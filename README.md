@@ -1,44 +1,65 @@
-# Codex + Claude Code project template
+# ecopy
 
-A reusable starter kit for software projects using OpenAI Codex and Claude Code. It contains
-shared agent skills, harness-specific agent definitions and hooks, optional OpenSpec commands,
-development workflow templates, and local checks for keeping the two configurations aligned.
+**The Python ecosystem, year by year.**
 
-## Adopt this template
+ecopy muestra cómo evoluciona el ecosistema Python desde 2018: qué librerías crecen, cuáles pierden
+terreno, qué versiones del lenguaje se adoptan y qué categorías ganan peso. Es un sitio estático,
+bilingüe (EN/ES), que se regenera una vez al día y se publicará en `ecopy.pages.dev`.
 
-1. Copy the repository into a new project.
-2. Rename `AGENTS.template.md` to `AGENTS.md` and `CLAUDE.template.md` to `CLAUDE.md`. Fill in the
-   project context, stack, commands, and repository structure in `AGENTS.md`; keep shared rules
-   there and Claude-specific guidance in `CLAUDE.md`.
-3. Copy `.claude/settings.template.json` to `.claude/settings.json`, then adjust permissions and
-   local commands. Review `.codex/hooks.template.json` alongside `.codex/hooks.json` and keep them
-   aligned if the active hooks change. In Codex, trust the project hooks and review them with
-   `/hooks` before relying on them.
-4. Copy `docs/guides/TESTING.template.md` to `docs/guides/TESTING.md` and, if adopting OpenSpec,
-   `docs/guides/OPENSPEC.template.md` to `docs/guides/OPENSPEC.md`; tailor each guide.
-5. Keep skills in `skills/` and their symlinks in `.claude/skills/` and `.agents/skills/`.
-6. Remove workflows, agents, hooks, or skills that the project will not use. Replace every
-   `<placeholder>` before relying on a template.
+> **Estado:** en planificación. El PRD está cerrado; todavía no hay código del producto.
+> Ver [`docs/prd.md`](docs/prd.md) y [`docs/HANDOFF.md`](docs/HANDOFF.md).
 
-## Layout
+## Qué va a ofrecer (MVP)
 
-- `.claude/` — Claude Code settings, commands, agents, and skill links.
-- `.codex/` — Codex hooks, agents, and OpenSpec skills.
-- `.agents/skills/` — Codex discovery links to the shared skill source.
-- `skills/` — shared skills and third-party notices.
-- `docs/` — optional workflows, prompt starters, and project guide templates.
-- `scripts/` — hook implementations and consistency checks.
-- `openspec/` — OpenSpec configuration template and workspace directories.
+- **Vista anual:** cuota de descargas por categoría, movers, recién llegados, adopción de versiones
+  de Python, línea de tiempo del lenguaje y volumen total (con advertencia sobre inflación por CI).
+  El año en curso se compara como YTD contra el mismo período del año anterior.
+- **Fichas de librerías:** un catálogo de ~500 paquetes (unión del top 100 de cada año desde 2018
+  + lista curada por categoría) con su serie histórica de descargas.
+- **Comparador simple** entre librerías.
+- **Releases de Python** en una línea de tiempo.
+- **Metodología:** fuentes, fórmulas, sesgos conocidos y versión metodológica de cada ranking.
+- **Estrellas de GitHub,** si se confirma una fuente histórica viable.
 
-## Local checks
+Principios: los rankings de años cerrados se congelan, no hay puntajes combinados opacos, los
+renombres de paquetes se enlazan pero no se suman, y cada dato guarda su procedencia.
 
-Run the relevant script directly when changing the toolkit:
+## Cómo funciona
 
-```bash
-scripts/bash/check_skill_symlinks.sh
-scripts/bash/check_hook_parity.sh
-scripts/bash/check_agent_parity.sh
+```
+GitHub Actions (cron diario)
+  → ingesta en Python (ClickPy; BigQuery como respaldo)
+  → Parquet append-only + DuckDB
+  → cálculo de métricas
+  → render HTML (Jinja2 + ECharts + SVG)
+  → Cloudflare Pages
 ```
 
-This repository is a template, not an example application; add the target project's source code,
-tests, dependency files, CI configuration, and deployment setup when adopting it.
+Sin servidor en runtime y con presupuesto cero: los datos cambian una vez al día y todo es de
+lectura, así que un sitio pre-generado alcanza.
+
+Módulos previstos: `sources`, `store`, `catalog`, `metrics`, `site` y `cli`.
+
+## Roadmap
+
+- **Fase 0 — spikes de validación:** cobertura histórica de ClickPy, desglose por versión de Python,
+  fuente de histórico de estrellas, ECharts vs Plotly, tamaño real del Parquet.
+- **MVP:** lo descrito arriba.
+- **Fase 3:** Trending y Seguridad (las estrellas se capturan a diario desde el día 1).
+- **Fase 4:** cuentas y encuestas.
+
+## Fuentes de datos
+
+- Descargas de PyPI (linehaul), consultadas vía [ClickPy](https://clickpy.clickhouse.com/).
+- Dataset público de PyPI en BigQuery, como respaldo reproducible.
+- Releases de Python y, si es viable, conteos de estrellas de GitHub (nunca identidades de usuarios).
+
+## Documentación
+
+- [`docs/prd.md`](docs/prd.md) — requisitos del producto, historias de usuario y decisiones.
+- [`docs/HANDOFF.md`](docs/HANDOFF.md) — estado actual, decisiones clave y próximos pasos.
+
+## Licencia
+
+[MIT](LICENSE). Los datos mostrados pertenecen a sus fuentes (PyPI/linehaul, ClickPy, GitHub) y se
+publican con atribución.

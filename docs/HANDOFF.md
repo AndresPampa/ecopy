@@ -12,7 +12,7 @@
 - **Tooling local, fuera de git:** `.gitignore` ignora `.claude/`, `.codex/`, `.agents/`, `skills/`,
   `openspec/`, pre-commit config, `AGENTS*.md`/`CLAUDE*.md`, `scripts/hooks/`, `scripts/bash/`,
   `docs/workflows/`, `docs/prompt_templates/`, `docs/guides/`, `docs/ROADMAP.template.md` y
-  también `brainstorming.md`. Git solo ve `.gitignore`, `README.md` y `docs/` (HANDOFF.md, prd.md).
+  también `brainstorming.md`. Git solo ve `.gitignore`, `README.md`, `LICENSE` (MIT) y `docs/` (HANDOFF.md, prd.md).
   Rama `master` sin commits. Remoto `origin` configurado (repo público vacío en GitHub).
 - Todos los checks del toolkit en verde (paridad de agentes/hooks, skill-symlinks, 5 tests de hooks).
 
@@ -21,7 +21,6 @@
 - [ ] Partir el PRD en issues con `/to-issues` (tracer-bullet). El repo ya existe, pero `gh` no está
       instalado → archivos locales (p. ej. `docs/issues/`) o instalar `gh`; la creación de issues en
       GitHub la decide/hace el usuario.
-- [ ] Reescribir `README.md` para ecopy (hoy describe el template).
 - [ ] Fase 0 (spikes de validación, ver "Further Notes" del PRD): cobertura de años y calidad antigua
       en ClickPy; si ClickPy tiene desglose por versión de Python; fuente de histórico de estrellas
       (probablemente NO existe `GET /repos/{o}/{r}/stargazers/history` — no verificado; alternativa:
@@ -34,6 +33,7 @@
       `.claude/settings.json` (hoy los guards solo corren en Codex).
 
 ## Key Decisions & Why
+- **Licencia MIT** (recomendada por simple y permisiva; aceptada por el usuario). Titular: `AndresPampa`.
 - **Git lo opera el usuario:** todos los `git add`, `commit`, `push` y PRs los hace el usuario. El agente
   solo prepara cambios en el working tree y sugiere comandos/mensajes; nunca los ejecuta.
 - **Nombre: ecopy**, subtítulo "the Python ecosystem, year by year". PyScope está tomado en PyPI;
@@ -121,3 +121,7 @@ seams de test confirmados por el usuario. Se marcó como dudoso el endpoint de h
 ### 2026-11-06 — Remoto configurado; git lo opera el usuario
 Usuario creó https://github.com/AndresPampa/ecopy (vacío). Se agregó como `origin`. Decisión: el
 agente nunca hace add/commit/push/PR.
+
+### 2026-11-06 — README reescrito para ecopy
+`README.md` ahora describe ecopy (estado, MVP, arquitectura, roadmap, fuentes); antes era el del template.
+Se agregó `LICENSE` (MIT) y la sección Licencia al README.
