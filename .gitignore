@@ -1,0 +1,49 @@
+# Python tooling
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage*
+htmlcov/
+
+# Local secrets and credentials
+.env
+.env.*
+!.env.example
+secrets/
+.credentials/
+
+# Local agent logs
+.claude/denials.log
+
+# Agent tooling (kept local, not versioned)
+# Harness configs, agents, commands and skill links
+.claude/
+.codex/
+.agents/
+# Shared skills (incl. impeccable)
+skills/
+# OpenSpec workspace and config
+openspec/
+# Pre-commit config (template and adopted)
+.pre-commit-config.template.yaml
+.pre-commit-config.yaml
+# Agent instruction files
+AGENTS.template.md
+CLAUDE.template.md
+AGENTS.md
+CLAUDE.md
+# Hook implementations and toolkit checks
+scripts/hooks/
+scripts/bash/
+# Workflows, prompt starters and toolkit guide templates
+docs/workflows/
+docs/prompt_templates/
+docs/guides/
+docs/ROADMAP.template.md
+
+#brainstorming and idea generation
+brainstorming.md
+
