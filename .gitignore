@@ -46,4 +46,8 @@ docs/ROADMAP.template.md
 
 #brainstorming and idea generation
 brainstorming.md
+categorias.md
 
+
+# Salidas generadas (spikes, builds locales)
+build/
