@@ -22,14 +22,16 @@ servidores que operar.
 **ecopy** ("the Python ecosystem, year by year") es un sitio estático, bilingüe (EN/ES), regenerado
 una vez al día, publicado en `ecopy.pages.dev`. Ofrece:
 
-- Una **vista anual** desde 2018: cuota de descargas por categoría (neutraliza la inflación por CI),
+- Una **vista anual** desde 2017: cuota de descargas por categoría (neutraliza la inflación por CI),
   movers, recién llegados, adopción de versiones de Python, línea de tiempo del lenguaje y volumen
   total con advertencia explícita.
 - **Fichas de librerías** de un catálogo de ~500 paquetes con su historia de descargas.
 - **Releases de Python** en una línea de tiempo.
 - Un **comparador simple** entre librerías.
 - Una página de **metodología** que explica fuentes, cálculos, sesgos y versiones metodológicas.
-- **Estrellas de GitHub** si la Fase 0 confirma una fuente histórica viable.
+- **Estrellas de GitHub** por librería, con su historia semanal.
+- **Categorías en dos niveles** (dominios → subcategorías) con página propia, y **tags** para descubrir
+  librerías por característica.
 
 Todo se genera en un pipeline diario sin servidor: GitHub Actions → ingesta Python → almacenamiento
 append-only en Parquet → cálculo de métricas → render HTML → Cloudflare Pages.
@@ -37,25 +39,25 @@ append-only en Parquet → cálculo de métricas → render HTML → Cloudflare 
 ## User Stories
 
 ### Lector: vista anual
-1. Como lector, quiero elegir un año desde 2018, para ver cómo estaba el ecosistema ese año.
+1. Como lector, quiero elegir un año desde 2017, para ver cómo estaba el ecosistema ese año.
 2. Como lector, quiero ver la cuota de descargas por categoría en un año, para comparar el peso relativo de áreas (web, datos, ML, testing…) sin que la inflación por CI distorsione.
 3. Como lector, quiero ver los "movers" del año (mayores subidas y bajadas de posición/cuota), para detectar tendencias.
 4. Como lector, quiero ver los recién llegados al top del año, para descubrir librerías emergentes.
-5. Como lector, quiero ver la adopción de versiones de Python por año, para saber cuándo una versión se volvió mayoritaria (si la Fase 0 confirma el desglose).
+5. Como lector, quiero ver la adopción de versiones de Python por año, para saber cuándo una versión se volvió mayoritaria.
 6. Como lector, quiero ver una línea de tiempo del lenguaje (releases, fin de soporte), para contextualizar los cambios de adopción.
-7. Como lector, quiero ver el volumen total de descargas con una advertencia visible, para no interpretarlo como crecimiento de usuarios reales.
+7. Como lector, quiero ver el volumen total de descargas con una advertencia visible y la discontinuidad de 2018-07-27 marcada, para no interpretarlo como crecimiento de usuarios reales ni comparar a través de un cambio de recolección.
 8. Como lector, quiero que el año en curso se muestre como YTD comparado con el mismo período del año anterior, para no comparar un año parcial contra uno completo.
 9. Como lector, quiero que los rankings de años cerrados no cambien entre visitas, para poder citarlos con confianza.
 10. Como lector, quiero ver qué versión metodológica produjo cada ranking anual, para entender por qué dos años podrían no ser comparables.
 11. Como lector, quiero que no haya un "puntaje combinado" opaco, para interpretar cada métrica por separado.
 
 ### Lector: librerías
-12. Como lector, quiero buscar/navegar el catálogo de librerías por categoría, para encontrar las de mi área.
-13. Como lector, quiero una ficha por librería con su serie histórica de descargas, para ver su trayectoria desde 2018.
+12. Como lector, quiero navegar el catálogo por dominio y categoría, para encontrar las librerías de mi área.
+13. Como lector, quiero una ficha por librería con su serie histórica de descargas, para ver su trayectoria desde 2016 (2016 marcado como parcial).
 14. Como lector, quiero ver sparklines en listados, para comparar trayectorias de un vistazo.
 15. Como lector, quiero ver que una librería renombrada enlaza con su nombre anterior, para seguir su historia completa.
 16. Como lector, quiero que los renombres no se sumen automáticamente, para no ver cifras infladas o mezcladas.
-17. Como lector, quiero ver las estrellas de GitHub de una librería (si están disponibles), para tener una señal complementaria a las descargas.
+17. Como lector, quiero ver las estrellas de GitHub de una librería y su evolución semanal, para tener una señal complementaria a las descargas.
 18. Como lector, quiero que las librerías que fueron top en años pasados sigan apareciendo aunque hayan caído, para evitar sesgo de supervivencia.
 
 ### Lector: comparador y releases
@@ -76,20 +78,27 @@ append-only en Parquet → cálculo de métricas → render HTML → Cloudflare 
 ### Mantenedor (desarrollador solo)
 30. Como mantenedor, quiero que todo el pipeline corra en un cron diario de GitHub Actions, para no operar servidores.
 31. Como mantenedor, quiero costo cero de infraestructura, para sostener el proyecto sin presupuesto.
-32. Como mantenedor, quiero un backfill único desde 2018 vía ClickPy, para tener el histórico sin pagar BigQuery.
+32. Como mantenedor, quiero un backfill único desde 2016-01-22 (todo lo disponible) vía ClickPy, para tener el histórico sin pagar BigQuery.
 33. Como mantenedor, quiero poder reconstruir el histórico desde BigQuery como respaldo, para no depender de un único proveedor.
 34. Como mantenedor, quiero que cada fila guardada tenga procedencia (`source`, `acquisition=backfill|observed`, `captured_at`, `ingestion_run_id`), para auditar cualquier cifra.
 35. Como mantenedor, quiero que el almacenamiento sea append-only, para que una corrida mala nunca destruya datos previos.
 36. Como mantenedor, quiero que las correcciones de la fuente se registren como archivos nuevos, para conservar lo observado originalmente.
 37. Como mantenedor, quiero que las métricas se recalculen en cada build desde los datos normalizados, para que un cambio de fórmula se aplique sin migraciones.
-38. Como mantenedor, quiero guardar snapshots diarios de estrellas de GitHub desde el día 1, para no perder un dato que no se puede recuperar después.
-39. Como mantenedor, quiero definir el catálogo curado por categoría en YAML, para editarlo sin tocar código.
+38. Como mantenedor, quiero guardar en cada corrida la historia reciente de estrellas y el `stargazers_count` del día, para conservar también el valor bruto (la historia de GitHub es neta: descuenta estrellas retiradas).
+39. Como mantenedor, quiero definir el catálogo curado en YAML (categoría principal, tags y repo de GitHub por librería), para editarlo sin tocar código.
 40. Como mantenedor, quiero que el catálogo se complete automáticamente con la unión del top 100 de cada año, para no depender solo de mi criterio.
 41. Como mantenedor, quiero declarar renombres en el catálogo, para enlazar historias sin sumarlas.
 42. Como mantenedor, quiero que, si la validación falla, se publique el sitio del día anterior con el aviso de fallo, para nunca publicar datos rotos.
 43. Como mantenedor, quiero un CLI con comandos separados (ingestar, construir, validar), para correr cada etapa localmente.
 44. Como mantenedor, quiero consultar ClickPy con moderación (límite de ritmo), para ser un buen ciudadano de un servicio gratuito.
 45. Como mantenedor, quiero que las opciones de gráficos se generen desde modelos tipados, para detectar errores al construir y no en el navegador.
+
+### Categorías y tags
+49. Como lector, quiero una página por categoría con su ranking interno, movers, recién llegados y la evolución de su cuota, para seguir mi área año a año.
+50. Como lector, quiero ver la cuota por dominio (Data & AI, Development, …) y bajar a sus categorías, para entender el panorama sin perderme en decenas de categorías.
+51. Como lector, quiero filtrar librerías por tags (p. ej. `async`, `dataframe`), para descubrir librerías por característica sin importar su categoría.
+52. Como mantenedor, quiero que cada librería tenga exactamente una categoría principal, para que las cuotas por categoría y por dominio sumen 100 % sin contar dos veces una descarga.
+53. Como mantenedor, quiero que los tags salgan de un vocabulario controlado, para que no deriven en sinónimos (`ml`/`machine-learning`).
 
 ### Seguridad y privacidad
 46. Como usuario de GitHub, quiero que ecopy nunca persista identidades de usuarios (solo conteos), para que mi actividad no quede expuesta.
@@ -114,14 +123,57 @@ append-only en Parquet → cálculo de métricas → render HTML → Cloudflare 
 - Esquema de procedencia por fila: `source`, `acquisition` (`backfill` | `observed`), `captured_at`, `ingestion_run_id`.
 - Particionado por fuente y fecha dentro del repo. Git LFS descartado; Cloudflare R2 como plan B si el tamaño o los términos de ClickPy lo exigen.
 - Año calendario en UTC. Rankings de años cerrados se congelan junto con su versión metodológica.
-- Estrellas de GitHub: se guardan solo conteos diarios; nunca logins ni IDs de usuarios.
+- Cobertura (spike S1): datos diarios desde 2016-01-22. Vistas anuales desde **2017** (primer año
+  completo); 2016 solo en fichas, marcado como parcial. Las métricas relativas (cuota, rankings,
+  movers) son comparables a través del salto ×3 de volumen del 2018-07-27 (cuotas estables); los
+  crecimientos de volumen absoluto que lo crucen no se calculan.
+- Calidad del dato: huecos (2016-03-06→05-21, 2019-04-26/27) y la ventana degradada
+  (2018-07-13→26) se marcan en el store como calidad, no se borran ni se interpolan.
+- La ingesta diaria toma hasta ayer (UTC); el día en curso está incompleto en la fuente.
+- Estrellas de GitHub (spike S3): `GET /repos/{o}/{r}/stargazers/history` (semanas con días, 30 por
+  página, neto; cuadra exacto con `stargazers_count`). Backfill una vez (~9.000 consultas para ~500
+  repos, repartido en varias corridas) y en cada corrida la página 1 + `stargazers_count`, con el
+  `GITHUB_TOKEN` de Actions. Solo conteos; nunca logins ni IDs de usuarios. El listado con
+  `starred_at` quedó descartado (exige autenticación de admin/colaborador desde julio de 2026).
 
 **Fuentes**
-- ClickPy (usuario `play`, gratis) como fuente principal del backfill desde 2018 (antes si es gratis). Sin solicitar permiso: el dato es público (PyPI/linehaul); se atribuye y se limita el ritmo.
+- Límites de la instancia pública de ClickPy (S2): resultados parciales **sin error** si se leen > 10.000 M de filas o se devuelven > 1.000 filas. El adaptador verifica el resumen de cada consulta, pagina y lee tablas grandes por rangos de `project`.
+- ClickPy (usuario `play`, gratis) como fuente principal del backfill desde 2016-01-22 (inicio de los datos; ver `docs/spikes/s1-clickpy-cobertura.md`). Sin solicitar permiso: el dato es público (PyPI/linehaul); se atribuye y se limita el ritmo.
 - BigQuery (`pypi` público) solo como respaldo reproducible, porque cobra por bytes escaneados.
 
+**Taxonomía**
+- Dos niveles: **dominio** → **categoría**. Cada librería tiene **exactamente una categoría
+  principal** (las cuotas suman 100 %) y **tags** opcionales de vocabulario controlado, que sirven
+  para navegar y filtrar pero **nunca entran en métricas**.
+- Dominios y categorías (propuesta del usuario; lista fina pendiente de cerrar al armar el catálogo
+  en la Etapa 2):
+  - **Data & AI:** Machine learning e IA · LLMs e IA generativa · Ciencia de datos · Ingeniería de
+    datos · Big Data · NLP · Estadística y econometría · Series temporales y forecasting ·
+    Visualización · MLOps.
+  - **Development:** Desarrollo web · Clientes HTTP y APIs · Aplicaciones de escritorio · CLI y
+    terminal · Herramientas de desarrollo · Testing · Documentación · Serialización y validación.
+  - **Infrastructure & Operations:** Cloud y DevOps · Bases de datos y ORMs · Mensajería y streaming ·
+    Sistemas distribuidos · Seguridad y criptografía · Monitoreo y observabilidad · Infraestructura
+    base.
+  - **Multimedia & Specialized:** Imagen y multimedia · Audio y video · Geoespacial y GIS ·
+    Computación científica · Robótica e IoT · Juegos y simulación · Finanzas cuantitativas ·
+    Optimización y matemática.
+  - **Utilities:** Scraping y automatización · Gestión de archivos y documentos · Configuración ·
+    Internacionalización · Generación de datos sintéticos.
+- Identificadores estables (slug) por dominio, categoría y tag, con etiquetas EN/ES; renombrar una
+  etiqueta no rompe URLs ni históricos.
+- Cambiar la categoría de una librería es un cambio metodológico: no altera rankings anuales ya
+  congelados.
+- "Infraestructura base" agrupa dependencias que casi nadie instala a propósito (`urllib3`,
+  `certifi`, `six`…), para que no inflen otras categorías.
+
 **Frontend**
-- Python-first: Jinja2 + ECharts + SVG. Descartados Dash/Streamlit/Reflex/NiceGUI (requieren servidor) y PyScript (peso). ECharts vs Plotly se decide en un prototipo de Fase 0.
+- Python-first: Jinja2 + ECharts + SVG. Descartados Dash/Streamlit/Reflex/NiceGUI (requieren servidor) y PyScript (peso).
+- Gráficos (spike S4): **ECharts 6.x, build `common`** (195 KB brotli; Plotly basic 324 KB e
+  inyecta `<style>` inline, incompatible con la CSP sin parche). Versión fija, **servida desde el
+  propio sitio** y verificada con hash al construir (mantiene `script-src 'self'`, sin depender de
+  un CDN). Renderer SVG. Si la vista anual pide un tipo que `common` no trae (treemap, heatmap),
+  pasar a `full` (+97 KB) antes que un build a medida con Node.
 - Diseño guiado por los skills `impeccable` y `dataviz`.
 
 ## Testing Decisions
@@ -135,28 +187,28 @@ append-only en Parquet → cálculo de métricas → render HTML → Cloudflare 
 4. **`metrics` (unitarios puros + propiedades con Hypothesis):** p. ej., las cuotas por categoría suman 1; los rankings congelados no cambian al agregar datos posteriores; los renombres nunca se suman; YTD compara ventanas de igual longitud.
 5. **`site` (snapshots):** modelos de vista fijos → HTML/opciones ECharts comparados con snapshots; tests de que campos externos con `<script>` salen escapados.
 
-`catalog` se cubre con unitarios puros (YAML de ejemplo → categorías, unión de top-100, renombres).
+`catalog` se cubre con unitarios puros (YAML de ejemplo → categorías, unión de top-100, renombres) y validaciones: toda librería tiene exactamente una categoría existente, todo tag pertenece al vocabulario, todo paquete existe en PyPI. En `metrics`, las cuotas por categoría y por dominio suman 1.
 
 **Prior art:** no hay código del producto aún. El único antecedente en el repo son los tests de hooks del tooling (script Python plano, sin pytest), que no aplican como patrón; el proyecto adoptará `pytest` + `hypothesis`.
 
 ## Out of Scope
 
-- Trending y Seguridad (Fase 3). Solo se adelanta la captura diaria de estrellas.
+- Trending y Seguridad (Fase 3).
 - Autenticación, cuentas, encuestas (Fase 4, Supabase).
 - API pública (FastAPI, futura).
 - Dominio propio pago.
 - Publicar en PyPI.
 - Puntajes combinados o "índices de popularidad" que mezclen métricas.
 - Cualquier dato de identidad de usuarios de GitHub.
-- Estrellas históricas de GitHub si la Fase 0 no confirma una fuente viable.
+- Métricas calculadas sobre tags (solo navegación).
 
 ## Further Notes
 
 **Fase 0 (spikes que condicionan este PRD):**
-- Cobertura de años y calidad del dato antiguo en ClickPy.
-- Si ClickPy desglosa por versión de Python (condiciona la historia 5).
-- Fuente de histórico de estrellas: verificar si existe un endpoint de historia; la alternativa conocida es reconstruir desde `starred_at` del listado de stargazers, con el riesgo de paginación/límites en repos grandes (condiciona la historia 17).
-- Peso real de ECharts vs Plotly en un prototipo de ranking + ficha.
+- ~~Cobertura de años y calidad del dato antiguo en ClickPy.~~ Resuelto en S1 (`docs/spikes/s1-clickpy-cobertura.md`): desde 2016-01-22; vistas anuales desde 2017.
+- ~~Si ClickPy desglosa por versión de Python.~~ Resuelto en S2 (`docs/spikes/s2-clickpy-versiones-python.md`): sí, desde 2016; historia 5 confirmada, granularidad mensual.
+- ~~Fuente de histórico de estrellas.~~ Resuelto en S3 (`docs/spikes/s3-github-estrellas.md`): existe `stargazers/history`; historia 17 confirmada.
+- ~~Peso real de ECharts vs Plotly en un prototipo de ranking + ficha.~~ Resuelto en S4 (`docs/spikes/s4-echarts-vs-plotly.md`): ECharts 6 `common`, servido desde el sitio.
 - Tamaño real del Parquet en el repo (condiciona el plan B en R2).
 
 **Pendientes externos:** crear el proyecto en Cloudflare Pages y confirmar que `ecopy.pages.dev` está libre; crear el repo público en GitHub (el usuario `ecopy` está tomado).
