@@ -47,13 +47,14 @@ Módulos previstos: `sources`, `store`, `catalog`, `metrics`, `site` y `cli`.
 
 Detalle y estado en [`docs/ROADMAP.md`](docs/ROADMAP.md). Cada etapa se trabaja en su propia rama.
 
-- **Etapa 0 — Spikes de validación** (en curso): cobertura de ClickPy, versiones de Python,
+- **Etapa 0 — Spikes de validación** ✅: cobertura de ClickPy, versiones de Python,
   histórico de estrellas, ECharts vs Plotly, tamaño de los datos.
-- **Etapa 1 — Tracer bullet:** un paquete, de ClickPy a una página publicada.
+- **Etapa 1 — Tracer bullet** (en curso): un paquete, de ClickPy a una página generada en local.
 - **Etapa 2 — Datos completos:** backfill, catálogo y categorías, ingesta diaria.
 - **Etapa 3 — Vista anual.**
 - **Etapa 4 — Librerías, comparador, releases y estrellas.**
-- **Etapa 5 — Publicación del MVP:** EN/ES, metodología, seguridad, accesibilidad y diseño.
+- **Etapa 5 — Publicación del MVP:** EN/ES, metodología, seguridad, accesibilidad, diseño y
+  despliegue (GitHub Actions + Cloudflare Pages).
 - **Después del MVP:** Trending y Seguridad; cuentas y encuestas.
 
 ## Fuentes de datos

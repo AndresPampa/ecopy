@@ -1,39 +1,37 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-07 · branch: `etapa-0-spikes` (SIN commits: todo el trabajo de la Etapa 0 está
-> en el working tree) · `main` = `origin/main` (PR #1) · remoto `origin` = https://github.com/AndresPampa/ecopy.git
+> Last updated: 2026-11-07 · branch: `etapa-1-tracer-bullet` (recién creada desde `main`; los
+> cambios de cierre de la Etapa 0 están sin commit) · `main` = `origin/main` (`a54967c`, PR #2) ·
+> remoto `origin` = https://github.com/AndresPampa/ecopy.git
 
 ## Current State
-- **PRD vigente** en `docs/prd.md`: 53 historias (49–53 = categorías y tags), seams de test acordados
-  (CLI end-to-end → `sources` contrato → `store` inmutabilidad → `metrics` puros + Hypothesis →
-  `site` snapshots), sección Taxonomía y decisiones de S1–S4 ya incorporadas (S5 todavía no).
-- **Etapa 0 (spikes) en curso** en la rama `etapa-0-spikes` (`docs/ROADMAP.md`):
-  - S1 ClickPy cobertura ✅ confirmado → datos desde 2016-01-22, vistas anuales desde 2017.
-  - S2 versiones de Python ✅ → historia 5 confirmada (mensual).
-  - S3 estrellas ✅ confirmado → `stargazers/history` existe; historia 17 confirmada.
-  - S4 ECharts vs Plotly ✅ confirmado (2026-11-07) → ECharts 6 `common`, servido desde el sitio;
-    PRD actualizado (Frontend + Further Notes).
-  - S5 tamaño Parquet + backfill ✅ hecho, **decisión pendiente del usuario** (propuesta: alcanza
-    el repo, sin R2; guardar serie diaria; backfill ≈ 10 MB, ~3 MB/año). El PRD NO refleja S5.
-  - S6 Cloudflare Pages ⏳ (lo hace el usuario).
-- **Sin commits en la rama.** Cambios pendientes: `.gitignore` (usuario agregó `categorias.md`; agente
-  agregó `build/`), `README.md`, `docs/HANDOFF.md`, `docs/prd.md`, nuevos `docs/ROADMAP.md` y
-  `docs/spikes/`. El usuario hace commit/push/PR al cerrar la etapa (una rama + commit + PR).
+- **Etapa 0 (spikes) mergeada** en `main` (PR #2). S1–S5 confirmados, con informe y script en
+  `docs/spikes/`. Decisiones clave: datos desde 2016-01-22 y vistas desde 2017 (S1); historia 5
+  mensual (S2); `stargazers/history` para la historia 17 (S3); ECharts 6 `common` servido desde
+  el sitio (S4); Parquet en el repo, sin R2, serie diaria (S5).
+- **PRD vigente** en `docs/prd.md`: 53 historias, seams de test acordados, Taxonomía y las
+  decisiones de S1–S5 (S5: Datos + reglas del adaptador de ClickPy en Fuentes).
+- **Etapa 1 (tracer bullet, LOCAL) recién abierta** en `etapa-1-tracer-bullet`. Decisión del
+  usuario: todo se prueba en local hasta tener un primer MVP; GitHub Actions y Cloudflare Pages
+  (S6) pasan a la Etapa 5. Slices sin definir.
+- **Sin commit en la rama nueva:** `docs/prd.md`, `docs/ROADMAP.md`, `docs/HANDOFF.md`,
+  `docs/spikes/s5-parquet-backfill.md`, `README.md` (cierre de la Etapa 0). Van como primer
+  commit de la Etapa 1.
 - **No hay código del producto todavía.** Tooling del agente local y fuera de git (`.claude/`,
   `.codex/`, `.agents/`, `skills/`, `openspec/`, `scripts/hooks|bash/`, `docs/workflows|guides|
   prompt_templates/`, `AGENTS*/CLAUDE*`, `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-- [ ] **Etapa 0 — Spikes** (rama `etapa-0-spikes`): slices en `docs/ROADMAP.md`, informes en
-      `docs/spikes/`. S1–S4 hechos y confirmados (PRD actualizado). S5 hecho: **confirmar la
-      decisión** de `docs/spikes/s5-parquet-backfill.md`; al confirmar, volcar al PRD (Datos:
-      serie diaria, disposición por año/día, sin R2; Fuentes: hallazgos 1–3 del adaptador) y
-      tildar S5 en ROADMAP. Falta S6 (Cloudflare Pages, usuario).
-- [ ] **Usuario:** commit de la Etapa 0 en `etapa-0-spikes` (comandos y mensaje propuestos en la
-      sesión del 2026-11-07) y PR cuando S5/S6 cierren.
-- [ ] **Usuario (opcional):** borrar la rama `docs/project-setup` (local y remota), ya mergeada.
-- [ ] Opcional: instalar `ruff`, `pytest`, `pre-commit` cuando arranque la Etapa 1 (hay `uv` 0.12.19,
-      Python 3.14.4, node).
+- [ ] **Usuario:** commit del cierre de la Etapa 0 en `etapa-1-tracer-bullet` (mensaje propuesto
+      en la sesión del 2026-11-07).
+- [ ] **Etapa 1 — Tracer bullet:** definir los slices en `docs/ROADMAP.md` (un paquete de punta a
+      punta, en local: `sources` ClickPy con las reglas de S5 → `store` Parquet → `metrics` →
+      `site` con ECharts `common` en `build/` → `cli`). Arrancar con `codebase-design` y `tdd`; instalar
+      `ruff`, `pytest`, `pre-commit` (hay `uv` 0.12.19, Python 3.14.4, node).
+- [ ] **Usuario (Etapa 5, con el primer MVP):** S6 — crear el proyecto en Cloudflare Pages y
+      confirmar `ecopy.pages.dev`; recién ahí entra GitHub Actions.
+- [ ] **Usuario (opcional):** borrar ramas mergeadas `etapa-0-spikes` y `docs/project-setup`
+      (local y remota).
 - [ ] Opcional: activar hooks de Claude Code copiando `.claude/settings.template.json` →
       `.claude/settings.json` (hoy los guards solo corren en Codex).
 
@@ -42,6 +40,9 @@
   `etapa-N-<tema>` + commit(s) + PR a `main`. **Sin issues ni OpenSpec** (CLI no instalado,
   `openspec/` ignorado por git, y su guía exige proposal/aprobación/verify/archive por change:
   demasiado peso para una persona). `to-issues` descartado por lo mismo.
+- **Local primero:** Etapas 1–4 se construyen y prueban en local (`build/` + localhost). GitHub
+  Actions y Cloudflare Pages entran recién en la Etapa 5, con un primer MVP (decisión del usuario,
+  2026-11-07). La arquitectura del PRD no cambia, solo el orden.
 - **Licencia MIT** (recomendada por simple y permisiva; aceptada por el usuario). Titular: `AndresPampa`.
 - **Git lo opera el usuario:** todos los `git add`, `commit`, `push` y PRs los hace el usuario. El agente
   solo prepara cambios en el working tree y sugiere comandos/mensajes; nunca los ejecuta.
@@ -217,3 +218,10 @@ del top 100 anual 2017–2026 da solo 213); 1,66 M filas diarias → 7,3 MB Parq
 mensual 0,3 MB, Python por paquete 2,65 MB; 64 consultas, ~37 s en modo array. Ingesta diaria
 ~3 MB/año; ≤ 125 MB a 10 años en el peor supuesto → alcanza el repo. Descubiertos duplicados sin
 fusionar, resumen temprano sin `wait_end_of_query` y límite de 10 MB no fiable. Decisión pendiente.
+
+### 2026-11-07 — S5 confirmado; Etapa 0 mergeada; arranca la Etapa 1
+Usuario commiteó y mergeó la Etapa 0 (PR #2, `a54967c`) y creó `etapa-1-tracer-bullet`. Confirmó
+S5 → PRD (Datos: tamaño, serie diaria, disposición, versión de Python global; Fuentes: reglas del
+adaptador de ClickPy; Further Notes), informe y ROADMAP actualizados. Etapa 0 colapsada en
+*Shipped*. Usuario decidió probar todo en local hasta un primer MVP: Etapa 1 sin Actions ni
+Cloudflare; GitHub Actions + Cloudflare Pages (S6) movidos a la Etapa 5 (ROADMAP, README).
