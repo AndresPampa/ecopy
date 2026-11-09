@@ -59,7 +59,37 @@ class PythonMinorBatch:
     rows: tuple[PythonMinorMonth, ...]
 
 
-Batch = DownloadBatch | PypiTotalsBatch | PythonMinorBatch
+@dataclass(frozen=True)
+class StarWeek:
+    """Estrellas netas ganadas en una semana calendario (empieza en domingo)."""
+
+    repo: str
+    week: date
+    stars: int
+
+
+@dataclass(frozen=True)
+class StarWeeksBatch:
+    source: Literal["github"]
+    rows: tuple[StarWeek, ...]
+
+
+@dataclass(frozen=True)
+class StarTotal:
+    """`stargazers_count` de un repo el día de la corrida."""
+
+    repo: str
+    date: date
+    stars: int
+
+
+@dataclass(frozen=True)
+class StarTotalsBatch:
+    source: Literal["github"]
+    rows: tuple[StarTotal, ...]
+
+
+Batch = DownloadBatch | PypiTotalsBatch | PythonMinorBatch | StarWeeksBatch | StarTotalsBatch
 
 
 @dataclass(frozen=True)
@@ -96,6 +126,22 @@ class RunReport:
     problems: tuple[Problem, ...]
     datasets: Mapping[str, DatasetCounts]
     last_day: date | None
+
+
+@dataclass(frozen=True)
+class StarsReport:
+    """Qué hizo una corrida de estrellas; va aparte para no tocar el estado del sitio."""
+
+    id: str
+    captured_at: datetime
+    status: Literal["complete", "partial"]
+    requests: int
+    backfilled: tuple[str, ...]
+    updated: tuple[str, ...]
+    pending: int
+    failed: tuple[tuple[str, str], ...]
+    moved: tuple[tuple[str, str], ...]
+    stopped: str | None
 
 
 @dataclass(frozen=True)
@@ -141,6 +187,8 @@ class MonthPoint(BaseModel):
     """None = sin datos ese mes (los huecos no se interpolan ni se muestran como cero)."""
     status: PeriodStatus
     coverage: Coverage
+    share: float | None = None
+    """Fracción de todas las descargas de PyPI de ese mes; None sin datos o sin el total."""
 
 
 class YearTotal(BaseModel):
@@ -260,6 +308,24 @@ class SiteStatus(BaseModel):
         super().__init__(last_updated=last_updated, failed=failed)
 
 
+class StarPoint(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    week: date
+    stars: int
+    """Estrellas netas acumuladas hasta esa semana."""
+
+
+class StarsView(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    repo: str
+    total: int
+    points: tuple[StarPoint, ...]
+    shared_with: tuple[str, ...]
+    """Otros paquetes del catálogo que publican desde el mismo repo."""
+
+
 class LibraryView(BaseModel):
     """Lo que necesita la ficha de una librería, ya calculado."""
 
@@ -270,3 +336,80 @@ class LibraryView(BaseModel):
     last_closed_month: MonthPoint | None
     monthly: tuple[MonthPoint, ...]
     yearly: tuple[YearTotal, ...]
+    discontinuities: tuple[date, ...] = ()
+    """Cambios de nivel de la fuente dentro de la historia del paquete."""
+    category: str | None = None
+    domain: str | None = None
+    tags: tuple[str, ...] = ()
+    repo: str | None = None
+    renamed_from: str | None = None
+    renamed_to: str | None = None
+    stars: StarsView | None = None
+
+
+class LibraryRow(BaseModel):
+    """Una fila de los listados."""
+
+    model_config = ConfigDict(frozen=True)
+
+    project: str
+    category: str
+    domain: str
+    tags: tuple[str, ...]
+    month: date | None
+    downloads: int | None
+    """Del último mes cerrado con datos."""
+    trend: tuple[float, ...]
+    """Cuota de PyPI de los últimos meses cerrados, de la más vieja a la más nueva."""
+
+
+class YearShare(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    year: int
+    status: Literal["closed", "ytd"]
+    share: float
+
+
+class CategoryPage(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    slug: str
+    domain: str
+    shares: tuple[YearShare, ...]
+    rows: tuple[LibraryRow, ...]
+
+
+class DomainPage(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    slug: str
+    shares: tuple[YearShare, ...]
+    categories: tuple[CategoryPage, ...]
+
+
+class ReleaseRow(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    version: str
+    released: date
+    end_of_life: date | None
+    status: Literal["supported", "end_of_life", "unknown"]
+
+
+class ReleasesView(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    as_of: date
+    releases: tuple[ReleaseRow, ...]
+
+
+class BrowseView(BaseModel):
+    """Lo que necesitan el catálogo, los dominios, el comparador y los releases."""
+
+    model_config = ConfigDict(frozen=True)
+
+    rows: tuple[LibraryRow, ...]
+    domains: tuple[DomainPage, ...]
+    releases: ReleasesView
+    tags: tuple[str, ...]

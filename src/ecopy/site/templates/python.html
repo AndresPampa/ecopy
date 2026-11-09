@@ -1,0 +1,31 @@
+{% extends "_base.html" %}
+{%- block title %}{{ t.python_page_title }}{% endblock %}
+{%- block content %}
+<h1>{{ t.python_page_title }}</h1>
+<p class="lead">{{ t.python_lead }}</p>
+{%- if lifecycle.bars %}
+<div class="scroll">
+<svg class="lifecycle" viewBox="0 0 {{ lifecycle.width }} {{ lifecycle.height }}" role="img" aria-label="{{ t.lifecycle_alt }}">
+{%- for year, x in lifecycle.ticks %}
+<line class="tick-line" x1="{{ x }}" x2="{{ x }}" y1="18" y2="{{ lifecycle.height }}"/><text class="tick" x="{{ x }}" y="13" text-anchor="middle">{{ year }}</text>
+{%- endfor %}
+<line class="today" x1="{{ lifecycle.today_x }}" x2="{{ lifecycle.today_x }}" y1="18" y2="{{ lifecycle.height }}"/>
+<text class="tick" x="{{ lifecycle.today_x }}" y="13" text-anchor="middle">{{ t.today }}</text>
+{%- for bar in lifecycle.bars %}
+<text class="version" x="48" y="{{ bar.y + 14 }}" text-anchor="end">{{ bar.version }}</text>
+<rect class="bar{% if bar.supported %} supported{% endif %}" x="{{ bar.x }}" y="{{ bar.y + 3 }}" width="{{ bar.width }}" height="14" rx="3"><title>Python {{ bar.version }}</title></rect>
+{%- endfor %}
+</svg>
+</div>
+{%- endif %}
+<section>
+<table class="plain">
+<thead><tr><th scope="col">{{ t.version }}</th><th scope="col">{{ t.released }}</th><th scope="col">{{ t.end_of_support }}</th><th scope="col">{{ t.status }}</th></tr></thead>
+<tbody>
+{%- for release in releases.releases %}
+<tr><th scope="row">{{ release.version }}</th><td><time datetime="{{ release.released }}">{{ release.released }}</time></td><td>{% if release.end_of_life %}<time datetime="{{ release.end_of_life }}">{{ release.end_of_life }}</time>{% else %}—{% endif %}</td><td>{{ t["support_" ~ release.status] }}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+</section>
+{%- endblock %}

@@ -1,0 +1,17 @@
+{% extends "_base.html" %}
+{%- import "_macros.html" as m with context %}
+{%- block title %}{{ t.catalog_title }}{% endblock %}
+{%- block scripts %}
+<script src="/static/filter.js" defer></script>
+{%- endblock %}
+{%- block content %}
+<h1>{{ t.catalog_title }}</h1>
+<p class="lead">{{ t.catalog_lead }}</p>
+<div id="filters" class="filters" role="group" aria-label="{{ t.filter_label }}" hidden>
+{%- for tag in browse.tags %}
+<button class="chip" type="button" data-tag="{{ tag }}" aria-pressed="false">{{ tag|label(lang) }}</button>
+{%- endfor %}
+</div>
+<p id="filter-count" class="note" role="status" data-template="{{ t.filter_count }}"></p>
+{{ m.library_table(browse.rows) }}
+{%- endblock %}

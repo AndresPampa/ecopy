@@ -8,12 +8,25 @@
 {%- block scripts %}{% endblock %}
 </head>
 <body>
-<main>
+<header class="site">
+{%- if nav %}
+<a class="mark" href="/{{ lang }}/">ecopy</a>
+<nav aria-label="{{ t.main_nav }}">
+{%- for id, target, text in nav %}
+<a href="/{{ lang }}/{{ target }}"{% if id == section %} aria-current="page"{% endif %}>{{ text }}</a>
+{%- endfor %}
+</nav>
+{%- else %}
+<span class="mark">ecopy</span>
+{%- endif %}
+<a class="lang" href="/{{ other }}/{{ path }}" hreflang="{{ other }}">{{ t.switch_label }}</a>
+</header>
+<main{% block main_attrs %}{% endblock %}>
 {%- if status.failed %}
 <p class="update-failed" role="status">{{ t.update_failed }}{% if status.last_updated %} {{ t.update_failed_since.format(date=status.last_updated) }}{% endif %}</p>
 {%- endif %}
 {%- block content %}{% endblock %}
-<footer><p>{{ t.source }}{% if status.last_updated %} {{ t.last_updated }}: <time datetime="{{ status.last_updated }}">{{ status.last_updated }}</time>.{% endif %}</p></footer>
 </main>
+<footer class="site"><p>{{ t.source }}{% if status.last_updated %} {{ t.last_updated }}: <time datetime="{{ status.last_updated }}">{{ status.last_updated }}</time>.{% endif %}</p></footer>
 </body>
 </html>

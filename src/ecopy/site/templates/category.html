@@ -1,0 +1,24 @@
+{% extends "_base.html" %}
+{%- import "_macros.html" as m with context %}
+{%- block title %}{{ category.slug|label(lang) }}{% endblock %}
+{%- block scripts %}
+<script src="/static/vendor/{{ echarts }}" defer></script>
+<script src="/static/charts.js" defer></script>
+{%- endblock %}
+{%- block main_attrs %} class="domain-{{ category.domain }}"{% endblock %}
+{%- block content %}
+<p class="crumbs"><a href="/{{ lang }}/domain/{{ category.domain }}/">{{ category.domain|label(lang) }}</a></p>
+<h1>{{ category.slug|label(lang) }}</h1>
+{%- if category.shares %}
+<section>
+<h2>{{ t.share_year_title }}</h2>
+{{ m.chart_box("share", t.share_year_alt, chart) }}
+<p class="note">{{ t.share_year_note }}</p>
+{{ m.share_table(category.shares) }}
+</section>
+{%- endif %}
+<section>
+<h2>{{ t.catalog_title }}</h2>
+{{ m.library_table(category.rows) }}
+</section>
+{%- endblock %}

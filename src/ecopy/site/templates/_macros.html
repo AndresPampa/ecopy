@@ -1,0 +1,30 @@
+{%- macro spark(trend, name) -%}
+{%- set s = trend|spark -%}
+{%- if s -%}
+<svg class="spark" viewBox="0 0 120 28" width="120" height="28" role="img" aria-label="{{ t.trend_alt.format(project=name) }}"><polyline points="{{ s.points }}"/><circle cx="{{ s.last_x }}" cy="{{ s.last_y }}" r="2.5"/></svg>
+{%- endif -%}
+{%- endmacro -%}
+{%- macro chart_box(name, alt, payload) %}
+<div id="chart-{{ name }}" class="chart" data-chart role="img" aria-label="{{ alt }}"></div>
+<script id="chart-{{ name }}-data" type="application/json">{{ payload|tojson }}</script>
+{%- endmacro -%}
+{%- macro library_table(rows) %}
+<table class="libraries">
+<thead><tr><th scope="col">{{ t.package }}</th><th scope="col" class="category">{{ t.category }}</th><th scope="col" class="trend">{{ t.trend_col }}</th><th scope="col">{{ t.last_month_col }}</th></tr></thead>
+<tbody>
+{%- for row in rows %}
+<tr data-tags="{{ row.tags|join(' ') }}"><th scope="row"><a class="package" href="/{{ lang }}/library/{{ row.project|slug }}/">{{ row.project }}</a></th><td class="category"><i class="sw d-{{ row.domain }}"></i> <a href="/{{ lang }}/category/{{ row.category }}/">{{ row.category|label(lang) }}</a></td><td class="trend">{{ spark(row.trend, row.project) }}</td><td>{% if row.downloads is none %}{{ t.no_data }}{% else %}{{ row.downloads|number(lang) }}{% endif %}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+{%- endmacro -%}
+{%- macro share_table(shares) %}
+<table>
+<thead><tr><th scope="col">{{ t.year }}</th><th scope="col">{{ t.share }}</th></tr></thead>
+<tbody>
+{%- for item in shares|reverse %}
+<tr><th scope="row">{{ item.year }}{% if item.status == "ytd" %} · {{ t.ytd }}{% endif %}</th><td>{{ item.share|percent(lang) }}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+{%- endmacro -%}

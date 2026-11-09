@@ -1,0 +1,31 @@
+{% extends "_base.html" %}
+{%- block title %}{{ t.compare_title }}{% endblock %}
+{%- block scripts %}
+<script src="/static/vendor/{{ echarts }}" defer></script>
+<script src="/static/compare.js" defer></script>
+{%- endblock %}
+{%- block content %}
+<h1>{{ t.compare_title }}</h1>
+<p class="lead">{{ t.compare_lead }}</p>
+<noscript><p class="note">{{ t.compare_noscript }}</p></noscript>
+<div id="compare" hidden data-texts="{{ {'full': t.compare_full, 'unknown': t.compare_unknown, 'empty': t.compare_empty, 'failed': t.compare_failed, 'remove': t.compare_remove, 'month': t.month, 'noData': t.no_data}|tojson|forceescape }}">
+<div class="controls">
+<label for="compare-input">{{ t.compare_add }}</label>
+<input id="compare-input" list="compare-names" autocomplete="off" spellcheck="false">
+<datalist id="compare-names"></datalist>
+<button id="compare-add" class="chip" type="button">{{ t.compare_button }}</button>
+<ul id="compare-chosen" class="chosen"></ul>
+</div>
+<div class="controls" role="group" aria-label="{{ t.compare_measure }}">
+<button class="chip" type="button" data-measure="share" aria-pressed="true">{{ t.measure_share }}</button>
+<button class="chip" type="button" data-measure="downloads" aria-pressed="false">{{ t.measure_downloads }}</button>
+<span class="separator"></span>
+<button class="chip" type="button" data-scale="linear" aria-pressed="true">{{ t.scale_linear }}</button>
+<button class="chip" type="button" data-scale="log" aria-pressed="false">{{ t.scale_log }}</button>
+</div>
+<p id="compare-message" class="note" role="status"></p>
+<div id="compare-chart" class="chart" role="img" aria-label="{{ t.compare_alt }}"></div>
+<p class="note">{{ t.compare_examples }}: <a href="?p=fastapi&amp;p=django&amp;p=flask">fastapi, django, flask</a> · <a href="?p=polars&amp;p=pandas">polars, pandas</a> · <a href="?p=uv&amp;p=poetry&amp;p=pipenv">uv, poetry, pipenv</a></p>
+<details><summary>{{ t.compare_table }}</summary><div class="scroll"><table id="compare-table"></table></div></details>
+</div>
+{%- endblock %}

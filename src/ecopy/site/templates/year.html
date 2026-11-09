@@ -19,8 +19,8 @@
 <script src="/static/charts.js" defer></script>
 {%- endblock %}
 {%- block content %}
-<nav><a href="/{{ other }}/year/{{ view.year }}/" hreflang="{{ other }}">{{ t.switch_label }}</a>
-{%- for item in years|reverse %} · {% if item.year == view.year %}<span aria-current="page">{{ item.year }}</span>{% else %}<a href="/{{ lang }}/year/{{ item.year }}/">{{ item.year }}</a>{% endif %}{% endfor %}</nav>
+<nav class="years" aria-label="{{ t.nav_years }}">
+{%- for item in years|reverse %}{% if item.year == view.year %}<span aria-current="page">{{ item.year }}</span>{% else %}<a href="/{{ lang }}/year/{{ item.year }}/">{{ item.year }}</a>{% endif %}{% endfor %}</nav>
 <h1>{{ view.year }}</h1>
 <p>{% if view.status == "ytd" %}{{ t.ytd }}: {{ view.period_start }} → {{ view.period_end }}. {{ t.compared_with.format(start=view.previous_start, end=view.previous_end) }}{% else %}{{ view.period_start }} → {{ view.period_end }}.{% endif %} {{ t.methodology.format(version=view.methodology_version) }}</p>
 

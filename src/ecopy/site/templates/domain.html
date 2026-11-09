@@ -1,0 +1,29 @@
+{% extends "_base.html" %}
+{%- import "_macros.html" as m with context %}
+{%- block title %}{{ domain.slug|label(lang) }}{% endblock %}
+{%- block scripts %}
+<script src="/static/vendor/{{ echarts }}" defer></script>
+<script src="/static/charts.js" defer></script>
+{%- endblock %}
+{%- block main_attrs %} class="domain-{{ domain.slug }}"{% endblock %}
+{%- block content %}
+<h1>{{ domain.slug|label(lang) }}</h1>
+<section>
+<h2>{{ t.share_year_title }}</h2>
+{{ m.chart_box("share", t.share_year_alt, chart) }}
+<p class="note">{{ t.share_year_note }}</p>
+{{ m.share_table(domain.shares) }}
+</section>
+<section>
+<h2>{{ t.categories_title }}</h2>
+<ul class="rows">
+{%- for category in domain.categories %}
+<li><a href="/{{ lang }}/category/{{ category.slug }}/">{{ category.slug|label(lang) }}</a><span class="note">{{ t.libraries_count.format(n=category.rows|length) }}</span>{% if category.shares %}<b>{{ (category.shares|last).share|percent(lang) }}</b>{% endif %}</li>
+{%- endfor %}
+</ul>
+</section>
+<section>
+<h2>{{ t.top_libraries }}</h2>
+{{ m.library_table(top) }}
+</section>
+{%- endblock %}

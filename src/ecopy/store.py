@@ -25,6 +25,9 @@ from ecopy.models import (
     PythonMinorBatch,
     Run,
     RunReport,
+    StarsReport,
+    StarTotalsBatch,
+    StarWeeksBatch,
     YearView,
 )
 
@@ -46,6 +49,7 @@ class _Dataset:
     key: tuple[_Column, ...]
     partition: Callable[[object], int]
     """Año del registro."""
+    value: str = "downloads"
 
     def key_of(self, row: object) -> tuple:
         return tuple(column.read(row) for column in self.key)
@@ -80,6 +84,24 @@ _DATASETS: dict[type, _Dataset] = {
             _Column("python_minor", pa.string(), _attr("python_minor")),
         ),
         lambda row: row.month.year,
+    ),
+    StarWeeksBatch: _Dataset(
+        "star_weeks",
+        (
+            _Column("repo", pa.string(), _attr("repo")),
+            _Column("week", pa.date32(), _attr("week")),
+        ),
+        lambda row: row.week.year,
+        "stars",
+    ),
+    StarTotalsBatch: _Dataset(
+        "star_totals",
+        (
+            _Column("repo", pa.string(), _attr("repo")),
+            _Column("date", pa.date32(), _attr("date")),
+        ),
+        lambda row: row.date.year,
+        "stars",
     ),
 }
 
@@ -118,7 +140,7 @@ def _table(dataset: _Dataset, rows: Sequence, source: str, run: Run) -> pa.Table
     return pa.table(
         {
             **columns,
-            "downloads": pa.array([r.downloads for r in rows], pa.int64()),
+            dataset.value: pa.array([getattr(r, dataset.value) for r in rows], pa.int64()),
             "source": pa.array([source] * size, pa.string()),
             "acquisition": pa.array([run.acquisition] * size, pa.string()),
             "captured_at": pa.array([run.captured_at] * size, pa.timestamp("us", tz="UTC")),
@@ -152,7 +174,7 @@ class Store:
         new_rows = revised_rows = 0
         for row in sorted(batch.rows, key=dataset.key_of):
             known = current.get(dataset.key_of(row))
-            if known == row.downloads:
+            if known == getattr(row, dataset.value):
                 continue
             new_rows += known is None
             revised_rows += known is not None
@@ -181,7 +203,7 @@ class Store:
         return (
             duckdb.connect(":memory:")
             .execute(
-                f"""SELECT {keys}, downloads FROM read_parquet(?) {where}
+                f"""SELECT {keys}, {dataset.value} FROM read_parquet(?) {where}
                     QUALIFY row_number() OVER (
                         PARTITION BY {keys} ORDER BY captured_at DESC, ingestion_run_id DESC
                     ) = 1
@@ -215,6 +237,39 @@ class Store:
         for month, minor, downloads in self._latest(dataset, self._files(dataset)):
             months.setdefault(month, {})[minor] = downloads
         return months
+
+    def _by_repo(self, kind: type, repos: Sequence[str]) -> dict[str, dict[date, int]]:
+        dataset = _DATASETS[kind]
+        rows = self._latest(
+            dataset, self._files(dataset), "WHERE list_contains(?, repo)", [list(repos)]
+        )
+        found: dict[str, dict[date, int]] = {}
+        for repo, day, stars in rows:
+            found.setdefault(repo, {})[day] = stars
+        return found
+
+    def star_weeks(self, repos: Sequence[str]) -> dict[str, dict[date, int]]:
+        """Estrellas netas por semana de cada repo."""
+        return self._by_repo(StarWeeksBatch, repos)
+
+    def star_totals(self, repos: Sequence[str]) -> dict[str, dict[date, int]]:
+        """`stargazers_count` por día de corrida de cada repo."""
+        return self._by_repo(StarTotalsBatch, repos)
+
+    def backfilled_repos(self) -> set[str]:
+        """Repos cuya historia completa ya se guardó."""
+        files = self._files(_DATASETS[StarWeeksBatch])
+        if not files:
+            return set()
+        rows = duckdb.connect(":memory:").execute(
+            "SELECT DISTINCT repo FROM read_parquet(?) WHERE acquisition = 'backfill'", [files]
+        )
+        return {repo for (repo,) in rows.fetchall()}
+
+    def record_stars_run(self, report: StarsReport) -> None:
+        """Va en su propio directorio: `site_status` solo mira las corridas de descargas."""
+        text = json.dumps(asdict(report), default=str, indent=1) + "\n"
+        _write_text_new(self._root / "runs" / "stars" / f"{report.id}.json", text)
 
     def record_run(self, report: RunReport) -> None:
         """Guarda el registro de una ejecución; igual que los datos, no se reescribe."""

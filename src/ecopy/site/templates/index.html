@@ -1,11 +1,52 @@
 {% extends "_base.html" %}
+{%- import "_macros.html" as m with context %}
+{%- macro strata_svg(s, kind) %}
+<svg class="strata {{ kind }}" viewBox="0 0 {{ s.width }} {{ s.height }}" role="img" aria-label="{{ t.strata_alt }}">
+{%- for column in s.columns %}
+<a href="/{{ lang }}/year/{{ column.year }}/"><g class="col"><title>{{ column.year }}{% for segment in column.segments %} · {{ segment.slug|label(lang) }} {{ segment.share|percent(lang) }}{% endfor %}</title>
+<text class="yr" x="{{ column.x + s.column / 2 }}" y="{{ s.font + 2 }}" text-anchor="middle" font-size="{{ s.font }}">{{ column.label }}</text>
+{%- for segment in column.segments %}
+<rect class="d-{{ segment.slug }}{% if column.partial %} partial{% endif %}" x="{{ column.x }}" y="{{ segment.y }}" width="{{ s.column }}" height="{{ segment.height }}" rx="2"/>
+{%- endfor %}
+</g></a>
+{%- endfor %}
+</svg>
+{%- endmacro %}
 {%- block title %}{{ t.years_title }}{% endblock %}
 {%- block content %}
-<nav><a href="/{{ other }}/" hreflang="{{ other }}">{{ t.switch_label }}</a></nav>
 <h1>{{ t.years_title }}</h1>
-<ul>
-{%- for item in years|reverse %}
-<li><a href="/{{ lang }}/year/{{ item.year }}/">{{ item.year }}</a>{% if item.status == "ytd" %} · {{ t.ytd }}{% endif %}</li>
+{%- if finding %}
+<p class="lead">{{ finding }}</p>
+{%- endif %}
+<figure class="hero">
+{{ strata_svg(wide, "wide") }}
+{{ strata_svg(narrow, "narrow") }}
+<ul class="legend">
+{%- for item in legend %}
+<li><i class="sw d-{{ item.slug }}"></i><span>{{ item.slug|label(lang) }}</span><b>{{ item.share|percent(lang) }}</b>{% if item.first is not none %}<small>{{ item.first|percent(lang) }} {{ t.in_year.format(year=years[0].year) }}</small>{% endif %}</li>
 {%- endfor %}
 </ul>
+</figure>
+<p class="note">{{ t.strata_caption }}</p>
+{%- if browse %}
+<div class="columns">
+<section>
+<h2>{{ t.movers_home.format(year=years[-1].year) }}</h2>
+<ul class="rows">
+{%- for mover in movers %}
+<li><a class="package" href="/{{ lang }}/library/{{ mover.project|slug }}/">{{ mover.project }}</a>{{ m.spark(trends.get(mover.project, ()), mover.project) }}<b>{{ mover.share_change|points(lang) }}</b></li>
+{%- endfor %}
+</ul>
+<p class="note">{{ t.movers_unit }}</p>
+</section>
+<section>
+<h2>{{ t.explore_domains }}</h2>
+<ul class="rows">
+{%- for domain in browse.domains %}
+<li><i class="sw d-{{ domain.slug }}"></i><a href="/{{ lang }}/domain/{{ domain.slug }}/">{{ domain.slug|label(lang) }}</a><span class="note">{{ t.libraries_count.format(n=domain.categories|map(attribute="rows")|map("length")|sum) }}</span></li>
+{%- endfor %}
+</ul>
+</section>
+</div>
+{%- endif %}
 {%- endblock %}

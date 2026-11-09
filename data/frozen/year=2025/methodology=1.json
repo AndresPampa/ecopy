@@ -1,0 +1,555 @@
+{
+ "year": 2025,
+ "status": "closed",
+ "methodology_version": 1,
+ "period_start": "2025-01-01",
+ "period_end": "2025-12-31",
+ "previous_start": "2024-01-01",
+ "previous_end": "2024-12-31",
+ "coverage": {
+  "expected": 365,
+  "gap": 0,
+  "degraded": 0
+ },
+ "volume": {
+  "total": 901232157741,
+  "previous": 526073594518,
+  "growth": 0.7131294311905702,
+  "discontinuities": []
+ },
+ "catalog_share": 0.6801578559341209,
+ "domains": [
+  {
+   "slug": "infrastructure",
+   "downloads": 348364154436,
+   "share": 0.5683123093043777,
+   "categories": [
+    {
+     "slug": "foundations",
+     "downloads": 205532922679,
+     "share": 0.33530111648510574
+    },
+    {
+     "slug": "cloud-devops",
+     "downloads": 80942951082,
+     "share": 0.13204824568072426
+    },
+    {
+     "slug": "security",
+     "downloads": 24786813810,
+     "share": 0.04043656965644174
+    },
+    {
+     "slug": "observability",
+     "downloads": 12100171834,
+     "share": 0.01973990868576486
+    },
+    {
+     "slug": "databases",
+     "downloads": 11673404615,
+     "share": 0.019043691636229543
+    },
+    {
+     "slug": "distributed",
+     "downloads": 10868588933,
+     "share": 0.01773073606092845
+    },
+    {
+     "slug": "messaging",
+     "downloads": 2459301483,
+     "share": 0.004012041099183129
+    }
+   ]
+  },
+  {
+   "slug": "development",
+   "downloads": 186323473817,
+   "share": 0.30396331635781626,
+   "categories": [
+    {
+     "slug": "dev-tools",
+     "downloads": 44265380687,
+     "share": 0.07221340198217216
+    },
+    {
+     "slug": "http-clients",
+     "downloads": 41212813119,
+     "share": 0.06723352187169873
+    },
+    {
+     "slug": "serialization",
+     "downloads": 33276458196,
+     "share": 0.05428635685395603
+    },
+    {
+     "slug": "web",
+     "downloads": 27103479301,
+     "share": 0.044215918071916695
+    },
+    {
+     "slug": "cli",
+     "downloads": 17749517680,
+     "share": 0.02895610599802073
+    },
+    {
+     "slug": "testing",
+     "downloads": 14460425888,
+     "share": 0.023590366360279096
+    },
+    {
+     "slug": "documentation",
+     "downloads": 7792380313,
+     "share": 0.012712288547105917
+    },
+    {
+     "slug": "dashboards",
+     "downloads": 389170339,
+     "share": 0.0006348824678243123
+    },
+    {
+     "slug": "desktop",
+     "downloads": 73848294,
+     "share": 0.00012047420484256216
+    }
+   ]
+  },
+  {
+   "slug": "data-ai",
+   "downloads": 53642378369,
+   "share": 0.08751079449268159,
+   "categories": [
+    {
+     "slug": "data-science",
+     "downloads": 17946723662,
+     "share": 0.02927782275794543
+    },
+    {
+     "slug": "llm",
+     "downloads": 10400894878,
+     "share": 0.016967752025227927
+    },
+    {
+     "slug": "machine-learning",
+     "downloads": 7222490117,
+     "share": 0.0117825843590759
+    },
+    {
+     "slug": "visualization",
+     "downloads": 5575336810,
+     "share": 0.009095460877054479
+    },
+    {
+     "slug": "data-engineering",
+     "downloads": 4205758201,
+     "share": 0.0068611656083153345
+    },
+    {
+     "slug": "big-data",
+     "downloads": 2770820984,
+     "share": 0.00452024598981915
+    },
+    {
+     "slug": "statistics",
+     "downloads": 2458245392,
+     "share": 0.004010318219525728
+    },
+    {
+     "slug": "nlp",
+     "downloads": 2091234067,
+     "share": 0.0034115853964277404
+    },
+    {
+     "slug": "mlops",
+     "downloads": 875599037,
+     "share": 0.001428429717597649
+    },
+    {
+     "slug": "time-series",
+     "downloads": 95275221,
+     "share": 0.0001554295416922479
+    }
+   ]
+  },
+  {
+   "slug": "utilities",
+   "downloads": 18211993715,
+   "share": 0.02971057749028521,
+   "categories": [
+    {
+     "slug": "scraping",
+     "downloads": 4802880325,
+     "share": 0.007835295262316574
+    },
+    {
+     "slug": "other",
+     "downloads": 4517072177,
+     "share": 0.007369035210759725
+    },
+    {
+     "slug": "files-documents",
+     "downloads": 4010924174,
+     "share": 0.006543318394687091
+    },
+    {
+     "slug": "configuration",
+     "downloads": 2769478056,
+     "share": 0.004518055171667538
+    },
+    {
+     "slug": "i18n",
+     "downloads": 1617715273,
+     "share": 0.0026390990315408418
+    },
+    {
+     "slug": "synthetic-data",
+     "downloads": 493923710,
+     "share": 0.0008057744193134409
+    }
+   ]
+  },
+  {
+   "slug": "multimedia-specialized",
+   "downloads": 6438131771,
+   "share": 0.010503002354839253,
+   "categories": [
+    {
+     "slug": "imaging",
+     "downloads": 2796120718,
+     "share": 0.004561519324263116
+    },
+    {
+     "slug": "optimization",
+     "downloads": 1454523282,
+     "share": 0.0023728718204911246
+    },
+    {
+     "slug": "geospatial",
+     "downloads": 1052762473,
+     "share": 0.0017174495841808385
+    },
+    {
+     "slug": "audio-video",
+     "downloads": 477325737,
+     "share": 0.00077869691364793
+    },
+    {
+     "slug": "scientific",
+     "downloads": 440264828,
+     "share": 0.0007182367012222028
+    },
+    {
+     "slug": "robotics-iot",
+     "downloads": 114734847,
+     "share": 0.00018717547435906953
+    },
+    {
+     "slug": "quant-finance",
+     "downloads": 71178959,
+     "share": 0.00011611952047323304
+    },
+    {
+     "slug": "games",
+     "downloads": 31220927,
+     "share": 0.00005093301620173757
+    }
+   ]
+  }
+ ],
+ "movers_up": [
+  {
+   "project": "cloudflare",
+   "category": "cloud-devops",
+   "share": 0.005430354066375387,
+   "share_change": 0.5385965524111997,
+   "rank": 24,
+   "rank_change": 344
+  },
+  {
+   "project": "acme",
+   "category": "cloud-devops",
+   "share": 0.005340868648942094,
+   "share_change": 0.5324964674428959,
+   "rank": 26,
+   "rank_change": 362
+  },
+  {
+   "project": "certbot-dns-cloudflare",
+   "category": "cloud-devops",
+   "share": 0.005327137156583517,
+   "share_change": 0.5297164512348982,
+   "rank": 27,
+   "rank_change": 352
+  },
+  {
+   "project": "grpcio-status",
+   "category": "http-clients",
+   "share": 0.012506964540001188,
+   "share_change": 0.23955765806452212,
+   "rank": 6,
+   "rank_change": 4
+  },
+  {
+   "project": "anyio",
+   "category": "distributed",
+   "share": 0.005159067800655602,
+   "share_change": 0.21195029068305965,
+   "rank": 28,
+   "rank_change": 26
+  },
+  {
+   "project": "grpcio-tools",
+   "category": "http-clients",
+   "share": 0.003992755138055245,
+   "share_change": 0.19917848873264096,
+   "rank": 41,
+   "rank_change": 42
+  },
+  {
+   "project": "aiobotocore",
+   "category": "cloud-devops",
+   "share": 0.013337707886035575,
+   "share_change": 0.17173927341678602,
+   "rank": 5,
+   "rank_change": 1
+  },
+  {
+   "project": "pydantic-core",
+   "category": "serialization",
+   "share": 0.006059347752800559,
+   "share_change": 0.17089983207045972,
+   "rank": 21,
+   "rank_change": 14
+  },
+  {
+   "project": "httpx",
+   "category": "http-clients",
+   "share": 0.004391565003489723,
+   "share_change": 0.16660533976867853,
+   "rank": 38,
+   "rank_change": 22
+  },
+  {
+   "project": "google-genai",
+   "category": "llm",
+   "share": 0.0015566865123646093,
+   "share_change": 0.1556508983476905,
+   "rank": 122,
+   "rank_change": 294
+  }
+ ],
+ "movers_down": [
+  {
+   "project": "boto3",
+   "category": "cloud-devops",
+   "share": 0.027535865699193862,
+   "share_change": -1.7087431952846628,
+   "rank": 1,
+   "rank_change": 0
+  },
+  {
+   "project": "wheel",
+   "category": "dev-tools",
+   "share": 0.005649166277366213,
+   "share_change": -0.5627477375081946,
+   "rank": 23,
+   "rank_change": -16
+  },
+  {
+   "project": "botocore",
+   "category": "cloud-devops",
+   "share": 0.016464219822742744,
+   "share_change": -0.27897050325784645,
+   "rank": 2,
+   "rank_change": 0
+  },
+  {
+   "project": "pip",
+   "category": "dev-tools",
+   "share": 0.00765841849695202,
+   "share_change": -0.27856619327856647,
+   "rank": 13,
+   "rank_change": -4
+  },
+  {
+   "project": "pyyaml",
+   "category": "serialization",
+   "share": 0.009081704703634955,
+   "share_change": -0.19299087623234518,
+   "rank": 10,
+   "rank_change": -2
+  },
+  {
+   "project": "google-api-core",
+   "category": "http-clients",
+   "share": 0.006146461008521206,
+   "share_change": -0.17733435979851728,
+   "rank": 20,
+   "rank_change": -6
+  },
+  {
+   "project": "pyjwt",
+   "category": "security",
+   "share": 0.004578134484309129,
+   "share_change": -0.12914648803544188,
+   "rank": 36,
+   "rank_change": -12
+  },
+  {
+   "project": "awscli",
+   "category": "cloud-devops",
+   "share": 0.0049691827735508535,
+   "share_change": -0.1173891741618806,
+   "rank": 31,
+   "rank_change": -8
+  },
+  {
+   "project": "cryptography",
+   "category": "security",
+   "share": 0.008613134740343887,
+   "share_change": -0.1172825992757965,
+   "rank": 11,
+   "rank_change": 1
+  },
+  {
+   "project": "s3transfer",
+   "category": "cloud-devops",
+   "share": 0.01066735433090338,
+   "share_change": -0.11247159768217763,
+   "rank": 7,
+   "rank_change": -2
+  }
+ ],
+ "newcomers": [
+  {
+   "project": "cloudflare",
+   "category": "cloud-devops",
+   "rank": 42
+  },
+  {
+   "project": "acme",
+   "category": "cloud-devops",
+   "rank": 44
+  },
+  {
+   "project": "certbot-dns-cloudflare",
+   "category": "cloud-devops",
+   "rank": 45
+  },
+  {
+   "project": "httpx",
+   "category": "http-clients",
+   "rank": 63
+  },
+  {
+   "project": "grpcio-tools",
+   "category": "http-clients",
+   "rank": 71
+  },
+  {
+   "project": "python-dotenv",
+   "category": "configuration",
+   "rank": 80
+  }
+ ],
+ "python_versions": [
+  {
+   "version": "3.15",
+   "downloads": 8357009,
+   "share": 9.774154150949036e-6
+  },
+  {
+   "version": "3.14",
+   "downloads": 3332105903,
+   "share": 0.0038971498945626643
+  },
+  {
+   "version": "3.13",
+   "downloads": 54315850515,
+   "share": 0.06352649563659853
+  },
+  {
+   "version": "3.12",
+   "downloads": 148507748845,
+   "share": 0.17369104542324337
+  },
+  {
+   "version": "3.11",
+   "downloads": 215466440191,
+   "share": 0.2520042997181258
+  },
+  {
+   "version": "3.10",
+   "downloads": 203927946567,
+   "share": 0.23850915865142136
+  },
+  {
+   "version": "3.9",
+   "downloads": 117664411839,
+   "share": 0.13761742979996058
+  },
+  {
+   "version": "3.8",
+   "downloads": 47681801039,
+   "share": 0.05576747297389149
+  },
+  {
+   "version": "3.7",
+   "downloads": 56982077455,
+   "share": 0.06664484971674528
+  },
+  {
+   "version": "3.6",
+   "downloads": 4326264360,
+   "share": 0.005059893408323106
+  },
+  {
+   "version": "3.5",
+   "downloads": 111346693,
+   "share": 0.00013022837974452318
+  },
+  {
+   "version": "3.4",
+   "downloads": 6405121,
+   "share": 7.491273493839822e-6
+  },
+  {
+   "version": "3.3",
+   "downloads": 211754,
+   "share": 2.4766232010520296e-7
+  },
+  {
+   "version": "3.2",
+   "downloads": 17546,
+   "share": 2.0521374182144806e-8
+  },
+  {
+   "version": "3.1",
+   "downloads": 34668,
+   "share": 4.054684829286425e-8
+  },
+  {
+   "version": "2.7",
+   "downloads": 2679943961,
+   "share": 0.0031343971737638372
+  },
+  {
+   "version": "2.6",
+   "downloads": 4331,
+   "share": 5.065432097507646e-9
+  }
+ ],
+ "python_unknown_share": 0.0512866613912852,
+ "python_other_share": 1.5922645321455524e-9,
+ "timeline": [
+  {
+   "date": "2025-10-07",
+   "version": "3.14",
+   "kind": "release"
+  },
+  {
+   "date": "2025-10-31",
+   "version": "3.9",
+   "kind": "end_of_life"
+  }
+ ]
+}

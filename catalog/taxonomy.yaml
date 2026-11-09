@@ -61,6 +61,7 @@ domains:
       - {slug: configuration, en: Configuration, es: Configuración}
       - {slug: i18n, en: Internationalization, es: Internacionalización}
       - {slug: synthetic-data, en: Synthetic data, es: Generación de datos sintéticos}
+      - {slug: other, en: Other, es: Otros}
 tags:
   - {slug: async, en: Async, es: Asíncrono}
   - {slug: dataframe, en: Dataframes, es: Dataframes}
@@ -71,3 +72,7 @@ tags:
   - {slug: aws, en: AWS, es: AWS}
   - {slug: google-cloud, en: Google Cloud, es: Google Cloud}
   - {slug: azure, en: Azure, es: Azure}
+  - {slug: typed, en: Typed, es: Con tipos}
+  - {slug: django, en: Django, es: Django}
+  - {slug: jupyter, en: Jupyter, es: Jupyter}
+  - {slug: pytest, en: pytest, es: pytest}
