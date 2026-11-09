@@ -1,7 +1,7 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-09 · branch: `etapa-1-tracer-bullet` (5 commits: cierre de la Etapa 0,
-> diseño, slices 1–2 y pre-commit; slice 3 sin commit) · `main` = `origin/main` (`a54967c`, PR #2) ·
+> Last updated: 2026-11-09 · branch: `etapa-1-tracer-bullet` (6 commits: cierre de la Etapa 0,
+> diseño, slices 1–3 y pre-commit; slice 4 sin commit) · `main` = `origin/main` (`a54967c`, PR #2) ·
 > remoto `origin` = https://github.com/AndresPampa/ecopy.git
 
 ## Current State
@@ -21,16 +21,19 @@
   (truncado, cuadre, reintentos, lotes de 50), validado además contra ClickPy real.
   **Slice 3 (`store`) hecho:** Parquet append-only por año, procedencia sellada desde `Run`,
   inmutabilidad (`ImmutabilityError`, escritura con `os.link`), correcciones al leer.
-- **Sin commit:** `src/ecopy/store.py`, `src/ecopy/models.py`, `tests/test_store.py`,
-  `pyproject.toml`, `uv.lock`, `docs/ROADMAP.md`, `docs/HANDOFF.md`.
+  **Slice 4 (`metrics.library_view`) hecho:** función pura → `LibraryView` (Pydantic).
+- **Sin commit:** `src/ecopy/metrics.py`, `src/ecopy/models.py`, `tests/test_metrics.py`,
+  `pyproject.toml`, `uv.lock`, `docs/ROADMAP.md`, `docs/HANDOFF.md`,
+  `docs/design/etapa-1-tracer-bullet.md`.
 - **Código del producto:** solo el esqueleto (slice 1). Tooling del agente local y fuera de git (`.claude/`,
   `.codex/`, `.agents/`, `skills/`, `openspec/`, `scripts/hooks|bash/`, `docs/workflows|guides|
   prompt_templates/`, `AGENTS*/CLAUDE*`, `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-- [ ] **Usuario:** commit del slice 3 (mensaje propuesto en la sesión del 2026-11-09).
-- [ ] **Etapa 1 — slice 4 (`metrics.library_view`)** con `tdd`: unitarios + propiedades con
-      Hypothesis; agrega `pydantic`. Luego slices 5–6 según `docs/ROADMAP.md`.
+- [ ] **Usuario:** commit del slice 4 (mensaje propuesto en la sesión del 2026-11-09).
+- [ ] **Etapa 1 — slice 5 (`site.render_site`)** con `tdd`: Jinja2, ECharts 6.1.0 `common`
+      vendorizado con SHA-256, `_headers` con CSP, snapshots y escape; agrega `jinja2`. Luego
+      slice 6 (`cli`) según `docs/ROADMAP.md`.
 - [ ] **Usuario (Etapa 5, con el primer MVP):** S6 — crear el proyecto en Cloudflare Pages y
       confirmar `ecopy.pages.dev`; recién ahí entra GitHub Actions.
 - [ ] **Usuario (opcional):** borrar ramas mergeadas `etapa-0-spikes` y `docs/project-setup`
@@ -280,3 +283,8 @@ antes de escribir (sin archivos sueltos) y `os.link` impide pisar aun en carrera
 captura posterior corrige" pasó antes de implementar (el orden de archivos lo favorecía); lo
 protege "el orden de escritura no decide", confirmado por mutación. `Run` valida id seguro como
 nombre de archivo y `captured_at` con zona. Agregados `pyarrow` y `duckdb`.
+
+### 2026-11-09 — Slice 4 (`metrics.library_view`) en verde
+TDD en 7 ciclos + 5 propiedades con Hypothesis: serie mensual contigua hasta `as_of`, totales por
+año (2016 parcial, año en curso YTD), último mes cerrado con datos. Decisión: un mes sin datos es
+`None`, no 0 (el PRD no interpola huecos; en el gráfico es un corte). Agregado `pydantic`.

@@ -116,7 +116,8 @@ def library_view(project: str, series: DailySeries, *, as_of: date) -> LibraryVi
 ```
 
 `LibraryView` (Pydantic, congelado) lleva lo que la ficha necesita y nada de cómo calcularlo:
-serie mensual (meses completos + mes en curso marcado parcial), total por año con 2016 marcado
+serie mensual contigua hasta `as_of` (mes en curso marcado parcial; un mes sin datos es `None`,
+no cero: los huecos no se interpolan), total por año con 2016 marcado
 parcial y el año en curso como YTD, último mes cerrado, primera fecha con datos.
 
 **Seam y test (en proceso):** la firma misma. Unitarios + propiedades con Hypothesis: la suma
