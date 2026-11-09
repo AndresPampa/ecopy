@@ -11,9 +11,11 @@ from ecopy.models import (
     PypiTotalsBatch,
     PythonMinorBatch,
     PythonMinorMonth,
+    StarWeek,
 )
-from ecopy.pipeline import ingest, python_cutoff, validate_store
-from ecopy.sources.clickpy import SourceUnavailable
+from ecopy.pipeline import ingest, ingest_stars, python_cutoff, validate_store
+from ecopy.sources.clickpy import SourceError, SourceUnavailable
+from ecopy.sources.github import BudgetExhausted, RepoStars
 from ecopy.store import Store
 
 SOURCE_START = date(2016, 1, 22)
@@ -263,3 +265,116 @@ def test_validating_a_stale_store_reports_it(tmp_path):
     problems = validate_store(("fastapi",), store, now=NOW + timedelta(days=10))
 
     assert [p.code for p in problems] == ["stale"]
+
+
+class FakeGitHub:
+    """Responde con semanas fijas y se queda sin consultas después de `limit` repos."""
+
+    def __init__(self, limit=None, failing=(), moved=None):
+        self.limit = limit
+        self.failing = set(failing)
+        self.moved = moved or {}
+        self.calls = []
+        self.attempts = 0
+        self.requests = 0
+
+    def _answer(self, repo, kind):
+        self.attempts += 1
+        if self.limit is not None and len(self.calls) >= self.limit:
+            raise BudgetExhausted("budget")
+        self.calls.append((repo, kind))
+        self.requests += 2
+        if repo in self.failing:
+            raise SourceError(f"{repo}: 404")
+        weeks = (StarWeek(repo, date(2024, 1, 7), 10),)
+        return RepoStars(repo, self.moved.get(repo, repo), 10, weeks)
+
+    def full_history(self, repo):
+        return self._answer(repo, "full")
+
+    def recent(self, repo):
+        return self._answer(repo, "recent")
+
+
+STARS_NOW = datetime(2024, 2, 1, tzinfo=UTC)
+
+
+def test_new_repos_get_a_backfill_and_known_repos_an_update(tmp_path):
+    store = Store(tmp_path)
+    ingest_stars(["a/b"], FakeGitHub(), store, now=STARS_NOW)
+    source = FakeGitHub()
+
+    report = ingest_stars(["a/b", "c/d"], source, store, now=STARS_NOW + timedelta(days=1))
+
+    assert source.calls == [("c/d", "full"), ("a/b", "recent")]
+    assert report.backfilled == ("c/d",) and report.updated == ("a/b",)
+    assert store.star_totals(["a/b"])["a/b"] == {date(2024, 2, 1): 10, date(2024, 2, 2): 10}
+
+
+def test_running_out_of_requests_saves_what_finished_and_resumes_later(tmp_path):
+    store = Store(tmp_path)
+
+    first = ingest_stars(["a/b", "c/d", "e/f"], FakeGitHub(limit=1), store, now=STARS_NOW)
+
+    assert (first.status, first.pending, first.stopped) == ("partial", 2, "budget")
+    assert store.backfilled_repos() == {"a/b"}
+
+    source = FakeGitHub()
+    ingest_stars(["a/b", "c/d", "e/f"], source, store, now=STARS_NOW + timedelta(hours=1))
+    assert source.calls[:2] == [("c/d", "full"), ("e/f", "full")]
+
+
+def test_a_run_stops_trying_as_soon_as_it_runs_out_of_requests(tmp_path):
+    source = FakeGitHub(limit=1)
+
+    ingest_stars(["a/b", "c/d", "e/f"], source, Store(tmp_path), now=STARS_NOW)
+
+    assert source.attempts == 2
+
+
+def test_a_failing_repo_is_reported_and_does_not_stop_the_run(tmp_path):
+    store = Store(tmp_path)
+
+    report = ingest_stars(["a/b", "c/d"], FakeGitHub(failing=["a/b"]), store, now=STARS_NOW)
+
+    assert report.failed == (("a/b", "a/b: 404"),)
+    assert report.backfilled == ("c/d",)
+    assert report.status == "partial"
+
+
+def test_a_moved_repo_is_reported_and_keeps_its_declared_name(tmp_path):
+    store = Store(tmp_path)
+
+    report = ingest_stars(["a/b"], FakeGitHub(moved={"a/b": "x/y"}), store, now=STARS_NOW)
+
+    assert report.moved == (("a/b", "x/y"),)
+    assert set(store.star_weeks(["a/b"])) == {"a/b"}
+
+
+def test_an_interrupted_run_keeps_the_repos_it_finished(tmp_path):
+    store = Store(tmp_path)
+    source = FakeGitHub()
+    original = source.full_history
+
+    def interrupted(repo):
+        if repo == "c/d":
+            raise KeyboardInterrupt
+        return original(repo)
+
+    source.full_history = interrupted
+
+    with pytest.raises(KeyboardInterrupt):
+        ingest_stars(["a/b", "c/d"], source, store, now=STARS_NOW)
+
+    assert store.backfilled_repos() == {"a/b"}
+
+
+def test_a_complete_run_says_so(tmp_path):
+    report = ingest_stars(["a/b"], FakeGitHub(), Store(tmp_path), now=STARS_NOW)
+
+    assert (report.status, report.pending, report.stopped, report.requests) == (
+        "complete",
+        0,
+        None,
+        2,
+    )

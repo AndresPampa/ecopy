@@ -7,22 +7,30 @@ from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, timedelta
 
-from ecopy.catalog import FIRST_RANKED_YEAR, Catalog
+from ecopy.catalog import FIRST_RANKED_YEAR, Catalog, PythonRelease
 from ecopy.models import (
+    CategoryPage,
     CategoryShare,
     Coverage,
     DailySeries,
+    DomainPage,
     DomainShare,
+    LibraryRow,
     LibraryView,
     MonthPoint,
     Mover,
     Newcomer,
     PeriodStatus,
     PythonVersionShare,
+    ReleaseRow,
+    ReleasesView,
     RunReport,
     SiteStatus,
+    StarPoint,
+    StarsView,
     TimelineEvent,
     VolumeView,
+    YearShare,
     YearTotal,
     YearView,
 )
@@ -56,13 +64,19 @@ def _period(
     return ("degraded" if coverage.degraded else "complete"), coverage
 
 
-def _monthly(totals: dict[date, int], first_date: date, as_of: date) -> tuple[MonthPoint, ...]:
+def _monthly(
+    totals: dict[date, int], first_date: date, as_of: date, pypi: Mapping[date, int]
+) -> tuple[MonthPoint, ...]:
     points = []
     for month in _months(first_date.replace(day=1), as_of.replace(day=1)):
         end = _next_month(month) - timedelta(days=1)
         status, coverage = _period(month, end, first_date=first_date, as_of=as_of)
+        downloads = totals.get(month)
+        share = downloads / pypi[month] if downloads is not None and pypi.get(month) else None
         points.append(
-            MonthPoint(month=month, downloads=totals.get(month), status=status, coverage=coverage)
+            MonthPoint(
+                month=month, downloads=downloads, status=status, coverage=coverage, share=share
+            )
         )
     return tuple(points)
 
@@ -80,23 +94,146 @@ def _yearly(observed: DailySeries, first_date: date, as_of: date) -> tuple[YearT
     return tuple(years)
 
 
-def library_view(project: str, series: DailySeries, *, as_of: date) -> LibraryView:
-    totals: dict[date, int] = defaultdict(int)
+def _monthly_totals(daily: DailySeries, as_of: date) -> dict[date, int]:
+    months: dict[date, int] = defaultdict(int)
+    for day, downloads in daily.items():
+        if day <= as_of:
+            months[day.replace(day=1)] += downloads
+    return months
+
+
+def library_view(
+    project: str,
+    series: DailySeries,
+    *,
+    as_of: date,
+    totals: DailySeries | None = None,
+    catalog: Catalog | None = None,
+    stars: StarsView | None = None,
+) -> LibraryView:
+    """La ficha de un paquete; `totals` agrega la cuota de PyPI y `catalog`, su lugar en él."""
+    by_month: dict[date, int] = defaultdict(int)
     observed = {day: n for day, n in series.items() if day <= as_of}
     if not observed:
         raise ValueError(f"{project}: sin datos hasta {as_of}")
     for day, downloads in observed.items():
-        totals[day.replace(day=1)] += downloads
+        by_month[day.replace(day=1)] += downloads
     first_date = min(observed)
-    monthly = _monthly(totals, first_date, as_of)
+    monthly = _monthly(by_month, first_date, as_of, _monthly_totals(totals or {}, as_of))
     closed = [m for m in monthly if m.status != "in_progress" and m.downloads is not None]
+    place = {}
+    if catalog is not None:
+        library = catalog.library(project)
+        place = {
+            "category": library.category,
+            "domain": catalog.domain_of(library.category),
+            "tags": library.tags,
+            "repo": library.repo,
+            "renamed_from": library.renamed_from,
+            "renamed_to": catalog.renamed_to(project),
+        }
     return LibraryView(
         project=project,
         first_date=first_date,
         last_closed_month=closed[-1] if closed else None,
         monthly=monthly,
         yearly=_yearly(observed, first_date, as_of),
+        discontinuities=tuple(d for d in DISCONTINUITIES if first_date <= d <= as_of),
+        stars=stars,
+        **place,
     )
+
+
+_TREND_MONTHS = 36
+
+
+def _row(view: LibraryView) -> LibraryRow:
+    closed = [m for m in view.monthly if m.status != "in_progress" and m.share is not None]
+    last = view.last_closed_month
+    return LibraryRow(
+        project=view.project,
+        category=view.category,
+        domain=view.domain,
+        tags=view.tags,
+        month=last.month if last else None,
+        downloads=last.downloads if last else None,
+        trend=tuple(m.share for m in closed[-_TREND_MONTHS:]),
+    )
+
+
+def library_rows(views: Sequence[LibraryView]) -> tuple[LibraryRow, ...]:
+    """Filas de los listados, de la más descargada a la menos en su último mes cerrado."""
+    rows = [_row(view) for view in views]
+    return tuple(sorted(rows, key=lambda r: (-(r.downloads or 0), r.project)))
+
+
+def taxonomy_view(
+    years: Sequence[YearView], rows: Sequence[LibraryRow], catalog: Catalog
+) -> tuple[DomainPage, ...]:
+    """Cuota por año de cada dominio y categoría, con las librerías de cada categoría."""
+    domain_share: dict[str, list[YearShare]] = defaultdict(list)
+    category_share: dict[str, list[YearShare]] = defaultdict(list)
+    for year in years:
+        for domain in year.domains:
+            domain_share[domain.slug].append(
+                YearShare(year=year.year, status=year.status, share=domain.share)
+            )
+            for category in domain.categories:
+                category_share[category.slug].append(
+                    YearShare(year=year.year, status=year.status, share=category.share)
+                )
+    return tuple(
+        DomainPage(
+            slug=domain.slug,
+            shares=tuple(domain_share[domain.slug]),
+            categories=tuple(
+                CategoryPage(
+                    slug=slug,
+                    domain=domain.slug,
+                    shares=tuple(category_share[slug]),
+                    rows=tuple(r for r in rows if r.category == slug),
+                )
+                for slug in domain.categories
+            ),
+        )
+        for domain in catalog.domains()
+    )
+
+
+def releases_view(releases: Sequence[PythonRelease], *, as_of: date) -> ReleasesView:
+    """Versiones de CPython, de la más nueva a la más vieja, con su estado a la fecha."""
+
+    def row(release: PythonRelease) -> ReleaseRow:
+        if release.end_of_life is None:
+            status = "unknown"
+        else:
+            status = "supported" if release.end_of_life > as_of else "end_of_life"
+        return ReleaseRow(
+            version=release.version,
+            released=release.released,
+            end_of_life=release.end_of_life,
+            status=status,
+        )
+
+    ordered = sorted(releases, key=lambda r: r.released, reverse=True)
+    return ReleasesView(as_of=as_of, releases=tuple(row(r) for r in ordered))
+
+
+def stars_view(
+    repo: str,
+    weeks: Mapping[date, int],
+    counts: Mapping[date, int],
+    *,
+    shared_with: Sequence[str],
+) -> StarsView:
+    """Acumula las semanas netas; el total es el último conteo guardado, si lo hay."""
+    running = 0
+    points = []
+    for week in sorted(weeks):
+        running += weeks[week]
+        points.append(StarPoint(week=week, stars=running))
+    total = counts[max(counts)] if counts else running
+    return StarsView(repo=repo, total=total, points=tuple(points), shared_with=tuple(shared_with))
 
 
 def site_status(runs: Sequence[RunReport]) -> SiteStatus:

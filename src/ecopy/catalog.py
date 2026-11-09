@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any, Protocol
@@ -34,6 +35,12 @@ class Library:
     tags: tuple[str, ...]
     repo: str | None
     renamed_from: str | None
+
+
+@dataclass(frozen=True)
+class Domain:
+    slug: str
+    categories: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -69,8 +76,8 @@ def _check_entry(kind: str, entry: dict, seen: set[str], problems: list[str]) ->
 
 def _read_taxonomy(
     data: dict, problems: list[str]
-) -> tuple[dict[str, str], set[str], dict[str, dict[str, str]]]:
-    """Devuelve categoría → dominio, el vocabulario de tags y las etiquetas por slug."""
+) -> tuple[dict[str, str], tuple[str, ...], dict[str, dict[str, str]], tuple[Domain, ...]]:
+    """Devuelve categoría → dominio, los tags, las etiquetas por slug y el árbol, en orden."""
     labels: dict[str, dict[str, str]] = {}
     domains: set[str] = set()
     categories: set[str] = set()
@@ -83,13 +90,38 @@ def _read_taxonomy(
             _check_entry("categoría", category, categories, problems)
             domain_of[category["slug"]] = domain["slug"]
             labels[category["slug"]] = {k: category.get(k, "") for k in ("en", "es")}
+    tree = tuple(
+        Domain(d["slug"], tuple(c["slug"] for c in d.get("categories", [])))
+        for d in data.get("domains", [])
+    )
+    vocabulary = []
     for tag in data.get("tags", []):
         _check_entry("tag", tag, tags, problems)
-    return domain_of, tags, labels
+        labels[tag.get("slug", "?")] = {k: tag.get(k, "") for k in ("en", "es")}
+        vocabulary.append(tag.get("slug", "?"))
+    return domain_of, tuple(vocabulary), labels, tree
+
+
+_REPO = re.compile(r"[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_][A-Za-z0-9._-]*")
+
+
+def _read_repos(data: dict, projects: set[str], problems: list[str]) -> dict[str, str | None]:
+    """Un valor por paquete del catálogo: `owner/name`, o None si se revisó y no tiene GitHub."""
+    repos: dict[str, str | None] = data.get("repos") or {}
+    problems.extend(f"{p}: falta en repos.yaml" for p in sorted(projects - set(repos)))
+    problems.extend(f"{p}: está en repos.yaml sin catalogar" for p in sorted(set(repos) - projects))
+    problems.extend(
+        f"{p}: repo inválido {r!r}"
+        for p, r in sorted(repos.items())
+        if r is not None and not _REPO.fullmatch(r)
+    )
+    return repos
 
 
 def _library(entry: dict, domain_of: dict, vocabulary: set, problems: list[str]) -> Library:
     project = entry["project"]
+    if "repo" in entry:
+        problems.append(f"{project}: el repo va en repos.yaml")
     category = entry.get("category")
     if category is None:
         problems.append(f"{project}: no tiene categoría")
@@ -99,7 +131,7 @@ def _library(entry: dict, domain_of: dict, vocabulary: set, problems: list[str])
     problems.extend(
         f"{project}: tag fuera del vocabulario {t}" for t in tags if t not in vocabulary
     )
-    return Library(project, category, tags, entry.get("repo"), entry.get("renamed_from"))
+    return Library(project, category, tags, None, entry.get("renamed_from"))
 
 
 def _read_releases(data: dict, problems: list[str]) -> tuple[PythonRelease, ...]:
@@ -123,12 +155,19 @@ class Catalog:
         top: Mapping[int, Sequence[str]] | None = None,
         releases: Sequence[PythonRelease] = (),
         labels: Mapping[str, Mapping[str, str]] | None = None,
+        domains: Sequence[Domain] = (),
+        tags: Sequence[str] = (),
     ) -> None:
         self._libraries = libraries
         self._domain_of = domain_of
         self._top = top or {}
         self._releases = tuple(releases)
         self._labels = labels or {}
+        self._domains = tuple(domains)
+        self._tags = tuple(tags)
+        self._renamed_to = {
+            lib.renamed_from: lib.project for lib in libraries.values() if lib.renamed_from
+        }
         self.projects = tuple(sorted(libraries))
 
     @classmethod
@@ -140,10 +179,10 @@ class Catalog:
         entries = _read(root / "libraries.yaml", problems) or []
         top = _read(root / "top100.yaml", problems) or {}
         releases = _read_releases(_read(root / "python_releases.yaml", problems) or {}, problems)
-        domain_of, vocabulary, labels = _read_taxonomy(taxonomy, problems)
+        domain_of, vocabulary, labels, domains = _read_taxonomy(taxonomy, problems)
         libraries: dict[str, Library] = {}
         for entry in entries:
-            library = _library(entry, domain_of, vocabulary, problems)
+            library = _library(entry, domain_of, set(vocabulary), problems)
             if library.project in libraries:
                 problems.append(f"proyecto duplicado: {library.project}")
             libraries[library.project] = library
@@ -156,13 +195,44 @@ class Catalog:
         problems.extend(
             f"{p}: está en el top 100 sin categorizar" for p in sorted(ranked - set(libraries))
         )
+        repos = _read_repos(_read(root / "repos.yaml", problems) or {}, set(libraries), problems)
         if problems:
             raise CatalogError(problems)
+        libraries = {p: replace(lib, repo=repos[p]) for p, lib in libraries.items()}
         ranking = {int(year): tuple(names) for year, names in top.get("years", {}).items()}
-        return cls(libraries, domain_of, top=ranking, releases=releases, labels=labels)
+        return cls(
+            libraries,
+            domain_of,
+            top=ranking,
+            releases=releases,
+            labels=labels,
+            domains=domains,
+            tags=vocabulary,
+        )
 
     def library(self, project: str) -> Library:
         return self._libraries[project]
+
+    def libraries(self) -> tuple[Library, ...]:
+        return tuple(self._libraries[p] for p in self.projects)
+
+    def domains(self) -> tuple[Domain, ...]:
+        """Dominios con sus categorías, en el orden de la taxonomía."""
+        return self._domains
+
+    def tags(self) -> tuple[str, ...]:
+        return self._tags
+
+    def renamed_to(self, project: str) -> str | None:
+        """El nombre nuevo de un paquete renombrado, si está en el catálogo."""
+        return self._renamed_to.get(project)
+
+    def repos(self) -> tuple[str, ...]:
+        """Repos de GitHub del catálogo, sin repetir: varios paquetes pueden compartir uno."""
+        return tuple(sorted({lib.repo for lib in self._libraries.values() if lib.repo}))
+
+    def projects_of_repo(self, repo: str) -> tuple[str, ...]:
+        return tuple(p for p in self.projects if self._libraries[p].repo == repo)
 
     def domain_of(self, category: str) -> str:
         return self._domain_of[category]
@@ -176,7 +246,7 @@ class Catalog:
         return self._releases
 
     def labels(self) -> Mapping[str, Mapping[str, str]]:
-        """Etiquetas EN/ES de dominios y categorías, por slug."""
+        """Etiquetas EN/ES de dominios, categorías y tags, por slug."""
         return self._labels
 
 

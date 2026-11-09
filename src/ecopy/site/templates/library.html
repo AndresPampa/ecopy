@@ -1,3 +1,5 @@
+{% extends "_base.html" %}
+{%- import "_macros.html" as m with context %}
 {%- macro period_status(period, in_progress) -%}
 {%- if period.status == "in_progress" %}{{ in_progress }}
 {%- elif period.status == "package_start" %}{{ t.package_start }}
@@ -5,45 +7,36 @@
 {%- elif period.status == "degraded" %}{{ t.degraded.format(degraded=period.coverage.degraded) }}
 {%- else %}{{ t.complete }}{% endif -%}
 {%- endmacro -%}
-<!doctype html>
-<html lang="{{ lang }}">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ view.project }} · ecopy</title>
-<link rel="stylesheet" href="/static/site.css">
+{%- block title %}{{ view.project }}{% endblock %}
+{%- block scripts %}
 <script src="/static/vendor/{{ echarts }}" defer></script>
-<script src="/static/library.js" defer></script>
-</head>
-<body>
-<main>
-{%- if status.failed %}
-<p class="update-failed" role="status">{{ t.update_failed }}{% if status.last_updated %} {{ t.update_failed_since.format(date=status.last_updated) }}{% endif %}</p>
+<script src="/static/charts.js" defer></script>
+{%- endblock %}
+{%- block main_attrs %} class="library{% if view.domain %} domain-{{ view.domain }}{% endif %}"{% endblock %}
+{%- block content %}
+{%- if view.category %}
+<p class="crumbs"><a href="/{{ lang }}/domain/{{ view.domain }}/">{{ view.domain|label(lang) }}</a> / <a href="/{{ lang }}/category/{{ view.category }}/">{{ view.category|label(lang) }}</a></p>
 {%- endif %}
-<nav><a href="/{{ other }}/library/{{ slug }}/" hreflang="{{ other }}">{{ t.switch_label }}</a></nav>
 <h1>{{ view.project }}</h1>
-<dl>
-<dt>{{ t.first_data }}</dt><dd><time datetime="{{ view.first_date }}">{{ view.first_date }}</time></dd>
+{%- if view.tags or view.repo or view.renamed_from or view.renamed_to %}
+<p class="meta">
+{%- for tag in view.tags %}<a class="tag" href="/{{ lang }}/library/?tag={{ tag }}">{{ tag|label(lang) }}</a>{% endfor %}
+{%- if view.repo %}<a href="https://github.com/{{ view.repo }}" rel="noopener noreferrer">{{ view.repo }}</a>{% endif %}
+{%- if view.renamed_from %}<span>{{ t.renamed_from }}: <a href="/{{ lang }}/library/{{ view.renamed_from|slug }}/">{{ view.renamed_from }}</a></span>{% endif %}
+{%- if view.renamed_to %}<span>{{ t.renamed_to }}: <a href="/{{ lang }}/library/{{ view.renamed_to|slug }}/">{{ view.renamed_to }}</a></span>{% endif %}
+</p>
+{%- endif %}
+<dl class="facts">
+<div><dt>{{ t.first_data }}</dt><dd><time datetime="{{ view.first_date }}">{{ view.first_date }}</time></dd></div>
 {%- if view.last_closed_month %}
-<dt>{{ t.last_closed }} ({{ view.last_closed_month.month.strftime("%Y-%m") }})</dt><dd>{{ view.last_closed_month.downloads|number(lang) }}</dd>
+<div><dt>{{ t.last_closed }} ({{ view.last_closed_month.month.strftime("%Y-%m") }})</dt><dd>{{ view.last_closed_month.downloads|number(lang) }}</dd></div>
 {%- endif %}
 </dl>
 <section>
-<h2>{{ t.yearly_title }}</h2>
-<table>
-<thead><tr><th scope="col">{{ t.year }}</th><th scope="col">{{ t.downloads }}</th><th scope="col">{{ t.status }}</th></tr></thead>
-<tbody>
-{%- for total in view.yearly %}
-<tr><th scope="row">{{ total.year }}</th><td>{{ total.downloads|number(lang) }}</td><td>{{ period_status(total, t.ytd) }}</td></tr>
-{%- endfor %}
-</tbody>
-</table>
-</section>
-<section>
 <h2>{{ t.monthly_title }}</h2>
-<div id="chart" class="chart" role="img" aria-label="{{ t.chart_alt }}"></div>
-{%- if chart.inProgressMonth %}
-<p class="note">{{ t.in_progress_note }}</p>
+<div id="chart" class="chart" data-chart role="img" aria-label="{{ t.chart_alt }}"></div>
+{%- if note %}
+<p class="note">{{ note }}</p>
 {%- endif %}
 <script id="chart-data" type="application/json">{{ chart|tojson }}</script>
 <details>
@@ -58,7 +51,37 @@
 </table>
 </details>
 </section>
-<footer><p>{{ t.source }}{% if status.last_updated %} {{ t.last_updated }}: <time datetime="{{ status.last_updated }}">{{ status.last_updated }}</time>.{% endif %}</p></footer>
-</main>
-</body>
-</html>
+<section>
+<h2>{{ t.share_title }}</h2>
+{{ m.chart_box("share", t.share_alt, share) }}
+<p class="note">{{ t.share_note }}</p>
+</section>
+{%- if view.category %}
+<section>
+<h2>{{ t.stars_title }}</h2>
+{%- if view.stars %}
+<p>{{ t.stars_total.format(total=view.stars.total|number(lang), repo=view.stars.repo) }}</p>
+{{ m.chart_box("stars", t.stars_alt, stars) }}
+<p class="note">{{ t.stars_note }}</p>
+{%- if view.stars.shared_with %}
+<p class="note">{{ t.stars_shared }}{% for name in view.stars.shared_with %} <a href="/{{ lang }}/library/{{ name|slug }}/">{{ name }}</a>{% endfor %}</p>
+{%- endif %}
+{%- elif view.repo %}
+<p class="note">{{ t.stars_none }}</p>
+{%- else %}
+<p class="note">{{ t.no_repo }}</p>
+{%- endif %}
+</section>
+{%- endif %}
+<section>
+<h2>{{ t.yearly_title }}</h2>
+<table>
+<thead><tr><th scope="col">{{ t.year }}</th><th scope="col">{{ t.downloads }}</th><th scope="col">{{ t.status }}</th></tr></thead>
+<tbody>
+{%- for total in view.yearly %}
+<tr><th scope="row">{{ total.year }}</th><td>{{ total.downloads|number(lang) }}</td><td>{{ period_status(total, t.ytd) }}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+</section>
+{%- endblock %}

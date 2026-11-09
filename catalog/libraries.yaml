@@ -1,46 +1,63 @@
 # Catálogo curado de ecopy. Borrador redactado por el agente (2026-11-09), para revisar por excepción.
 # Cada entrada: `project` (nombre en PyPI), `category` (slug de taxonomy.yaml) y, opcionales, `tags`,
-# `repo` (owner/name, se completa en la Etapa 4) y `renamed_from` (enlaza, nunca suma).
-- {project: absl-py, category: machine-learning}
+# y `renamed_from` (enlaza, nunca suma). El repo de GitHub va en `repos.yaml`. La categoría `other`
+# agrupa lo que no entra con claridad en otra.
+- {project: absl-py, category: other}
 - {project: acme, category: cloud-devops}
 - project: aiobotocore
   category: cloud-devops
   tags: [async, aws]
 - project: aiofiles
-  category: distributed
+  category: other
   tags: [async]
-- {project: aiohappyeyeballs, category: foundations}
+- project: aiohappyeyeballs
+  category: foundations
+  tags: [async]
 - project: aiohttp
   category: web
   tags: [async]
-- {project: aiosignal, category: foundations}
+- project: aiosignal
+  category: foundations
+  tags: [async]
 - {project: alembic, category: databases}
-- {project: altair, category: visualization}
+- project: altair
+  category: visualization
+  tags: [typed]
 - {project: amqp, category: messaging}
-- {project: annotated-doc, category: foundations}
-- {project: annotated-types, category: foundations}
+- project: annotated-doc
+  category: foundations
+  tags: [typed]
+- project: annotated-types
+  category: foundations
+  tags: [typed]
 - {project: ansible, category: cloud-devops}
 - project: anyio
   category: distributed
-  tags: [async]
+  tags: [async, typed]
 - {project: apache-beam, category: data-engineering}
 - {project: appdirs, category: foundations}
 - {project: apscheduler, category: distributed}
 - {project: arcade, category: games}
 - {project: argcomplete, category: cli}
-- {project: argon2-cffi, category: security}
+- project: argon2-cffi
+  category: security
+  tags: [typed]
 - {project: argparse, category: foundations}
-- {project: arrow, category: foundations}
+- {project: arrow, category: other}
 - {project: asgiref, category: web}
 - {project: asn1crypto, category: security}
 - {project: astroid, category: dev-tools}
 - {project: astropy, category: scientific}
-- {project: async-timeout, category: foundations}
+- project: async-timeout
+  category: foundations
+  tags: [async]
 - project: asyncpg
   category: databases
   tags: [async]
 - {project: atomicwrites, category: foundations}
-- {project: attrs, category: foundations}
+- project: attrs
+  category: foundations
+  tags: [typed]
 - {project: authlib, category: security}
 - {project: av, category: audio-video}
 - project: awscli
@@ -90,17 +107,27 @@
   tags: [packaging]
 - {project: cachetools, category: foundations}
 - {project: catboost, category: machine-learning}
-- {project: cattrs, category: serialization}
+- project: cattrs
+  category: serialization
+  tags: [typed]
 - {project: celery, category: messaging}
 - {project: certbot-dns-cloudflare, category: cloud-devops}
 - {project: certifi, category: foundations}
 - {project: cffi, category: foundations}
-- {project: channels, category: web}
+- project: channels
+  category: web
+  tags: [django]
 - {project: chardet, category: foundations}
-- {project: charset-normalizer, category: foundations}
+- project: charset-normalizer
+  category: foundations
+  tags: [typed]
 - {project: chromadb, category: llm}
-- {project: click, category: cli}
-- {project: cloudflare, category: cloud-devops}
+- project: click
+  category: cli
+  tags: [typed]
+- project: cloudflare
+  category: cloud-devops
+  tags: [typed]
 - {project: cloudpickle, category: distributed}
 - {project: colorama, category: cli}
 - {project: colorlog, category: observability}
@@ -112,7 +139,9 @@
 - {project: cupy, category: scientific}
 - {project: cvxpy, category: optimization}
 - {project: cycler, category: visualization}
-- {project: cython, category: dev-tools}
+- project: cython
+  category: dev-tools
+  tags: [typed]
 - {project: dagster, category: data-engineering}
 - {project: darts, category: time-series}
 - {project: dash, category: dashboards}
@@ -126,51 +155,77 @@
 - {project: debugpy, category: dev-tools}
 - {project: decorator, category: foundations}
 - {project: defusedxml, category: security}
-- {project: delta-spark, category: data-engineering}
-- {project: deprecated, category: foundations}
+- project: delta-spark
+  category: data-engineering
+  tags: [typed]
+- project: deprecated
+  category: foundations
+  tags: [typed]
 - project: diffusers
   category: machine-learning
   tags: [deep-learning]
 - {project: dill, category: distributed}
 - {project: discord, category: http-clients}
-- {project: discord-py, category: http-clients}
+- project: discord-py
+  category: http-clients
+  tags: [typed]
 - project: distlib
   category: dev-tools
   tags: [packaging]
-- {project: django, category: web}
-- {project: django-cors-headers, category: web}
-- {project: django-debug-toolbar, category: web}
-- {project: django-filter, category: web}
+- project: django
+  category: web
+  tags: [django]
+- project: django-cors-headers
+  category: web
+  tags: [django, typed]
+- project: django-debug-toolbar
+  category: web
+  tags: [django]
+- project: django-filter
+  category: web
+  tags: [django]
 - {project: docker, category: cloud-devops, renamed_from: docker-py}
 - {project: docker-py, category: cloud-devops}
 - {project: docopt, category: cli}
 - {project: docutils, category: documentation}
 - {project: dramatiq, category: distributed}
 - {project: dvc, category: mlops}
-- {project: dynaconf, category: configuration}
+- project: dynaconf
+  category: configuration
+  tags: [django]
 - {project: ecdsa, category: security}
 - {project: elasticsearch, category: databases}
 - {project: email-validator, category: serialization}
 - {project: entrypoints, category: foundations}
 - {project: enum34, category: foundations}
 - {project: et-xmlfile, category: foundations}
-- {project: exceptiongroup, category: foundations}
+- project: exceptiongroup
+  category: foundations
+  tags: [typed]
 - {project: fabric, category: cloud-devops}
-- {project: factory-boy, category: synthetic-data}
+- project: factory-boy
+  category: synthetic-data
+  tags: [django]
 - {project: faiss-cpu, category: llm}
 - {project: faker, category: synthetic-data}
-- {project: falcon, category: web}
+- project: falcon
+  category: web
+  tags: [typed]
 - project: fastapi
   category: web
-  tags: [async]
+  tags: [async, typed]
 - {project: fastavro, category: serialization}
-- {project: fastjsonschema, category: serialization}
+- project: fastjsonschema
+  category: serialization
+  tags: [typed]
 - {project: feast, category: mlops}
 - {project: filelock, category: foundations}
 - project: flake8
   category: dev-tools
   tags: [linter]
-- {project: flask, category: web}
+- project: flask
+  category: web
+  tags: [typed]
 - {project: flask-cors, category: web}
 - {project: flet, category: desktop}
 - {project: folium, category: geospatial}
@@ -188,7 +243,9 @@
 - {project: geopandas, category: geospatial}
 - {project: geopy, category: geospatial}
 - {project: gevent, category: web}
-- {project: gitpython, category: dev-tools}
+- project: gitpython
+  category: dev-tools
+  tags: [typed]
 - project: google-api-core
   category: http-clients
   tags: [google-cloud]
@@ -228,12 +285,14 @@
 - {project: guidance, category: llm}
 - {project: gunicorn, category: web}
 - {project: h11, category: foundations}
-- {project: h5py, category: machine-learning}
+- {project: h5py, category: other}
 - project: hatchling
   category: dev-tools
   tags: [packaging]
 - {project: html5lib, category: scraping}
-- {project: httpcore, category: foundations}
+- project: httpcore
+  category: foundations
+  tags: [async]
 - {project: httplib2, category: http-clients}
 - project: httpx
   category: http-clients
@@ -248,22 +307,34 @@
 - {project: iniconfig, category: testing}
 - {project: invoke, category: cloud-devops}
 - {project: ipaddress, category: foundations}
-- {project: ipykernel, category: data-science}
-- {project: ipython, category: data-science}
-- {project: ipywidgets, category: data-science}
+- project: ipykernel
+  category: data-science
+  tags: [jupyter]
+- project: ipython
+  category: data-science
+  tags: [jupyter]
+- project: ipywidgets
+  category: data-science
+  tags: [jupyter]
 - {project: isodate, category: foundations}
 - {project: isort, category: dev-tools}
-- {project: itsdangerous, category: web}
+- project: itsdangerous
+  category: web
+  tags: [typed]
 - project: jax
   category: machine-learning
   tags: [deep-learning]
 - {project: jedi, category: dev-tools}
-- {project: jinja2, category: web}
+- project: jinja2
+  category: web
+  tags: [typed]
 - {project: jmespath, category: foundations}
 - {project: joblib, category: machine-learning}
 - {project: jsonschema, category: serialization}
 - {project: jsonschema-specifications, category: foundations}
-- {project: jupyterlab, category: data-science}
+- project: jupyterlab
+  category: data-science
+  tags: [jupyter]
 - project: keras
   category: machine-learning
   tags: [deep-learning]
@@ -278,8 +349,12 @@
 - {project: langchain-openai, category: llm}
 - {project: langchain-text-splitters, category: llm}
 - {project: langgraph, category: llm}
-- {project: langsmith, category: llm}
-- {project: libcst, category: dev-tools}
+- project: langsmith
+  category: llm
+  tags: [typed]
+- project: libcst
+  category: dev-tools
+  tags: [typed]
 - {project: librosa, category: audio-video}
 - {project: lightgbm, category: machine-learning}
 - project: lightning
@@ -295,14 +370,18 @@
 - {project: mako, category: web}
 - {project: markdown, category: documentation}
 - {project: markdown-it-py, category: foundations}
-- {project: markupsafe, category: web}
+- project: markupsafe
+  category: web
+  tags: [typed]
 - {project: marshmallow, category: serialization}
 - {project: matplotlib, category: visualization}
 - project: mccabe
   category: dev-tools
   tags: [linter]
 - {project: mcp, category: llm}
-- {project: mdurl, category: foundations}
+- project: mdurl
+  category: foundations
+  tags: [typed]
 - {project: mimesis, category: synthetic-data}
 - {project: mistune, category: documentation}
 - {project: mkdocs, category: documentation}
@@ -328,24 +407,36 @@
 - {project: multiprocess, category: distributed}
 - project: mypy
   category: dev-tools
-  tags: [linter]
+  tags: [linter, typed]
 - {project: mypy-extensions, category: dev-tools}
-- {project: mysql-connector-python, category: databases}
+- project: mysql-connector-python
+  category: databases
+  tags: [typed]
 - project: narwhals
   category: data-science
-  tags: [dataframe]
-- {project: nbconvert, category: data-science}
-- {project: nbformat, category: data-science}
+  tags: [dataframe, typed]
+- project: nbconvert
+  category: data-science
+  tags: [jupyter]
+- project: nbformat
+  category: data-science
+  tags: [jupyter]
 - project: nest-asyncio
   category: distributed
   tags: [async]
-- {project: networkx, category: visualization}
+- {project: networkx, category: other}
 - {project: nltk, category: nlp}
 - {project: nose, category: testing}
-- {project: notebook, category: data-science}
-- {project: nox, category: dev-tools}
+- project: notebook
+  category: data-science
+  tags: [jupyter, typed]
+- project: nox
+  category: dev-tools
+  tags: [typed]
 - {project: numba, category: scientific}
-- {project: numpy, category: data-science}
+- project: numpy
+  category: data-science
+  tags: [typed]
 - project: oauth2client
   category: cloud-devops
   tags: [google-cloud]
@@ -354,19 +445,31 @@
 - project: onnx
   category: machine-learning
   tags: [deep-learning]
-- {project: openai, category: llm}
+- project: openai
+  category: llm
+  tags: [typed]
 - {project: openai-whisper, category: audio-video}
 - {project: opencv-python, category: imaging}
 - {project: openpyxl, category: files-documents}
 - {project: opensearch-py, category: databases}
-- {project: opentelemetry-api, category: observability}
-- {project: opentelemetry-exporter-otlp, category: observability}
-- {project: opentelemetry-sdk, category: observability}
+- project: opentelemetry-api
+  category: observability
+  tags: [typed]
+- project: opentelemetry-exporter-otlp
+  category: observability
+  tags: [typed]
+- project: opentelemetry-sdk
+  category: observability
+  tags: [typed]
 - {project: opentelemetry-semantic-conventions, category: observability}
 - {project: optuna, category: mlops}
-- {project: orjson, category: serialization}
+- project: orjson
+  category: serialization
+  tags: [typed]
 - {project: ortools, category: optimization}
-- {project: packaging, category: foundations}
+- project: packaging
+  category: foundations
+  tags: [typed]
 - {project: panda3d, category: games}
 - project: pandas
   category: data-science
@@ -374,23 +477,29 @@
 - {project: pandas-stubs, category: data-science}
 - {project: panel, category: dashboards}
 - {project: paramiko, category: cloud-devops}
-- {project: parso, category: dev-tools}
+- project: parso
+  category: dev-tools
+  tags: [typed]
 - {project: passlib, category: security}
 - {project: pathspec, category: foundations}
 - {project: pbr, category: foundations}
 - {project: pdfplumber, category: files-documents}
-- {project: pdoc, category: documentation}
+- project: pdoc
+  category: documentation
+  tags: [typed]
 - project: peewee
   category: databases
   tags: [orm]
-- {project: pendulum, category: foundations}
+- {project: pendulum, category: other}
 - project: pep8
   category: dev-tools
   tags: [linter]
 - {project: petl, category: data-engineering}
 - {project: pexpect, category: foundations}
 - {project: pika, category: messaging}
-- {project: pillow, category: imaging}
+- project: pillow
+  category: imaging
+  tags: [typed]
 - {project: pingouin, category: statistics}
 - project: pip
   category: dev-tools
@@ -409,15 +518,21 @@
   tags: [packaging]
 - project: polars
   category: data-science
-  tags: [dataframe]
+  tags: [dataframe, typed]
 - {project: pre-commit, category: dev-tools}
 - {project: prefect, category: data-engineering}
-- {project: prettytable, category: cli}
-- {project: progressbar2, category: cli}
+- project: prettytable
+  category: cli
+  tags: [typed]
+- project: progressbar2
+  category: cli
+  tags: [typed]
 - {project: prometheus-client, category: observability}
 - {project: prompt-toolkit, category: cli}
 - {project: propcache, category: foundations}
-- {project: prophet, category: time-series}
+- project: prophet
+  category: time-series
+  tags: [typed]
 - {project: protobuf, category: serialization}
 - {project: psutil, category: observability}
 - {project: psycopg, category: databases}
@@ -425,7 +540,9 @@
 - {project: psycopg2-binary, category: databases}
 - {project: ptyprocess, category: foundations}
 - {project: pulp, category: optimization}
-- {project: pulumi, category: cloud-devops}
+- project: pulumi
+  category: cloud-devops
+  tags: [typed]
 - {project: py, category: foundations}
 - {project: py4j, category: big-data}
 - project: pyarrow
@@ -442,9 +559,13 @@
 - {project: pycountry, category: i18n}
 - {project: pycparser, category: foundations}
 - {project: pycrypto, category: security}
-- {project: pycryptodome, category: security}
+- project: pycryptodome
+  category: security
+  tags: [typed]
 - {project: pydantic, category: serialization}
-- {project: pydantic-core, category: serialization}
+- project: pydantic-core
+  category: serialization
+  tags: [typed]
 - {project: pydantic-settings, category: serialization}
 - {project: pydub, category: audio-video}
 - project: pyflakes
@@ -457,47 +578,72 @@
 - {project: pyjwt, category: security}
 - project: pylint
   category: dev-tools
-  tags: [linter]
+  tags: [linter, typed]
 - {project: pymc, category: statistics}
-- {project: pymodbus, category: robotics-iot}
-- {project: pymongo, category: databases}
+- project: pymodbus
+  category: robotics-iot
+  tags: [async]
+- project: pymongo
+  category: databases
+  tags: [typed]
 - {project: pymupdf, category: files-documents}
 - {project: pymysql, category: databases}
 - {project: pynacl, category: security}
 - {project: pyodbc, category: databases}
 - {project: pyopenssl, category: security}
-- {project: pyparsing, category: foundations}
-- {project: pypdf, category: files-documents, renamed_from: pypdf2}
-- {project: pypdf2, category: files-documents}
-- {project: pyproj, category: geospatial}
+- project: pyparsing
+  category: foundations
+  tags: [typed]
+- project: pypdf
+  category: files-documents
+  tags: [typed]
+  renamed_from: pypdf2
+- project: pypdf2
+  category: files-documents
+  tags: [typed]
+- project: pyproj
+  category: geospatial
+  tags: [typed]
 - {project: pyqt5, category: desktop}
 - {project: pyqt6, category: desktop}
 - project: pyright
   category: dev-tools
-  tags: [linter]
+  tags: [linter, typed]
 - {project: pyrsistent, category: foundations}
 - {project: pyserial, category: robotics-iot}
 - {project: pyside6, category: desktop}
 - project: pyspark
   category: big-data
-  tags: [dataframe]
-- {project: pytest, category: testing}
+  tags: [dataframe, typed]
+- project: pytest
+  category: testing
+  tags: [pytest]
 - project: pytest-asyncio
   category: testing
-  tags: [async]
-- {project: pytest-cov, category: testing}
-- {project: pytest-mock, category: testing}
-- {project: pytest-runner, category: dev-tools}
-- {project: pytest-xdist, category: testing}
+  tags: [async, pytest, typed]
+- project: pytest-cov
+  category: testing
+  tags: [pytest]
+- project: pytest-mock
+  category: testing
+  tags: [pytest]
+- project: pytest-runner
+  category: dev-tools
+  tags: [pytest]
+- project: pytest-xdist
+  category: testing
+  tags: [pytest]
 - {project: python-dateutil, category: foundations}
 - {project: python-docx, category: files-documents}
 - {project: python-dotenv, category: configuration}
 - {project: python-i18n, category: i18n}
 - {project: python-jose, category: security}
-- {project: python-json-logger, category: observability}
+- project: python-json-logger
+  category: observability
+  tags: [typed]
 - {project: python-multipart, category: web}
 - {project: python-pptx, category: files-documents}
-- {project: python-slugify, category: cli}
+- {project: python-slugify, category: other}
 - {project: python-socketio, category: web}
 - {project: python-telegram-bot, category: http-clients}
 - project: pytorch-lightning
@@ -511,7 +657,9 @@
 - {project: rasterio, category: geospatial}
 - {project: ray, category: big-data}
 - {project: rdkit, category: scientific}
-- {project: readme-renderer, category: documentation}
+- project: readme-renderer
+  category: documentation
+  tags: [typed]
 - {project: redis, category: databases}
 - {project: referencing, category: foundations}
 - {project: reflex, category: dashboards}
@@ -521,10 +669,14 @@
 - {project: requests-oauthlib, category: http-clients}
 - {project: requests-toolbelt, category: http-clients}
 - {project: responses, category: testing}
-- {project: rich, category: cli}
+- project: rich
+  category: cli
+  tags: [typed]
 - {project: rpds-py, category: foundations}
 - {project: rsa, category: security}
-- {project: ruamel-yaml, category: serialization}
+- project: ruamel-yaml
+  category: serialization
+  tags: [typed]
 - project: ruff
   category: dev-tools
   tags: [linter]
@@ -534,7 +686,9 @@
 - project: s3transfer
   category: cloud-devops
   tags: [aws]
-- {project: safetensors, category: machine-learning}
+- project: safetensors
+  category: machine-learning
+  tags: [typed]
 - project: sagemaker
   category: mlops
   tags: [aws]
@@ -562,19 +716,25 @@
 - {project: six, category: foundations}
 - {project: sktime, category: time-series}
 - {project: slack-sdk, category: http-clients}
-- {project: sniffio, category: foundations}
+- project: sniffio
+  category: foundations
+  tags: [async]
 - {project: snowflake-connector-python, category: data-engineering}
 - {project: sortedcontainers, category: foundations}
 - {project: soundfile, category: audio-video}
-- {project: soupsieve, category: scraping}
+- project: soupsieve
+  category: scraping
+  tags: [typed]
 - {project: spacy, category: nlp}
-- {project: sphinx, category: documentation}
+- project: sphinx
+  category: documentation
+  tags: [typed]
 - project: sqlalchemy
   category: databases
   tags: [orm]
 - project: sqlmodel
   category: databases
-  tags: [orm]
+  tags: [orm, async, typed]
 - {project: sqlparse, category: databases}
 - project: starlette
   category: web
@@ -582,7 +742,9 @@
 - {project: statsforecast, category: time-series}
 - {project: statsmodels, category: statistics}
 - {project: streamlit, category: dashboards}
-- {project: structlog, category: observability}
+- project: structlog
+  category: observability
+  tags: [typed]
 - {project: sympy, category: optimization}
 - {project: tabulate, category: cli}
 - {project: tenacity, category: distributed}
@@ -590,9 +752,13 @@
 - project: tensorflow
   category: machine-learning
   tags: [deep-learning]
-- {project: termcolor, category: cli}
+- project: termcolor
+  category: cli
+  tags: [typed]
 - {project: text-unidecode, category: i18n}
-- {project: textual, category: cli}
+- project: textual
+  category: cli
+  tags: [typed]
 - {project: threadpoolctl, category: machine-learning}
 - {project: tiktoken, category: llm}
 - project: timm
@@ -600,7 +766,9 @@
   tags: [deep-learning]
 - {project: tokenizers, category: llm}
 - {project: toml, category: foundations}
-- {project: tomli, category: foundations}
+- project: tomli
+  category: foundations
+  tags: [typed]
 - {project: tomlkit, category: foundations}
 - {project: toolz, category: foundations}
 - project: torch
@@ -619,15 +787,25 @@
   tags: [deep-learning]
 - project: trio
   category: distributed
-  tags: [async]
-- {project: trove-classifiers, category: foundations}
+  tags: [async, typed]
+- project: trove-classifiers
+  category: foundations
+  tags: [typed]
 - {project: typeguard, category: serialization}
-- {project: typer, category: cli}
-- {project: types-pyyaml, category: dev-tools}
-- {project: types-requests, category: dev-tools}
+- project: typer
+  category: cli
+  tags: [typed]
+- project: types-pyyaml
+  category: dev-tools
+  tags: [typed]
+- project: types-requests
+  category: dev-tools
+  tags: [typed]
 - {project: typing, category: foundations}
 - {project: typing-extensions, category: foundations}
-- {project: typing-inspection, category: foundations}
+- project: typing-inspection
+  category: foundations
+  tags: [typed]
 - {project: tzdata, category: foundations}
 - {project: uritemplate, category: foundations}
 - {project: urllib3, category: foundations}
@@ -649,21 +827,27 @@
   category: dev-tools
   tags: [packaging]
 - {project: wandb, category: mlops}
-- {project: wcwidth, category: foundations}
+- project: wcwidth
+  category: foundations
+  tags: [typed]
 - {project: weaviate-client, category: llm}
 - {project: webencodings, category: foundations}
 - {project: websocket-client, category: http-clients}
 - project: websockets
   category: web
   tags: [async]
-- {project: werkzeug, category: web}
+- project: werkzeug
+  category: web
+  tags: [typed]
 - project: wheel
   category: dev-tools
   tags: [packaging]
 - {project: wrapt, category: foundations}
 - {project: wsproto, category: web}
 - {project: xarray, category: data-science}
-- {project: xgboost, category: machine-learning}
+- project: xgboost
+  category: machine-learning
+  tags: [typed]
 - {project: xlrd, category: files-documents}
 - {project: xlsxwriter, category: files-documents}
 - {project: xmltodict, category: serialization}

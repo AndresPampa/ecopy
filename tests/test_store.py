@@ -13,6 +13,11 @@ from ecopy.models import (
     PythonMinorBatch,
     PythonMinorMonth,
     Run,
+    StarsReport,
+    StarTotal,
+    StarTotalsBatch,
+    StarWeek,
+    StarWeeksBatch,
     YearView,
 )
 from ecopy.store import ImmutabilityError, Store
@@ -324,3 +329,67 @@ def test_the_highest_methodology_wins_and_the_old_file_stays(tmp_path):
 
     assert store.frozen_year(2024).volume.total == 10
     assert len(list(tmp_path.rglob("*.json"))) == 3
+
+
+def star_run(name="20240201T000000Z-b", acquisition="backfill"):
+    return Run(name, datetime(2024, 2, 1, tzinfo=UTC), acquisition)
+
+
+def test_star_weeks_and_counts_are_read_by_repo(tmp_path):
+    store = Store(tmp_path)
+    weeks = (StarWeek("a/b", date(2024, 1, 7), 10), StarWeek("a/b", date(2024, 1, 14), 5))
+
+    store.append(StarWeeksBatch("github", weeks), star_run())
+    store.append(StarTotalsBatch("github", (StarTotal("a/b", date(2024, 2, 1), 15),)), star_run())
+
+    assert store.star_weeks(["a/b"]) == {"a/b": {date(2024, 1, 7): 10, date(2024, 1, 14): 5}}
+    assert store.star_totals(["a/b"]) == {"a/b": {date(2024, 2, 1): 15}}
+
+
+def test_a_later_capture_of_a_week_replaces_it_without_rewriting(tmp_path):
+    store = Store(tmp_path)
+    store.append(StarWeeksBatch("github", (StarWeek("a/b", date(2024, 1, 7), 10),)), star_run())
+    later = Run("20240202T000000Z-o", datetime(2024, 2, 2, tzinfo=UTC), "observed")
+
+    result = store.append(StarWeeksBatch("github", (StarWeek("a/b", date(2024, 1, 7), 9),)), later)
+
+    assert result.revised_rows == 1
+    assert store.star_weeks(["a/b"])["a/b"][date(2024, 1, 7)] == 9
+
+
+def test_only_repos_with_a_backfill_count_as_backfilled(tmp_path):
+    store = Store(tmp_path)
+    store.append(StarWeeksBatch("github", (StarWeek("a/b", date(2024, 1, 7), 1),)), star_run())
+    observed = Run("20240202T000000Z-o", datetime(2024, 2, 2, tzinfo=UTC), "observed")
+    store.append(StarWeeksBatch("github", (StarWeek("c/d", date(2024, 1, 7), 1),)), observed)
+
+    assert store.backfilled_repos() == {"a/b"}
+
+
+def test_no_star_data_reads_as_empty(tmp_path):
+    store = Store(tmp_path)
+
+    assert store.star_weeks(["a/b"]) == {}
+    assert store.star_totals(["a/b"]) == {}
+    assert store.backfilled_repos() == set()
+
+
+def test_star_runs_are_recorded_apart_from_the_ingest_runs(tmp_path):
+    store = Store(tmp_path)
+    report = StarsReport(
+        id="20240201T000000Z",
+        captured_at=datetime(2024, 2, 1, tzinfo=UTC),
+        status="partial",
+        requests=3,
+        backfilled=("a/b",),
+        updated=(),
+        pending=2,
+        failed=(("c/d", "404"),),
+        moved=(),
+        stopped="budget",
+    )
+
+    store.record_stars_run(report)
+
+    assert (tmp_path / "runs" / "stars" / "20240201T000000Z.json").exists()
+    assert store.runs() == ()

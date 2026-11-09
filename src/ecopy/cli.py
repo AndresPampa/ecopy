@@ -5,7 +5,9 @@ from __future__ import annotations
 import argparse
 import contextlib
 import functools
+import os
 import sys
+import time
 from collections.abc import Callable, Iterator, Sequence
 from datetime import UTC, date, datetime
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -15,11 +17,22 @@ from pathlib import Path
 import httpx
 
 from ecopy.catalog import FIRST_RANKED_YEAR, Catalog, CatalogError, refresh_top100
-from ecopy.metrics import METHODOLOGY_VERSION, YearInputs, library_view, site_status, year_view
-from ecopy.models import DailySeries, Problem, YearView
-from ecopy.pipeline import REOBSERVE_DAYS, ingest, validate_store
+from ecopy.metrics import (
+    METHODOLOGY_VERSION,
+    YearInputs,
+    library_rows,
+    library_view,
+    releases_view,
+    site_status,
+    stars_view,
+    taxonomy_view,
+    year_view,
+)
+from ecopy.models import BrowseView, DailySeries, Problem, StarsView, YearView
+from ecopy.pipeline import REOBSERVE_DAYS, ingest, ingest_stars, validate_store
 from ecopy.site import render_site
 from ecopy.sources.clickpy import ClickPy, SourceError
+from ecopy.sources.github import GitHub
 from ecopy.store import ImmutabilityError, Store
 
 
@@ -108,6 +121,29 @@ def _year_views(store: Store, catalog: Catalog, series: dict, as_of: date) -> li
     return views
 
 
+def _library_stars(store: Store, catalog: Catalog) -> dict[str, StarsView]:
+    """Vista de estrellas por paquete; un repo compartido aparece en todos sus paquetes."""
+    repos = catalog.repos()
+    weeks, counts = store.star_weeks(repos), store.star_totals(repos)
+    views = {}
+    for repo, history in weeks.items():
+        projects = catalog.projects_of_repo(repo)
+        for project in projects:
+            others = tuple(p for p in projects if p != project)
+            views[project] = stars_view(repo, history, counts.get(repo, {}), shared_with=others)
+    return views
+
+
+def _browse(pages, years, catalog: Catalog, as_of: date) -> BrowseView:
+    rows = library_rows(pages)
+    return BrowseView(
+        rows=rows,
+        domains=taxonomy_view(years, rows, catalog),
+        releases=releases_view(catalog.python_releases(), as_of=as_of),
+        tags=catalog.tags(),
+    )
+
+
 def _build(args: argparse.Namespace) -> int:
     projects = _projects(args)
     store = Store(args.data)
@@ -122,9 +158,29 @@ def _build(args: argparse.Namespace) -> int:
     # Las cuotas solo tienen sentido con todo el catálogo.
     catalog = None if args.project else Catalog.load(args.catalog)
     years = _year_views(store, catalog, series, as_of) if catalog else []
-    pages = [library_view(project, days, as_of=as_of) for project, days in sorted(series.items())]
+    totals = store.pypi_daily_totals()
+    stars = _library_stars(store, catalog) if catalog else {}
+    pages = [
+        library_view(
+            project,
+            days,
+            as_of=as_of,
+            totals=totals,
+            catalog=catalog,
+            stars=stars.get(project),
+        )
+        for project, days in sorted(series.items())
+    ]
     labels = catalog.labels() if catalog else {}
-    render_site(pages, args.out, status=site_status(store.runs()), years=years, labels=labels)
+    browse = _browse(pages, years, catalog, as_of) if catalog else None
+    render_site(
+        pages,
+        args.out,
+        status=site_status(store.runs()),
+        years=years,
+        labels=labels,
+        browse=browse,
+    )
     print(f"sitio en {args.out}: {len(pages)} fichas y {len(years)} años")
     return 0
 
@@ -175,9 +231,48 @@ def _catalog(args: argparse.Namespace, http: httpx.Client | None, now: datetime)
     return 1 if missing else 0
 
 
+_MAX_WITHOUT_TOKEN = 50
+
+
+def _stars(
+    args: argparse.Namespace,
+    http: httpx.Client | None,
+    now: datetime,
+    sleep: Callable[[float], None],
+) -> int:
+    catalog = Catalog.load(args.catalog)
+    known = catalog.repos()
+    unknown = sorted(set(args.repo or ()) - set(known))
+    if unknown:
+        print(f"ecopy: repos fuera del catálogo: {', '.join(unknown)}", file=sys.stderr)
+        return 1
+    token = os.environ.get("GITHUB_TOKEN") or None
+    budget = args.budget
+    if token is None:
+        budget = min(budget, _MAX_WITHOUT_TOKEN)
+        print(
+            f"ecopy: sin GITHUB_TOKEN; máximo {_MAX_WITHOUT_TOKEN} consultas en esta corrida",
+            file=sys.stderr,
+        )
+    with _client(http) as client:
+        source = GitHub(client, token=token, budget=budget, sleep=sleep)
+        report = ingest_stars(args.repo or known, source, Store(args.data), now=now)
+    print(
+        f"{len(report.backfilled)} con historia completa, {len(report.updated)} actualizados, "
+        f"{report.pending} pendientes, {report.requests} consultas"
+    )
+    if report.stopped:
+        print(f"la corrida se detuvo ({report.stopped}): volver a correr para seguir")
+    for repo, new in report.moved:
+        print(f"ecopy: {repo} ahora es {new}; corregir catalog/repos.yaml", file=sys.stderr)
+    for repo, detail in report.failed:
+        print(f"ecopy: {repo} falló: {detail}", file=sys.stderr)
+    return 0
+
+
 def _serve(args: argparse.Namespace) -> int:
     with make_server(args.out, args.port) as server:
-        print(f"http://127.0.0.1:{server.server_address[1]}/en/library/ (Ctrl+C para salir)")
+        print(f"http://127.0.0.1:{server.server_address[1]}/en/ (Ctrl+C para salir)")
         with contextlib.suppress(KeyboardInterrupt):
             server.serve_forever()
     return 0
@@ -207,6 +302,12 @@ def _parser() -> argparse.ArgumentParser:
     freeze.add_argument("--catalog", type=Path, default=Path("catalog"))
     freeze.add_argument("--data", type=Path, default=Path("data"))
 
+    stars = commands.add_parser("stars", help="trae la historia de estrellas de GitHub")
+    stars.add_argument("--catalog", type=Path, default=Path("catalog"))
+    stars.add_argument("--data", type=Path, default=Path("data"))
+    stars.add_argument("--budget", type=int, default=4000, help="consultas máximas de la corrida")
+    stars.add_argument("--repo", action="append", help="por defecto, todos los del catálogo")
+
     catalog = commands.add_parser("catalog", help="mantiene el catálogo")
     catalog.add_argument("action", choices=["refresh", "check"])
     catalog.add_argument("--catalog", type=Path, default=Path("catalog"))
@@ -226,6 +327,7 @@ def main(
     *,
     http: httpx.Client | None = None,
     now: Callable[[], datetime] = _utcnow,
+    sleep: Callable[[float], None] = time.sleep,
 ) -> int:
     args = _parser().parse_args(argv)
     try:
@@ -237,6 +339,8 @@ def main(
             return _build(args)
         if args.command == "freeze":
             return _freeze(args)
+        if args.command == "stars":
+            return _stars(args, http, now(), sleep)
         if args.command == "catalog":
             return _catalog(args, http, now())
         return _serve(args)

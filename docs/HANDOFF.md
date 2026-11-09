@@ -1,7 +1,7 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-09 · branch: `etapa-3-vista-anual` (desde `main` = `5d184fc`), con toda la
-> Etapa 3 sin commit: el usuario hace commit, push y PR · remoto `origin` =
+> Last updated: 2026-11-09 · branch: `etapa-4-librerias-y-comparador` (desde `main` = `ea14545`), con
+> toda la Etapa 4 sin commit, a la espera de que el usuario la revise y la commitee · remoto `origin` =
 > https://github.com/AndresPampa/ecopy.git
 
 ## Current State
@@ -11,9 +11,14 @@
   días, `data/` = 120 KB): página EN/ES con tabla anual, tabla mensual y gráfico ECharts,
   servida con la CSP real. Sin violaciones en Chrome headless (con control positivo), tooltip y
   móvil verificados. Diseño: `docs/design/etapa-1-tracer-bullet.md`.
-- **Etapa 3 (vista anual, LOCAL) implementada, sin commit:** 252 tests y 54 mutaciones con arnés
-  corregido. Sobre una copia de `data/`: 9 años congelados en 4 s, 500 fichas y 10 años en 9 s, sin
-  violaciones de CSP en Chrome. Falta congelar en `data/` tras revisar el catálogo.
+- **Etapa 3 (vista anual, LOCAL) mergeada** (PR #5): 252 tests y 54 mutaciones con arnés
+  corregido, sin violaciones de CSP en Chrome. `ecopy freeze` ya corrió en `data/` (2017–2025,
+  metodología 1, sin commit) y `ecopy build` completo funciona: 500 fichas y 10 años en 9 s.
+- **Etapa 4 implementada en local, sin commit:** base visual (dirección Estratos), fichas ampliadas,
+  catálogo con sparklines y filtro por tags, dominios y categorías, comparador, releases y `ecopy
+  stars`. 340 tests, 41 mutaciones detectadas, Chrome sin violaciones de CSP (con control positivo).
+  Build real: 500 fichas y 10 años en 18 s. **Falta la corrida real de estrellas:** sin token solo
+  se probó `astral-sh/uv`.
 - **Etapa 2 (datos completos, LOCAL) mergeada** (PR #4). Corrida
   real: 500 paquetes desde 2016-01-22 (1.708.804 filas), totales de PyPI (3.866 días), versiones de
   Python (2.322 filas), `data/` = 7,4 MB, 42 s; reobservación sin archivos nuevos; 1.000 páginas en
@@ -25,21 +30,23 @@
   `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-- [ ] **Usuario:** revisar `git diff`, hacer commit, push y PR de la Etapa 3.
-- [ ] **Después de revisar el catálogo:** `uv run ecopy freeze`, que escribe `data/frozen/` para
-      2017–2025 como metodología 1. Hasta entonces, `ecopy build` sin `--project` falla a propósito.
-- [ ] **Usuario (antes de congelar los años cerrados):** revisar por excepción `catalog/libraries.yaml` (500 librerías,
-      borrador del agente: categoría, tags y 5 renombres; `repo` se completa en la Etapa 4).
-- [ ] **Pendiente de la Etapa 2:** correr `uv run ecopy ingest` en un día posterior y mirar `revised_rows` en
-      `data/runs/`: hoy la reobservación solo se probó el mismo día.
+- [ ] **Usuario:** revisar por excepción `catalog/libraries.yaml` (7 en `other`, tags nuevos) y
+      `catalog/repos.yaml` (lo que marca `docs/spikes/s8-repos-y-tags.md`). Si cambia una categoría:
+      borrar `data/frozen/`, volver a correr `uv run ecopy freeze`. `repo` y tags no lo invalidan.
+- [ ] **Usuario:** commit de la Etapa 4, luego `data/frozen/` tras la revisión, y PR.
+- [ ] **Usuario (corrida real de estrellas):** token *fine-grained*, solo lectura de repos públicos,
+      en `GITHUB_TOKEN`: `read -rs GITHUB_TOKEN && export GITHUB_TOKEN`, y 3 veces
+      `uv run ecopy stars --budget 4000` (~9.500 consultas, ~2,6 h, se reanuda sola). Después
+      `uv run ecopy build`, y corregir en `repos.yaml` los repos que informe como movidos o fallidos.
+- [ ] **Usuario:** borrar las ramas remotas ya mergeadas; las locales ya están borradas:
+      `git push origin --delete etapa-0-spikes etapa-1-tracer-bullet etapa-2-datos-completos etapa-3-vista-anual`.
+- [ ] **Pendiente de la Etapa 2:** correr `uv run ecopy ingest` desde el 2026-11-10 y mirar `revised_rows`
+      en `data/runs/`: el mismo día da 0 nuevas y 0 corregidas, porque llega hasta ayer (UTC).
 - [ ] **Investigar la caída desde 2026-08-25** (−36 % de un día para el otro, recuperación lenta,
       algunos paquetes ×0,12). Ya está marcada como discontinuidad: si se explica, revisar esa marca.
 - [ ] **Usuario (Etapa 5, con el primer MVP):** S6 — crear el proyecto en Cloudflare Pages y
       confirmar `ecopy.pages.dev`; recién ahí entra GitHub Actions.
-- [ ] **Etapa 5 — diseño:** el tramo punteado del mes en curso todavía se lee como una caída fuerte
-      (aviso debajo del gráfico); revisar con `impeccable` + `dataviz`.
-- [ ] **Usuario (opcional):** borrar las ramas mergeadas `etapa-0-spikes` y `etapa-1-tracer-bullet`
-      (local y remota).
+- [ ] **Etapa 5:** las sparklines se encogen en 390 px (`/library/`); revisar en la auditoría y el pulido.
 - [ ] Opcional: activar hooks de Claude Code copiando `.claude/settings.template.json` →
       `.claude/settings.json` (hoy los guards solo corren en Codex).
 
@@ -48,6 +55,9 @@
   `etapa-N-<tema>` + commit(s) + PR a `main`. **Sin issues ni OpenSpec** (CLI no instalado,
   `openspec/` ignorado por git, y su guía exige proposal/aprobación/verify/archive por change:
   demasiado peso para una persona). `to-issues` descartado por lo mismo.
+- **Base visual en la Etapa 4** (decisión del usuario, 2026-11-09): cabecera, navegación, portada y
+  sistema de estilos van primero, porque las páginas nuevas de esa etapa se apoyarían en una base que
+  después habría que rehacer. La auditoría de accesibilidad y el pulido final siguen en la Etapa 5.
 - **Local primero:** Etapas 1–4 se construyen y prueban en local (`build/` + localhost). GitHub
   Actions y Cloudflare Pages entran recién en la Etapa 5, con un primer MVP (decisión del usuario,
   2026-11-07). La arquitectura del PRD no cambia, solo el orden.
@@ -117,6 +127,11 @@
   top 100 como archivo revisado; versiones solo con meses cerrados; módulo `pipeline`, sin comando
   `backfill`. Razones y evidencia en `docs/design/etapa-2-datos-completos.md`.
 
+- **Diseño de la Etapa 4 (aprobado 2026-11-09, 9 decisiones):** dirección Estratos, mes en curso como
+  franja (sin proyectar: con 3 días erra 31 % en p90), sparklines y comparador en cuota de PyPI (la
+  correlación entre paquetes baja de 0,96 a 0,05), `repos.yaml` aparte, estrellas fuera de `ingest`.
+  Categoría `other` para lo dudoso, pedida por el usuario. Razones: `docs/design/etapa-4-*.md`.
+
 ## Failed Approaches
 - **Consultas grandes a ClickPy devuelven resultados parciales sin error** (usuario `play`:
   `read_overflow_mode=break` a 10.000 M filas leídas, `result_overflow_mode=break` a 1.000 filas de
@@ -162,6 +177,12 @@
   (S1, con 5 paquetes): 369 de 500 tienen días sin filas, y no son huecos de la fuente. "La
   diferencia entre versiones y total es carga en vivo" (S2): aparece en meses cerrados.
 
+- **`pkill -f '<patrón>'` desde el mismo Bash mata esa shell** (el patrón aparece en su propia línea
+  de comandos). Guardar el PID del proceso y usar `kill $PID`.
+
+- **GitHub sin token comparte 60 consultas/h por IP:** con la muestra de S8 se agotaron y `ecopy stars`
+  se detuvo bien con `rate_limited`. Para probar, esperar al `reset` que da `/rate_limit`, que no consume.
+
 - **En `library.html`, una macro no puede llamarse `status`:** tapa la variable `status` del
   contexto. Por eso es `period_status`.
 
@@ -170,11 +191,14 @@
 - `docs/design/etapa-1-tracer-bullet.md` — interfaces, seams y tests de la Etapa 1.
 - `docs/design/etapa-2-datos-completos.md` — diseño y evidencia de la Etapa 2.
 - `docs/design/etapa-3-vista-anual.md` — diseño y evidencia de la Etapa 3.
+- `docs/design/etapa-4-librerias-y-comparador.md` — diseño y evidencia de la Etapa 4.
+- `DESIGN.md`, `PRODUCT.md` — sistema visual y contexto para `impeccable`.
+- `build/preview-etapa-4/` (ignorado) — vistas previas de las tres direcciones visuales.
 - `data/frozen/year=YYYY/methodology=N.json` — años cerrados congelados (`ecopy freeze`).
-- `catalog/` — `taxonomy.yaml` (39 categorías), `libraries.yaml`, `python_releases.yaml`, `top100.yaml`
+- `catalog/` — `taxonomy.yaml` (40 categorías), `libraries.yaml`, `repos.yaml`, `python_releases.yaml`, `top100.yaml`
   (generado).
 - `data/runs/*.json` — registro por corrida; `revised_rows` mide correcciones de ClickPy.
-- `src/ecopy/` — `sources/clickpy.py`, `store.py`, `catalog.py`, `quality.py`, `validate.py`,
+- `src/ecopy/` — `sources/clickpy.py`, `sources/github.py`, `store.py`, `catalog.py`, `quality.py`, `validate.py`,
   `pipeline.py`, `metrics.py`, `site/`, `cli.py`, `models.py`.
 - `tests/snapshots/` — HTML esperado; regenerar con `UPDATE_SNAPSHOTS=1 uv run pytest tests/test_site.py`.
 - `docs/spikes/` — informe (`sN-*.md`) + script reproducible (`sN_*.py`) por spike: S1 cobertura,
@@ -192,7 +216,7 @@
 
 ## Resume Setup
 - Producto: `uv sync` · `uv run pytest` · `uv run ruff check . && uv run ruff format --check src tests`
-  · `uv run ecopy ingest|validate|freeze|build|serve|catalog --help`. Paquete en `src/ecopy/` (build backend `uv_build`), tests en `tests/`.
+  · `uv run ecopy ingest|validate|freeze|build|serve|stars|catalog --help`. Paquete en `src/ecopy/` (build backend `uv_build`), tests en `tests/`.
 - Checks del toolkit: `scripts/bash/check_skill_symlinks.sh`, `check_hook_parity.sh`,
   `check_agent_parity.sh`; tests: `python3 scripts/hooks/test_<nombre>.py` (sin pytest).
 - Spikes: scripts con dependencias inline (PEP 723), `uv run docs/spikes/<script>.py`. ClickPy:
@@ -275,3 +299,18 @@ Usuario aprobó las 6 decisiones (PRD actualizado). `python_releases.yaml` verif
 endoflife.date y python.org; `year_view`, `ecopy freeze`, páginas por año EN/ES con 3 gráficos. Corrida
 real sobre una copia para no congelar antes de revisar el catálogo. Corrección: las 24 mutaciones de
 la Etapa 2 no eran válidas (arnés roto); con el arnés corregido, 5 de 54 sobrevivían y ahora tienen test.
+
+### 2026-11-09 — Etapa 3 mergeada y años congelados
+PR #5 mergeado. `ecopy freeze` corrido a pedido del usuario: 9 años en `data/frozen/`, sin commit y
+con el catálogo sin cambios. Build completo en verde. Ingest del mismo día: 0 filas nuevas, esperado.
+Próximo: diseño de la Etapa 4. El usuario aprobó traer la base visual a esa etapa y creó la rama.
+Ramas locales de las Etapas 0–3 borradas tras confirmar que estaban mergeadas; las remotas quedan
+para el usuario, porque borrarlas es un push. README y ROADMAP actualizados.
+
+### 2026-11-09 — Etapa 4 implementada en local
+Usuario aprobó las 9 decisiones y pidió una categoría "Otros". Vista previa de tres direcciones con
+datos reales; ganó Estratos. TDD de corrido: `render.py` separado en `i18n`, `charts` y `svg`; base
+visual; `repos.yaml` (486 con repo, 459 únicos); 176 librerías con tags; 7 pasan a `other` y
+`data/frozen/` se regeneró; catálogo, dominios, categorías, comparador, releases, adaptador de GitHub y
+`ecopy stars`. Mutaciones: 4 de 41 sobrevivían y ahora tienen test. Prueba real sin token sobre
+`astral-sh/uv`: 163 semanas, suma = conteo. Sin commit: lo hace el usuario.

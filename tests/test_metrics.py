@@ -264,3 +264,10 @@ def test_a_good_run_after_a_failure_clears_the_notice():
 
 def test_a_failure_without_previous_good_runs_has_no_date():
     assert site_status((report(1, "failed"),)) == SiteStatus(None, failed=True)
+
+
+def test_a_library_view_lists_the_discontinuities_inside_its_history():
+    series = {date(2018, 7, 1): 5, date(2019, 1, 1): 5}
+
+    assert library_view("a", series, as_of=date(2019, 1, 1)).discontinuities == (date(2018, 7, 27),)
+    assert library_view("a", {date(2019, 1, 1): 5}, as_of=date(2019, 1, 2)).discontinuities == ()

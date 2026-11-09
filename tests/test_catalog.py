@@ -22,9 +22,10 @@ TAXONOMY = {
     "tags": [{"slug": "async", "en": "Async", "es": "Asíncrono"}],
 }
 LIBRARIES = [
-    {"project": "fastapi", "category": "web", "tags": ["async"], "repo": "fastapi/fastapi"},
+    {"project": "fastapi", "category": "web", "tags": ["async"]},
     {"project": "pytest", "category": "testing"},
 ]
+REPOS = {"repos": {"fastapi": "fastapi/fastapi", "pytest": None}}
 TOP = {"years": {2024: ["fastapi"]}}
 RELEASES = {
     "releases": [
@@ -34,12 +35,14 @@ RELEASES = {
 }
 
 
-def write(root, *, taxonomy=TAXONOMY, libraries=LIBRARIES, top=TOP, releases=RELEASES):
+def write(root, *, taxonomy=TAXONOMY, libraries=LIBRARIES, top=TOP, releases=RELEASES, repos=REPOS):
     root.mkdir(exist_ok=True)
     (root / "taxonomy.yaml").write_text(yaml.safe_dump(taxonomy, allow_unicode=True))
     (root / "libraries.yaml").write_text(yaml.safe_dump(libraries, allow_unicode=True))
     (root / "top100.yaml").write_text(yaml.safe_dump(top))
     (root / "python_releases.yaml").write_text(yaml.safe_dump(releases))
+    if repos is not None:
+        (root / "repos.yaml").write_text(yaml.safe_dump(repos))
     return root
 
 
@@ -97,7 +100,10 @@ def test_a_valid_rename_is_a_link_between_two_libraries(tmp_path):
         {"project": "pypdf", "category": "web", "renamed_from": "pypdf2"},
         {"project": "pypdf2", "category": "web"},
     ]
-    catalog = Catalog.load(write(tmp_path / "c", libraries=libraries, top={"years": {}}))
+    repos = {"repos": {"pypdf": None, "pypdf2": None}}
+    catalog = Catalog.load(
+        write(tmp_path / "c", libraries=libraries, top={"years": {}}, repos=repos)
+    )
 
     assert catalog.library("pypdf").renamed_from == "pypdf2"
 
@@ -228,3 +234,65 @@ def test_first_refresh_reads_every_year_since_2017(tmp_path):
     refresh_top100(root, source, now=NOW)
 
     assert source.asked == [list(range(2017, 2027))]
+
+
+def test_a_library_without_an_entry_in_repos_is_rejected(tmp_path):
+    root = write(tmp_path / "c", repos={"repos": {"fastapi": "fastapi/fastapi"}})
+
+    assert "pytest" in problems(root)
+
+
+def test_a_catalog_without_a_repos_file_is_rejected(tmp_path):
+    assert "repos.yaml" in problems(write(tmp_path / "c", repos=None))
+
+
+@pytest.mark.parametrize("bad", ["fastapi", "a/b/c", "../etc", "a/..", "a/b c", "a/b?x=1"])
+def test_a_repo_that_is_not_owner_and_name_is_rejected(tmp_path, bad):
+    root = write(tmp_path / "c", repos={"repos": {"fastapi": bad, "pytest": None}})
+
+    assert "fastapi" in problems(root)
+
+
+def test_a_repo_for_a_package_outside_the_catalog_is_rejected(tmp_path):
+    repos = {"repos": {"fastapi": "a/b", "pytest": None, "ghost": "c/d"}}
+
+    assert "ghost" in problems(write(tmp_path / "c", repos=repos))
+
+
+def test_repo_in_the_libraries_file_is_rejected(tmp_path):
+    libraries = [{"project": "fastapi", "category": "web", "repo": "a/b"}, LIBRARIES[1]]
+
+    assert "repos.yaml" in problems(write(tmp_path / "c", libraries=libraries))
+
+
+def test_the_taxonomy_and_the_tags_are_listed_in_order(tmp_path):
+    catalog = Catalog.load(write(tmp_path / "c"))
+
+    assert [(d.slug, d.categories) for d in catalog.domains()] == [
+        ("development", ("web", "testing"))
+    ]
+    assert catalog.tags() == ("async",)
+    assert catalog.labels()["async"] == {"en": "Async", "es": "Asíncrono"}
+    assert [lib.project for lib in catalog.libraries()] == ["fastapi", "pytest"]
+
+
+def test_a_rename_is_followed_in_both_directions(tmp_path):
+    libraries = [
+        {"project": "fastapi", "category": "web", "renamed_from": "pytest"},
+        LIBRARIES[1],
+    ]
+
+    catalog = Catalog.load(write(tmp_path / "c", libraries=libraries))
+
+    assert catalog.renamed_to("pytest") == "fastapi"
+    assert catalog.renamed_to("fastapi") is None
+
+
+def test_repos_are_unique_and_know_the_packages_that_share_them(tmp_path):
+    libraries = [*LIBRARIES, {"project": "fastapi-cli", "category": "web"}]
+    repos = {"repos": {"fastapi": "a/b", "fastapi-cli": "a/b", "pytest": None}}
+
+    catalog = Catalog.load(write(tmp_path / "c", libraries=libraries, repos=repos))
+
+    assert catalog.repos() == ("a/b",)
+    assert catalog.projects_of_repo("a/b") == ("fastapi", "fastapi-cli")

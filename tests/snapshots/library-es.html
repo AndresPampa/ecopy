@@ -6,34 +6,24 @@
 <title>fastapi · ecopy</title>
 <link rel="stylesheet" href="/static/site.css">
 <script src="/static/vendor/echarts-6.1.0.common.min.js" defer></script>
-<script src="/static/library.js" defer></script>
+<script src="/static/charts.js" defer></script>
 </head>
 <body>
-<main>
-<nav><a href="/en/library/fastapi/" hreflang="en">English</a></nav>
+<header class="site">
+<span class="mark">ecopy</span>
+<a class="lang" href="/en/library/fastapi/" hreflang="en">English</a>
+</header>
+<main class="library">
 <h1>fastapi</h1>
-<dl>
-<dt>Primer día con datos</dt><dd><time datetime="2024-01-01">2024-01-01</time></dd>
-<dt>Último mes cerrado (2024-03)</dt><dd>40.000.000</dd>
+<dl class="facts">
+<div><dt>Primer día con datos</dt><dd><time datetime="2024-01-01">2024-01-01</time></dd></div>
+<div><dt>Último mes cerrado (2024-03)</dt><dd>40.000.000</dd></div>
 </dl>
 <section>
-<h2>Descargas por año</h2>
-<table>
-<thead><tr><th scope="col">Año</th><th scope="col">Descargas</th><th scope="col">Estado</th></tr></thead>
-<tbody>
-<tr><th scope="row">2016</th><td>1.234</td><td>Huecos de la fuente (268 de 366 días)</td></tr>
-<tr><th scope="row">2018</th><td>2.000</td><td>Desde el primer release</td></tr>
-<tr><th scope="row">2019</th><td>3.000</td><td>Días degradados (3)</td></tr>
-<tr><th scope="row">2023</th><td>4.000</td><td>Completo</td></tr>
-<tr><th scope="row">2024</th><td>75.562.750</td><td>Año en curso</td></tr>
-</tbody>
-</table>
-</section>
-<section>
 <h2>Descargas por mes</h2>
-<div id="chart" class="chart" role="img" aria-label="Gráfico de líneas de descargas por mes. La tabla tiene los mismos datos."></div>
-<p class="note">El tramo punteado es el mes en curso.</p>
-<script id="chart-data" type="application/json">{"inProgressMonth": "2024-04-01", "labels": {"inProgress": "En curso", "noData": "Sin datos"}, "option": {"grid": {"bottom": 8, "containLabel": true, "left": 8, "right": 24, "top": 16}, "series": [{"connectNulls": false, "data": [["2024-01-01", 35561750], ["2024-02-01", null], ["2024-03-01", 40000000], ["2024-04-01", null]], "lineStyle": {"cap": "round", "join": "round", "type": "solid", "width": 2}, "showSymbol": false, "type": "line"}, {"connectNulls": false, "data": [["2024-03-01", 40000000], ["2024-04-01", 1000]], "lineStyle": {"cap": "round", "join": "round", "type": "dashed", "width": 2}, "showSymbol": false, "type": "line"}], "tooltip": {"axisPointer": {"type": "line"}, "confine": true, "trigger": "axis"}, "xAxis": {"axisLabel": {"formatter": "{yyyy}", "hideOverlap": true}, "minInterval": 31536000000, "splitLine": {"show": false}, "type": "time"}, "yAxis": {"min": 0, "type": "value"}}}</script>
+<div id="chart" class="chart" data-chart role="img" aria-label="Gráfico de líneas de descargas por mes. La tabla tiene los mismos datos."></div>
+<p class="note">2024-04 en curso: 1.000 descargas en 31 de 30 días. La línea termina en el último mes cerrado.</p>
+<script id="chart-data" type="application/json">{"format": "full", "inProgress": {"downloads": 1000, "month": "2024-04-01"}, "labels": {"inProgress": "En curso", "noData": "Sin datos"}, "option": {"grid": {"bottom": 8, "containLabel": true, "left": 8, "right": 24, "top": 16}, "series": [{"connectNulls": false, "data": [["2024-01-01", 35561750], ["2024-02-01", null], ["2024-03-01", 40000000], ["2024-04-01", null]], "lineStyle": {"cap": "round", "join": "round", "width": 2}, "markArea": {"data": [[{"xAxis": "2024-04-01"}, {"xAxis": "2024-05-01"}]], "silent": true}, "showSymbol": false, "type": "line"}], "tooltip": {"axisPointer": {"type": "line"}, "confine": true, "trigger": "axis"}, "xAxis": {"axisLabel": {"formatter": "{yyyy}", "hideOverlap": true}, "max": "2024-05-01", "minInterval": 31536000000, "splitLine": {"show": false}, "type": "time"}, "yAxis": {"min": 0, "type": "value"}}}</script>
 <details>
 <summary>Descargas por mes</summary>
 <table>
@@ -47,7 +37,27 @@
 </table>
 </details>
 </section>
-<footer><p>Datos: ClickPy, a partir de los registros de descargas de PyPI.</p></footer>
+<section>
+<h2>Cuota de todas las descargas de PyPI</h2>
+
+<div id="chart-share" class="chart" data-chart role="img" aria-label="Gráfico de líneas de la cuota mensual de PyPI."></div>
+<script id="chart-share-data" type="application/json">{"format": "percent", "inProgress": null, "labels": {"inProgress": "En curso", "noData": "Sin datos"}, "option": {"grid": {"bottom": 8, "containLabel": true, "left": 8, "right": 24, "top": 16}, "series": [{"connectNulls": false, "data": [["2024-01-01", null], ["2024-02-01", null], ["2024-03-01", null]], "lineStyle": {"cap": "round", "join": "round", "width": 2}, "showSymbol": false, "type": "line"}], "tooltip": {"axisPointer": {"type": "line"}, "confine": true, "trigger": "axis"}, "xAxis": {"axisLabel": {"formatter": "{yyyy}", "hideOverlap": true}, "minInterval": 31536000000, "splitLine": {"show": false}, "type": "time"}, "yAxis": {"min": 0, "type": "value"}}}</script>
+<p class="note">La cuota se ve menos afectada por la inflación de CI que las descargas.</p>
+</section>
+<section>
+<h2>Descargas por año</h2>
+<table>
+<thead><tr><th scope="col">Año</th><th scope="col">Descargas</th><th scope="col">Estado</th></tr></thead>
+<tbody>
+<tr><th scope="row">2016</th><td>1.234</td><td>Huecos de la fuente (268 de 366 días)</td></tr>
+<tr><th scope="row">2018</th><td>2.000</td><td>Desde el primer release</td></tr>
+<tr><th scope="row">2019</th><td>3.000</td><td>Días degradados (3)</td></tr>
+<tr><th scope="row">2023</th><td>4.000</td><td>Completo</td></tr>
+<tr><th scope="row">2024</th><td>75.562.750</td><td>Año en curso</td></tr>
+</tbody>
+</table>
+</section>
 </main>
+<footer class="site"><p>Datos: ClickPy, a partir de los registros de descargas de PyPI.</p></footer>
 </body>
 </html>

@@ -186,11 +186,14 @@ CATALOG_TAXONOMY = {
 }
 
 
-def write_catalog(root, *projects: str, top=None):
+def write_catalog(root, *projects: str, top=None, repos=None):
     root.mkdir(exist_ok=True)
     (root / "taxonomy.yaml").write_text(yaml.safe_dump(CATALOG_TAXONOMY))
     libraries = [{"project": p, "category": "web"} for p in projects]
     (root / "libraries.yaml").write_text(yaml.safe_dump(libraries))
+    (root / "repos.yaml").write_text(
+        yaml.safe_dump({"repos": {p: (repos or {}).get(p) for p in projects}})
+    )
     (root / "top100.yaml").write_text(yaml.safe_dump(top or {"years": {}}))
     (root / "python_releases.yaml").write_text(
         yaml.safe_dump({"releases": [{"version": "3.12", "released": date(2023, 10, 2)}]})
@@ -411,3 +414,110 @@ def test_a_dormant_package_uses_the_same_as_of_as_the_rest(tmp_path):
     assert main(args) == 0
 
     assert ">2024-03<" in (out / "en" / "library" / "old" / "index.html").read_text()
+
+
+WEEK = int(datetime(2024, 1, 7, tzinfo=UTC).timestamp())
+
+
+def github() -> tuple[httpx.Client, list[httpx.Request]]:
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        if request.url.path.endswith("/history"):
+            return httpx.Response(200, json=[{"week": WEEK, "total": 7, "days": [7] + [0] * 6}])
+        return httpx.Response(200, json={"full_name": "fastapi/fastapi", "stargazers_count": 7})
+
+    return httpx.Client(transport=httpx.MockTransport(handler)), calls
+
+
+def stars(catalog, data, http, *extra) -> int:
+    return main(
+        ["stars", "--catalog", str(catalog), "--data", str(data), *extra],
+        http=http,
+        now=lambda: NOW,
+        sleep=lambda _: None,
+    )
+
+
+def test_stars_uses_the_token_and_saves_the_history(tmp_path, capsys, monkeypatch):
+    monkeypatch.setenv("GITHUB_TOKEN", "s3cret")
+    catalog = write_catalog(tmp_path / "c", "fastapi", repos={"fastapi": "fastapi/fastapi"})
+    client, calls = github()
+
+    assert stars(catalog, tmp_path / "d", client) == 0
+
+    assert calls[0].headers["authorization"] == "Bearer s3cret"
+    assert Store(tmp_path / "d").backfilled_repos() == {"fastapi/fastapi"}
+    output = capsys.readouterr()
+    assert "1 con historia completa" in output.out
+    assert "s3cret" not in output.out + output.err
+
+
+def test_without_a_token_stars_warns_and_caps_its_requests(tmp_path, capsys, monkeypatch):
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    names = [f"p{i}" for i in range(40)]
+    catalog = write_catalog(tmp_path / "c", *names, repos={n: f"o/{n}" for n in names})
+    client, calls = github()
+
+    assert stars(catalog, tmp_path / "d", client, "--budget", "4000") == 0
+
+    assert len(calls) == 50
+    assert "GITHUB_TOKEN" in capsys.readouterr().err
+
+
+def test_stars_can_be_limited_to_repos_of_the_catalog(tmp_path, capsys, monkeypatch):
+    monkeypatch.setenv("GITHUB_TOKEN", "t")
+    catalog = write_catalog(tmp_path / "c", "fastapi", repos={"fastapi": "fastapi/fastapi"})
+
+    assert stars(catalog, tmp_path / "d", github()[0], "--repo", "no/such") == 1
+
+    assert "no/such" in capsys.readouterr().err
+
+
+def test_a_star_run_does_not_change_the_last_update_of_the_site(tmp_path, monkeypatch):
+    monkeypatch.setenv("GITHUB_TOKEN", "t")
+    catalog = write_catalog(tmp_path / "c", "fastapi", repos={"fastapi": "fastapi/fastapi"})
+
+    stars(catalog, tmp_path / "d", github()[0])
+
+    assert Store(tmp_path / "d").runs() == ()
+
+
+def test_a_full_build_writes_the_catalog_pages_and_shows_the_stars(tmp_path, monkeypatch):
+    monkeypatch.setenv("GITHUB_TOKEN", "t")
+    data = tmp_path / "d"
+    catalog = yearly_catalog(tmp_path / "c")
+    (catalog / "repos.yaml").write_text(yaml.safe_dump({"repos": {"fastapi": "fastapi/fastapi"}}))
+    seed(Store(data))
+    assert main(["freeze", "--catalog", str(catalog), "--data", str(data)]) == 0
+    stars(catalog, data, github()[0])
+    out = tmp_path / "site"
+
+    assert main(["build", "--catalog", str(catalog), "--data", str(data), "--out", str(out)]) == 0
+
+    assert (out / "en" / "library" / "index.html").exists()
+    assert (out / "en" / "compare" / "index.html").exists()
+    assert (out / "es" / "python" / "index.html").exists()
+    assert (out / "en" / "category" / "web" / "index.html").exists()
+    assert (out / "data" / "library" / "fastapi.json").exists()
+    assert "7 stars in fastapi/fastapi" in (out / "en/library/fastapi/index.html").read_text()
+
+
+def test_a_shared_repo_lists_only_the_other_packages(tmp_path, monkeypatch):
+    monkeypatch.setenv("GITHUB_TOKEN", "t")
+    data, out = tmp_path / "d", tmp_path / "site"
+    repos = {"fastapi": "fastapi/fastapi", "flask": "fastapi/fastapi"}
+    catalog = write_catalog(tmp_path / "c", "fastapi", "flask", repos=repos)
+    run = Run("seed", datetime(2024, 2, 1, tzinfo=UTC), "backfill")
+    rows = tuple(DailyDownload(p, date(2024, 1, 15), 10) for p in ("fastapi", "flask"))
+    Store(data).append(DownloadBatch("clickpy", rows), run)
+    Store(data).append(PypiTotalsBatch("clickpy", (DailyTotal(date(2024, 1, 15), 100),)), run)
+    stars(catalog, data, github()[0])
+
+    assert main(["build", "--catalog", str(catalog), "--data", str(data), "--out", str(out)]) == 0
+
+    html = (out / "en" / "library" / "fastapi" / "index.html").read_text()
+    shared = html[html.index("also publishes") :]
+    assert 'href="/en/library/flask/"' in shared[:200]
+    assert 'href="/en/library/fastapi/"' not in shared[:200]

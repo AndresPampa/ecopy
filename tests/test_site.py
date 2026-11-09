@@ -184,32 +184,62 @@ def chart(html: str) -> dict:
     return json.loads(data.group(1))
 
 
-def test_chart_keeps_gaps_and_draws_the_month_in_progress_apart(tmp_path):
+def test_the_line_stops_at_the_last_closed_month_and_keeps_gaps(tmp_path):
     render_site([view()], tmp_path)
 
-    payload = chart(page(tmp_path))
-    closed, in_progress = payload["option"]["series"]
+    series = chart(page(tmp_path))["option"]["series"]
 
-    assert closed["data"] == [
+    assert len(series) == 1
+    assert series[0]["data"] == [
         ["2024-01-01", 35_561_750],
         ["2024-02-01", None],
         ["2024-03-01", 40_000_000],
         ["2024-04-01", None],
     ]
-    assert in_progress["lineStyle"]["type"] == "dashed"
-    assert in_progress["data"] == [["2024-03-01", 40_000_000], ["2024-04-01", 1_000]]
-    assert payload["inProgressMonth"] == "2024-04-01"
 
 
-def test_a_series_without_a_month_in_progress_has_a_single_line(tmp_path):
+def test_the_month_in_progress_is_a_band_with_its_partial_value(tmp_path):
+    render_site([view()], tmp_path)
+
+    payload = chart(page(tmp_path))
+
+    band = payload["option"]["series"][0]["markArea"]["data"]
+    assert band == [[{"xAxis": "2024-04-01"}, {"xAxis": "2024-05-01"}]]
+    assert payload["option"]["xAxis"]["max"] == "2024-05-01"
+    assert payload["inProgress"] == {"month": "2024-04-01", "downloads": 1_000}
+
+
+def test_the_month_in_progress_is_explained_in_days(tmp_path):
+    months = list(view().monthly)
+    partial = Coverage(expected=8, gap=0, degraded=0)
+    months[-1] = months[-1].model_copy(update={"coverage": partial})
+
+    render_site([view().model_copy(update={"monthly": tuple(months)})], tmp_path)
+
+    assert "2024-04 in progress: 1,000 downloads in 8 of 30 days" in page(tmp_path)
+    assert "2024-04 en curso: 1.000 descargas en 8 de 30 días" in page(tmp_path, "es")
+
+
+def test_a_series_without_a_month_in_progress_has_no_band(tmp_path):
     months = (MonthPoint(month=date(2024, 1, 1), downloads=5, status="complete", coverage=FULL),)
     closed_only = view().model_copy(update={"monthly": months, "last_closed_month": months[0]})
 
     render_site([closed_only], tmp_path)
 
     payload = chart(page(tmp_path))
-    assert len(payload["option"]["series"]) == 1
-    assert payload["inProgressMonth"] is None
+    assert "markArea" not in payload["option"]["series"][0]
+    assert payload["inProgress"] is None
+
+
+def test_discontinuities_are_marked_on_the_chart(tmp_path):
+    marked = view().model_copy(update={"discontinuities": (date(2024, 2, 15),)})
+
+    render_site([marked], tmp_path)
+
+    mark = chart(page(tmp_path))["option"]["series"][0]["markLine"]
+    assert mark["data"] == [{"xAxis": "2024-02-15"}]
+    assert mark["label"]["formatter"] == "discontinuity"
+    assert mark["label"]["position"] == "end"
 
 
 def test_chart_data_cannot_break_out_of_its_script_tag(tmp_path, monkeypatch):
@@ -444,6 +474,105 @@ def test_the_language_index_lists_the_years(tmp_path):
     index = (tmp_path / "en" / "index.html").read_text()
 
     assert 'href="/en/year/2024/"' in index and 'href="/en/year/2023/"' in index
+
+
+def test_every_page_has_the_header_with_home_navigation_and_language(tmp_path):
+    render_site([view()], tmp_path, years=(year(),), labels=LABELS)
+
+    for html in (page(tmp_path), year_page(tmp_path), (tmp_path / "en" / "index.html").read_text()):
+        assert '<header class="site">' in html
+        assert 'class="mark" href="/en/"' in html
+        assert 'hreflang="es"' in html
+
+
+def test_the_current_section_is_marked_in_the_navigation(tmp_path):
+    render_site([view()], tmp_path, years=(year(),), labels=LABELS)
+
+    assert 'href="/en/" aria-current="page">Years' in year_page(tmp_path)
+    assert 'aria-current="page"' not in page(tmp_path)
+
+
+def test_a_partial_build_has_no_links_to_pages_it_did_not_write(tmp_path):
+    render_site([view()], tmp_path)
+
+    assert 'href="/en/"' not in page(tmp_path)
+
+
+def domains(*shares) -> tuple[DomainShare, ...]:
+    return tuple(
+        DomainShare(slug=slug, downloads=int(share * 100), share=share, categories=())
+        for slug, share in shares
+    )
+
+
+def test_the_home_page_draws_one_linked_column_per_year_with_a_segment_per_domain(tmp_path):
+    views = (
+        year(2023, domains=domains(("development", 0.75), ("data-ai", 0.25))),
+        year(2024, domains=domains(("development", 0.5), ("data-ai", 0.5))),
+    )
+
+    render_years(tmp_path, *views)
+
+    index = (tmp_path / "en" / "index.html").read_text()
+    wide = index[index.index('class="strata wide"') :]
+    wide = wide[: wide.index("</svg>")]
+    assert wide.count("<rect") == 4
+    assert wide.count('class="d-data-ai') == 2
+    assert 'href="/en/year/2023/"' in wide and 'href="/en/year/2024/"' in wide
+
+
+def test_the_strata_stack_the_featured_domain_at_the_base_in_any_input_order(tmp_path):
+    render_years(tmp_path, year(2024, domains=domains(("infrastructure", 0.5), ("data-ai", 0.5))))
+
+    index = (tmp_path / "en" / "index.html").read_text()
+    wide = index[index.index('class="strata wide"') :]
+    positions = dict(
+        re.findall(r'class="d-([a-z-]+)" x="[^"]*" y="([\d.]+)"', wide[: wide.index("</svg>")])
+    )
+
+    assert float(positions["data-ai"]) > float(positions["infrastructure"])
+
+
+def test_the_home_page_states_the_domain_that_gained_the_most_share(tmp_path):
+    views = (
+        year(2023, domains=domains(("development", 0.75), ("data-ai", 0.25))),
+        year(2024, domains=domains(("development", 0.5), ("data-ai", 0.5))),
+    )
+    labels = {**LABELS, "data-ai": {"en": "Data & AI", "es": "Datos e IA"}}
+
+    render_site([], tmp_path, years=views, labels=labels)
+
+    english = (tmp_path / "en" / "index.html").read_text()
+    spanish = (tmp_path / "es" / "index.html").read_text()
+    assert "Data &amp; AI went from 25.0% of catalog downloads in 2023 to 50.0% in 2024." in english
+    assert (
+        "Datos e IA pasó de 25,0 % de las descargas del catálogo en 2023 a 50,0 % en 2024."
+        in spanish
+    )
+
+
+def test_the_home_page_states_no_finding_when_no_domain_gained_share(tmp_path):
+    same = domains(("development", 1.0))
+
+    render_years(tmp_path, year(2023, domains=same), year(2024, domains=same))
+
+    assert 'class="lead"' not in (tmp_path / "en" / "index.html").read_text()
+
+
+def test_a_year_in_progress_is_marked_as_partial_on_the_home_page(tmp_path):
+    views = (
+        year(
+            2026,
+            status="ytd",
+            period_end=date(2026, 11, 8),
+            previous_start=date(2025, 1, 1),
+            previous_end=date(2025, 11, 8),
+        ),
+    )
+
+    render_years(tmp_path, *views)
+
+    assert 'class="d-development partial"' in (tmp_path / "en" / "index.html").read_text()
 
 
 def test_no_index_is_written_without_years(tmp_path):

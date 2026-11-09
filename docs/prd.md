@@ -85,7 +85,7 @@ append-only en Parquet → cálculo de métricas → render HTML → Cloudflare 
 36. Como mantenedor, quiero que las correcciones de la fuente se registren como archivos nuevos, para conservar lo observado originalmente.
 37. Como mantenedor, quiero que las métricas se recalculen en cada build desde los datos normalizados, para que un cambio de fórmula se aplique sin migraciones.
 38. Como mantenedor, quiero guardar en cada corrida la historia reciente de estrellas y el `stargazers_count` del día, para conservar también el valor bruto (la historia de GitHub es neta: descuenta estrellas retiradas).
-39. Como mantenedor, quiero definir el catálogo curado en YAML (categoría principal, tags y repo de GitHub por librería), para editarlo sin tocar código.
+39. Como mantenedor, quiero definir el catálogo curado en YAML (categoría principal y tags en `libraries.yaml`, repo de GitHub en `repos.yaml`), para editarlo sin tocar código.
 40. Como mantenedor, quiero que el catálogo se complete automáticamente con la unión del top 100 de cada año, para no depender solo de mi criterio.
 41. Como mantenedor, quiero declarar renombres en el catálogo, para enlazar historias sin sumarlas.
 42. Como mantenedor, quiero que, si la validación falla, se publique el sitio del día anterior con el aviso de fallo, para nunca publicar datos rotos.
@@ -147,7 +147,8 @@ append-only en Parquet → cálculo de métricas → render HTML → Cloudflare 
 - Estrellas de GitHub (spike S3): `GET /repos/{o}/{r}/stargazers/history` (semanas con días, 30 por
   página, neto; cuadra exacto con `stargazers_count`). Backfill una vez (~9.000 consultas para ~500
   repos, repartido en varias corridas) y en cada corrida la página 1 + `stargazers_count`, con el
-  `GITHUB_TOKEN` de Actions. Solo conteos; nunca logins ni IDs de usuarios. El listado con
+  `GITHUB_TOKEN` de Actions (el backfill se corre en local con un token personal, 5.000/h: ver
+  `docs/design/etapa-4-librerias-y-comparador.md`). Comando aparte de `ingest`. Solo conteos; nunca logins ni IDs de usuarios. El listado con
   `starred_at` quedó descartado (exige autenticación de admin/colaborador desde julio de 2026).
 
 **Fuentes**

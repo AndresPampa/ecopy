@@ -17,9 +17,15 @@ from ecopy.models import (
     PythonMinorMonth,
     Run,
     RunReport,
+    StarsReport,
+    StarTotal,
+    StarTotalsBatch,
+    StarWeek,
+    StarWeeksBatch,
 )
 from ecopy.quality import SOURCE_START
 from ecopy.sources.clickpy import ClickPy, SourceError
+from ecopy.sources.github import BudgetExhausted, GitHub, RateLimited
 from ecopy.store import Store
 from ecopy.validate import RECENT_DAYS, Candidates, History, check
 
@@ -168,3 +174,70 @@ def validate_store(projects: Sequence[str], store: Store, *, now: datetime) -> l
         python=python,
     )
     return check(candidates, History(totals, store.last_days()), projects=projects, as_of=as_of)
+
+
+def ingest_stars(
+    repos: Sequence[str], source: GitHub, store: Store, *, now: datetime
+) -> StarsReport:
+    """Completa la historia de los repos que no la tienen y actualiza los demás.
+
+    Guarda una vez por corrida, aun si se interrumpe, y solo repos completos: la siguiente
+    corrida retoma por los que falten.
+    """
+    captured = now.astimezone(UTC)
+    report_id = f"{captured:%Y%m%dT%H%M%SZ}"
+    done = store.backfilled_repos()
+    plan = [(r, "backfill") for r in repos if r not in done]
+    plan += [(r, "observed") for r in repos if r in done]
+    weeks: dict[str, list[StarWeek]] = {"backfill": [], "observed": []}
+    totals: dict[str, list[StarTotal]] = {"backfill": [], "observed": []}
+    finished: dict[str, list[str]] = {"backfill": [], "observed": []}
+    failed: list[tuple[str, str]] = []
+    moved: list[tuple[str, str]] = []
+    stopped: str | None = None
+    attempted = 0
+
+    def save() -> None:
+        for kind in ("backfill", "observed"):
+            run = Run(f"{report_id}-{kind}", captured, kind)
+            store.append(StarWeeksBatch("github", tuple(weeks[kind])), run)
+            store.append(StarTotalsBatch("github", tuple(totals[kind])), run)
+
+    try:
+        for repo, kind in plan:
+            fetch = source.full_history if kind == "backfill" else source.recent
+            try:
+                stars = fetch(repo)
+            except BudgetExhausted:
+                stopped = "budget"
+                break
+            except RateLimited:
+                stopped = "rate_limited"
+                break
+            except SourceError as error:
+                attempted += 1
+                failed.append((repo, str(error)))
+                continue
+            attempted += 1
+            weeks[kind].extend(stars.weeks)
+            totals[kind].append(StarTotal(repo, captured.date(), stars.stars))
+            finished[kind].append(repo)
+            if stars.full_name.lower() != repo.lower():
+                moved.append((repo, stars.full_name))
+    finally:
+        save()
+
+    report = StarsReport(
+        id=report_id,
+        captured_at=captured,
+        status="complete" if stopped is None and not failed else "partial",
+        requests=source.requests,
+        backfilled=tuple(finished["backfill"]),
+        updated=tuple(finished["observed"]),
+        pending=len(plan) - attempted,
+        failed=tuple(failed),
+        moved=tuple(moved),
+        stopped=stopped,
+    )
+    store.record_stars_run(report)
+    return report

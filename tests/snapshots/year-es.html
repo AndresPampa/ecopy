@@ -9,8 +9,15 @@
 <script src="/static/charts.js" defer></script>
 </head>
 <body>
+<header class="site">
+<a class="mark" href="/es/">ecopy</a>
+<nav aria-label="Principal">
+<a href="/es/" aria-current="page">Años</a>
+</nav>
+<a class="lang" href="/en/year/2024/" hreflang="en">English</a>
+</header>
 <main>
-<nav><a href="/en/year/2024/" hreflang="en">English</a> · <span aria-current="page">2024</span> · <a href="/es/year/2023/">2023</a></nav>
+<nav class="years" aria-label="Años"><span aria-current="page">2024</span><a href="/es/year/2023/">2023</a></nav>
 <h1>2024</h1>
 <p>2024-01-01 → 2024-12-31. Versión metodológica 1.</p>
 
@@ -108,7 +115,7 @@
 <li><time datetime="2024-10-07">2024-10-07</time> · Python 3.13 · lanzamiento</li>
 </ul>
 </section>
-<footer><p>Datos: ClickPy, a partir de los registros de descargas de PyPI.</p></footer>
 </main>
+<footer class="site"><p>Datos: ClickPy, a partir de los registros de descargas de PyPI.</p></footer>
 </body>
 </html>

@@ -7,8 +7,9 @@ terreno, qué versiones del lenguaje se adoptan y qué categorías ganan peso. E
 bilingüe (EN/ES), que se regenera una vez al día y se publicará en `ecopy.pages.dev`.
 
 > **Estado:** en desarrollo local. Ya funciona de punta a punta con un catálogo de 500 paquetes:
-> descargas desde 2016, totales de PyPI, versiones de Python, validación y fichas EN/ES generadas
-> y servidas en localhost.
+> descargas desde 2016, totales de PyPI, versiones de Python, validación, años cerrados congelados
+> y fichas y páginas por año EN/ES generadas y servidas en localhost. La interfaz visual es lo
+> próximo: hoy las páginas tienen un diseño mínimo y no hay navegación.
 
 ## Qué va a ofrecer (MVP)
 
@@ -52,10 +53,11 @@ Detalle y estado en [`docs/ROADMAP.md`](docs/ROADMAP.md). Cada etapa se trabaja 
   histórico de estrellas, ECharts vs Plotly, tamaño de los datos.
 - **Etapa 1 — Tracer bullet** ✅: un paquete, de ClickPy a una página generada en local.
 - **Etapa 2 — Datos completos** ✅: backfill, catálogo y categorías, ingesta y validación.
-- **Etapa 3 — Vista anual** 🚧: cuotas, movers, versiones de Python y años congelados; en revisión.
-- **Etapa 4 — Librerías, comparador, releases y estrellas.**
-- **Etapa 5 — Publicación del MVP:** EN/ES, metodología, seguridad, accesibilidad, diseño y
-  despliegue (GitHub Actions + Cloudflare Pages).
+- **Etapa 3 — Vista anual** ✅: cuotas, movers, versiones de Python y años congelados.
+- **Etapa 4 — Base visual, librerías y comparador** 🚧: interfaz y navegación, fichas, comparador,
+  releases y estrellas.
+- **Etapa 5 — Publicación del MVP:** EN/ES, metodología, seguridad, accesibilidad y despliegue
+  (GitHub Actions + Cloudflare Pages).
 - **Después del MVP:** Trending y Seguridad; cuentas y encuestas.
 
 ## Fuentes de datos
@@ -81,6 +83,16 @@ Para generar una ficha en local, con datos reales de ClickPy:
 uv run ecopy ingest --project fastapi   # primera vez: histórico; después: solo lo nuevo
 uv run ecopy build --project fastapi    # genera build/site/
 uv run ecopy serve                      # http://127.0.0.1:8000/en/library/fastapi/ con la CSP real
+```
+
+Para generar el sitio completo, con el catálogo entero y las páginas por año:
+
+```bash
+uv run ecopy ingest   # primera vez: histórico; después: hasta ayer (UTC)
+uv run ecopy freeze   # congela los años cerrados que falten; lo ya congelado no se reescribe
+uv run ecopy build    # genera build/site/; falla si falta congelar algún año cerrado
+uv run ecopy stars    # historia de estrellas; pide GITHUB_TOKEN y se reanuda sola
+uv run ecopy serve    # http://127.0.0.1:8000/en/ con la CSP real
 ```
 
 ## Documentación
