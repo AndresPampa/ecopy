@@ -1,0 +1,675 @@
+# Catálogo curado de ecopy. Borrador redactado por el agente (2026-11-09), para revisar por excepción.
+# Cada entrada: `project` (nombre en PyPI), `category` (slug de taxonomy.yaml) y, opcionales, `tags`,
+# `repo` (owner/name, se completa en la Etapa 4) y `renamed_from` (enlaza, nunca suma).
+- {project: absl-py, category: machine-learning}
+- {project: acme, category: cloud-devops}
+- project: aiobotocore
+  category: cloud-devops
+  tags: [async, aws]
+- project: aiofiles
+  category: distributed
+  tags: [async]
+- {project: aiohappyeyeballs, category: foundations}
+- project: aiohttp
+  category: web
+  tags: [async]
+- {project: aiosignal, category: foundations}
+- {project: alembic, category: databases}
+- {project: altair, category: visualization}
+- {project: amqp, category: messaging}
+- {project: annotated-doc, category: foundations}
+- {project: annotated-types, category: foundations}
+- {project: ansible, category: cloud-devops}
+- project: anyio
+  category: distributed
+  tags: [async]
+- {project: apache-beam, category: data-engineering}
+- {project: appdirs, category: foundations}
+- {project: apscheduler, category: distributed}
+- {project: arcade, category: games}
+- {project: argcomplete, category: cli}
+- {project: argon2-cffi, category: security}
+- {project: argparse, category: foundations}
+- {project: arrow, category: foundations}
+- {project: asgiref, category: web}
+- {project: asn1crypto, category: security}
+- {project: astroid, category: dev-tools}
+- {project: astropy, category: scientific}
+- {project: async-timeout, category: foundations}
+- project: asyncpg
+  category: databases
+  tags: [async]
+- {project: atomicwrites, category: foundations}
+- {project: attrs, category: foundations}
+- {project: authlib, category: security}
+- {project: av, category: audio-video}
+- project: awscli
+  category: cloud-devops
+  tags: [aws]
+- project: awscli-cwlogs
+  category: cloud-devops
+  tags: [aws]
+- project: awswrangler
+  category: data-engineering
+  tags: [aws]
+- project: azure-common
+  category: cloud-devops
+  tags: [azure]
+- project: azure-core
+  category: cloud-devops
+  tags: [azure]
+- project: azure-identity
+  category: cloud-devops
+  tags: [azure]
+- project: azure-storage-blob
+  category: cloud-devops
+  tags: [azure]
+- {project: babel, category: i18n}
+- {project: backoff, category: distributed}
+- {project: backports-abc, category: foundations}
+- {project: backports-ssl-match-hostname, category: foundations}
+- {project: backtrader, category: quant-finance}
+- {project: bcrypt, category: security}
+- {project: beautifulsoup4, category: scraping}
+- {project: biopython, category: scientific}
+- {project: black, category: dev-tools}
+- {project: bleach, category: foundations}
+- {project: bokeh, category: visualization}
+- project: boto
+  category: cloud-devops
+  tags: [aws]
+- project: boto3
+  category: cloud-devops
+  tags: [aws]
+- project: botocore
+  category: cloud-devops
+  tags: [aws]
+- {project: bottle, category: web}
+- project: build
+  category: dev-tools
+  tags: [packaging]
+- {project: cachetools, category: foundations}
+- {project: catboost, category: machine-learning}
+- {project: cattrs, category: serialization}
+- {project: celery, category: messaging}
+- {project: certbot-dns-cloudflare, category: cloud-devops}
+- {project: certifi, category: foundations}
+- {project: cffi, category: foundations}
+- {project: channels, category: web}
+- {project: chardet, category: foundations}
+- {project: charset-normalizer, category: foundations}
+- {project: chromadb, category: llm}
+- {project: click, category: cli}
+- {project: cloudflare, category: cloud-devops}
+- {project: cloudpickle, category: distributed}
+- {project: colorama, category: cli}
+- {project: colorlog, category: observability}
+- {project: configparser, category: configuration}
+- {project: confluent-kafka, category: messaging}
+- {project: contourpy, category: visualization}
+- {project: coverage, category: testing}
+- {project: cryptography, category: security}
+- {project: cupy, category: scientific}
+- {project: cvxpy, category: optimization}
+- {project: cycler, category: visualization}
+- {project: cython, category: dev-tools}
+- {project: dagster, category: data-engineering}
+- {project: darts, category: time-series}
+- {project: dash, category: dashboards}
+- project: dask
+  category: data-engineering
+  tags: [dataframe]
+- {project: databricks-sdk, category: big-data}
+- {project: databricks-sql-connector, category: big-data}
+- {project: datadog, category: observability}
+- {project: dbt-core, category: data-engineering}
+- {project: debugpy, category: dev-tools}
+- {project: decorator, category: foundations}
+- {project: defusedxml, category: security}
+- {project: delta-spark, category: data-engineering}
+- {project: deprecated, category: foundations}
+- project: diffusers
+  category: machine-learning
+  tags: [deep-learning]
+- {project: dill, category: distributed}
+- {project: discord, category: http-clients}
+- {project: discord-py, category: http-clients}
+- project: distlib
+  category: dev-tools
+  tags: [packaging]
+- {project: django, category: web}
+- {project: django-cors-headers, category: web}
+- {project: django-debug-toolbar, category: web}
+- {project: django-filter, category: web}
+- {project: docker, category: cloud-devops, renamed_from: docker-py}
+- {project: docker-py, category: cloud-devops}
+- {project: docopt, category: cli}
+- {project: docutils, category: documentation}
+- {project: dramatiq, category: distributed}
+- {project: dvc, category: mlops}
+- {project: dynaconf, category: configuration}
+- {project: ecdsa, category: security}
+- {project: elasticsearch, category: databases}
+- {project: email-validator, category: serialization}
+- {project: entrypoints, category: foundations}
+- {project: enum34, category: foundations}
+- {project: et-xmlfile, category: foundations}
+- {project: exceptiongroup, category: foundations}
+- {project: fabric, category: cloud-devops}
+- {project: factory-boy, category: synthetic-data}
+- {project: faiss-cpu, category: llm}
+- {project: faker, category: synthetic-data}
+- {project: falcon, category: web}
+- project: fastapi
+  category: web
+  tags: [async]
+- {project: fastavro, category: serialization}
+- {project: fastjsonschema, category: serialization}
+- {project: feast, category: mlops}
+- {project: filelock, category: foundations}
+- project: flake8
+  category: dev-tools
+  tags: [linter]
+- {project: flask, category: web}
+- {project: flask-cors, category: web}
+- {project: flet, category: desktop}
+- {project: folium, category: geospatial}
+- {project: freezegun, category: testing}
+- {project: frozenlist, category: foundations}
+- {project: fsspec, category: foundations}
+- {project: funcsigs, category: foundations}
+- {project: functools32, category: foundations}
+- {project: future, category: foundations}
+- {project: futures, category: foundations}
+- project: gcsfs
+  category: cloud-devops
+  tags: [google-cloud]
+- {project: gensim, category: nlp}
+- {project: geopandas, category: geospatial}
+- {project: geopy, category: geospatial}
+- {project: gevent, category: web}
+- {project: gitpython, category: dev-tools}
+- project: google-api-core
+  category: http-clients
+  tags: [google-cloud]
+- project: google-api-python-client
+  category: http-clients
+  tags: [google-cloud]
+- project: google-auth
+  category: cloud-devops
+  tags: [google-cloud]
+- project: google-auth-httplib2
+  category: cloud-devops
+  tags: [google-cloud]
+- project: google-cloud-bigquery
+  category: cloud-devops
+  tags: [google-cloud]
+- project: google-cloud-core
+  category: cloud-devops
+  tags: [google-cloud]
+- project: google-cloud-storage
+  category: cloud-devops
+  tags: [google-cloud]
+- {project: google-genai, category: llm}
+- project: google-resumable-media
+  category: cloud-devops
+  tags: [google-cloud]
+- project: googleapis-common-protos
+  category: http-clients
+  tags: [google-cloud]
+- {project: gpiozero, category: robotics-iot}
+- {project: gradio, category: dashboards}
+- {project: graphviz, category: visualization}
+- {project: great-expectations, category: data-engineering}
+- {project: greenlet, category: foundations}
+- {project: grpcio, category: http-clients}
+- {project: grpcio-status, category: http-clients}
+- {project: grpcio-tools, category: http-clients}
+- {project: guidance, category: llm}
+- {project: gunicorn, category: web}
+- {project: h11, category: foundations}
+- {project: h5py, category: machine-learning}
+- project: hatchling
+  category: dev-tools
+  tags: [packaging]
+- {project: html5lib, category: scraping}
+- {project: httpcore, category: foundations}
+- {project: httplib2, category: http-clients}
+- project: httpx
+  category: http-clients
+  tags: [async]
+- {project: huggingface-hub, category: llm}
+- {project: hvac, category: cloud-devops}
+- {project: hydra-core, category: configuration}
+- {project: idna, category: foundations}
+- {project: imageio, category: imaging}
+- {project: importlib-metadata, category: foundations}
+- {project: importlib-resources, category: foundations}
+- {project: iniconfig, category: testing}
+- {project: invoke, category: cloud-devops}
+- {project: ipaddress, category: foundations}
+- {project: ipykernel, category: data-science}
+- {project: ipython, category: data-science}
+- {project: ipywidgets, category: data-science}
+- {project: isodate, category: foundations}
+- {project: isort, category: dev-tools}
+- {project: itsdangerous, category: web}
+- project: jax
+  category: machine-learning
+  tags: [deep-learning]
+- {project: jedi, category: dev-tools}
+- {project: jinja2, category: web}
+- {project: jmespath, category: foundations}
+- {project: joblib, category: machine-learning}
+- {project: jsonschema, category: serialization}
+- {project: jsonschema-specifications, category: foundations}
+- {project: jupyterlab, category: data-science}
+- project: keras
+  category: machine-learning
+  tags: [deep-learning]
+- {project: keyring, category: security}
+- {project: kivy, category: desktop}
+- {project: kiwisolver, category: visualization}
+- {project: kombu, category: messaging}
+- {project: kubernetes, category: cloud-devops}
+- {project: langchain, category: llm}
+- {project: langchain-community, category: llm}
+- {project: langchain-core, category: llm}
+- {project: langchain-openai, category: llm}
+- {project: langchain-text-splitters, category: llm}
+- {project: langgraph, category: llm}
+- {project: langsmith, category: llm}
+- {project: libcst, category: dev-tools}
+- {project: librosa, category: audio-video}
+- {project: lightgbm, category: machine-learning}
+- project: lightning
+  category: machine-learning
+  tags: [deep-learning]
+  renamed_from: pytorch-lightning
+- {project: litellm, category: llm}
+- {project: llama-index, category: llm}
+- {project: locust, category: testing}
+- {project: loguru, category: observability}
+- {project: luigi, category: data-engineering}
+- {project: lxml, category: serialization}
+- {project: mako, category: web}
+- {project: markdown, category: documentation}
+- {project: markdown-it-py, category: foundations}
+- {project: markupsafe, category: web}
+- {project: marshmallow, category: serialization}
+- {project: matplotlib, category: visualization}
+- project: mccabe
+  category: dev-tools
+  tags: [linter]
+- {project: mcp, category: llm}
+- {project: mdurl, category: foundations}
+- {project: mimesis, category: synthetic-data}
+- {project: mistune, category: documentation}
+- {project: mkdocs, category: documentation}
+- {project: mkdocs-material, category: documentation}
+- {project: mlflow, category: mlops}
+- {project: mock, category: testing}
+- project: modin
+  category: data-science
+  tags: [dataframe]
+- {project: more-itertools, category: foundations}
+- {project: moviepy, category: audio-video}
+- {project: mpmath, category: optimization}
+- project: msal
+  category: cloud-devops
+  tags: [azure]
+- {project: msgpack, category: serialization, renamed_from: msgpack-python}
+- {project: msgpack-python, category: serialization}
+- {project: msgspec, category: serialization}
+- project: msrest
+  category: cloud-devops
+  tags: [azure]
+- {project: multidict, category: foundations}
+- {project: multiprocess, category: distributed}
+- project: mypy
+  category: dev-tools
+  tags: [linter]
+- {project: mypy-extensions, category: dev-tools}
+- {project: mysql-connector-python, category: databases}
+- project: narwhals
+  category: data-science
+  tags: [dataframe]
+- {project: nbconvert, category: data-science}
+- {project: nbformat, category: data-science}
+- project: nest-asyncio
+  category: distributed
+  tags: [async]
+- {project: networkx, category: visualization}
+- {project: nltk, category: nlp}
+- {project: nose, category: testing}
+- {project: notebook, category: data-science}
+- {project: nox, category: dev-tools}
+- {project: numba, category: scientific}
+- {project: numpy, category: data-science}
+- project: oauth2client
+  category: cloud-devops
+  tags: [google-cloud]
+- {project: oauthlib, category: security}
+- {project: omegaconf, category: configuration}
+- project: onnx
+  category: machine-learning
+  tags: [deep-learning]
+- {project: openai, category: llm}
+- {project: openai-whisper, category: audio-video}
+- {project: opencv-python, category: imaging}
+- {project: openpyxl, category: files-documents}
+- {project: opensearch-py, category: databases}
+- {project: opentelemetry-api, category: observability}
+- {project: opentelemetry-exporter-otlp, category: observability}
+- {project: opentelemetry-sdk, category: observability}
+- {project: opentelemetry-semantic-conventions, category: observability}
+- {project: optuna, category: mlops}
+- {project: orjson, category: serialization}
+- {project: ortools, category: optimization}
+- {project: packaging, category: foundations}
+- {project: panda3d, category: games}
+- project: pandas
+  category: data-science
+  tags: [dataframe]
+- {project: pandas-stubs, category: data-science}
+- {project: panel, category: dashboards}
+- {project: paramiko, category: cloud-devops}
+- {project: parso, category: dev-tools}
+- {project: passlib, category: security}
+- {project: pathspec, category: foundations}
+- {project: pbr, category: foundations}
+- {project: pdfplumber, category: files-documents}
+- {project: pdoc, category: documentation}
+- project: peewee
+  category: databases
+  tags: [orm]
+- {project: pendulum, category: foundations}
+- project: pep8
+  category: dev-tools
+  tags: [linter]
+- {project: petl, category: data-engineering}
+- {project: pexpect, category: foundations}
+- {project: pika, category: messaging}
+- {project: pillow, category: imaging}
+- {project: pingouin, category: statistics}
+- project: pip
+  category: dev-tools
+  tags: [packaging]
+- project: pipenv
+  category: dev-tools
+  tags: [packaging]
+- {project: platformdirs, category: foundations}
+- {project: plotly, category: visualization}
+- {project: pluggy, category: testing}
+- project: poetry
+  category: dev-tools
+  tags: [packaging]
+- project: poetry-core
+  category: dev-tools
+  tags: [packaging]
+- project: polars
+  category: data-science
+  tags: [dataframe]
+- {project: pre-commit, category: dev-tools}
+- {project: prefect, category: data-engineering}
+- {project: prettytable, category: cli}
+- {project: progressbar2, category: cli}
+- {project: prometheus-client, category: observability}
+- {project: prompt-toolkit, category: cli}
+- {project: propcache, category: foundations}
+- {project: prophet, category: time-series}
+- {project: protobuf, category: serialization}
+- {project: psutil, category: observability}
+- {project: psycopg, category: databases}
+- {project: psycopg2, category: databases}
+- {project: psycopg2-binary, category: databases}
+- {project: ptyprocess, category: foundations}
+- {project: pulp, category: optimization}
+- {project: pulumi, category: cloud-devops}
+- {project: py, category: foundations}
+- {project: py4j, category: big-data}
+- project: pyarrow
+  category: data-science
+  tags: [dataframe]
+- {project: pyasn1, category: foundations}
+- {project: pyasn1-modules, category: foundations}
+- {project: pybind11, category: dev-tools}
+- {project: pybullet, category: games}
+- project: pycodestyle
+  category: dev-tools
+  tags: [linter]
+  renamed_from: pep8
+- {project: pycountry, category: i18n}
+- {project: pycparser, category: foundations}
+- {project: pycrypto, category: security}
+- {project: pycryptodome, category: security}
+- {project: pydantic, category: serialization}
+- {project: pydantic-core, category: serialization}
+- {project: pydantic-settings, category: serialization}
+- {project: pydub, category: audio-video}
+- project: pyflakes
+  category: dev-tools
+  tags: [linter]
+- {project: pygame, category: games}
+- {project: pygithub, category: http-clients}
+- {project: pygments, category: documentation}
+- {project: pyinstaller, category: dev-tools}
+- {project: pyjwt, category: security}
+- project: pylint
+  category: dev-tools
+  tags: [linter]
+- {project: pymc, category: statistics}
+- {project: pymodbus, category: robotics-iot}
+- {project: pymongo, category: databases}
+- {project: pymupdf, category: files-documents}
+- {project: pymysql, category: databases}
+- {project: pynacl, category: security}
+- {project: pyodbc, category: databases}
+- {project: pyopenssl, category: security}
+- {project: pyparsing, category: foundations}
+- {project: pypdf, category: files-documents, renamed_from: pypdf2}
+- {project: pypdf2, category: files-documents}
+- {project: pyproj, category: geospatial}
+- {project: pyqt5, category: desktop}
+- {project: pyqt6, category: desktop}
+- project: pyright
+  category: dev-tools
+  tags: [linter]
+- {project: pyrsistent, category: foundations}
+- {project: pyserial, category: robotics-iot}
+- {project: pyside6, category: desktop}
+- project: pyspark
+  category: big-data
+  tags: [dataframe]
+- {project: pytest, category: testing}
+- project: pytest-asyncio
+  category: testing
+  tags: [async]
+- {project: pytest-cov, category: testing}
+- {project: pytest-mock, category: testing}
+- {project: pytest-runner, category: dev-tools}
+- {project: pytest-xdist, category: testing}
+- {project: python-dateutil, category: foundations}
+- {project: python-docx, category: files-documents}
+- {project: python-dotenv, category: configuration}
+- {project: python-i18n, category: i18n}
+- {project: python-jose, category: security}
+- {project: python-json-logger, category: observability}
+- {project: python-multipart, category: web}
+- {project: python-pptx, category: files-documents}
+- {project: python-slugify, category: cli}
+- {project: python-socketio, category: web}
+- {project: python-telegram-bot, category: http-clients}
+- project: pytorch-lightning
+  category: machine-learning
+  tags: [deep-learning]
+- {project: pytz, category: foundations}
+- {project: pyyaml, category: serialization}
+- {project: pyzmq, category: messaging}
+- {project: quantlib, category: quant-finance}
+- {project: rapidfuzz, category: nlp}
+- {project: rasterio, category: geospatial}
+- {project: ray, category: big-data}
+- {project: rdkit, category: scientific}
+- {project: readme-renderer, category: documentation}
+- {project: redis, category: databases}
+- {project: referencing, category: foundations}
+- {project: reflex, category: dashboards}
+- {project: regex, category: foundations}
+- {project: reportlab, category: files-documents}
+- {project: requests, category: http-clients}
+- {project: requests-oauthlib, category: http-clients}
+- {project: requests-toolbelt, category: http-clients}
+- {project: responses, category: testing}
+- {project: rich, category: cli}
+- {project: rpds-py, category: foundations}
+- {project: rsa, category: security}
+- {project: ruamel-yaml, category: serialization}
+- project: ruff
+  category: dev-tools
+  tags: [linter]
+- project: s3fs
+  category: cloud-devops
+  tags: [aws]
+- project: s3transfer
+  category: cloud-devops
+  tags: [aws]
+- {project: safetensors, category: machine-learning}
+- project: sagemaker
+  category: mlops
+  tags: [aws]
+- project: sanic
+  category: web
+  tags: [async]
+- {project: scalene, category: observability}
+- {project: scikit-learn, category: machine-learning}
+- {project: scipy, category: statistics}
+- {project: scrapy, category: scraping}
+- {project: seaborn, category: visualization}
+- {project: selenium, category: scraping}
+- {project: sentencepiece, category: nlp}
+- {project: sentry-sdk, category: observability}
+- project: setuptools
+  category: dev-tools
+  tags: [packaging]
+- project: setuptools-scm
+  category: dev-tools
+  tags: [packaging]
+- {project: shap, category: machine-learning}
+- {project: shapely, category: geospatial}
+- {project: simplejson, category: serialization}
+- {project: singledispatch, category: foundations}
+- {project: six, category: foundations}
+- {project: sktime, category: time-series}
+- {project: slack-sdk, category: http-clients}
+- {project: sniffio, category: foundations}
+- {project: snowflake-connector-python, category: data-engineering}
+- {project: sortedcontainers, category: foundations}
+- {project: soundfile, category: audio-video}
+- {project: soupsieve, category: scraping}
+- {project: spacy, category: nlp}
+- {project: sphinx, category: documentation}
+- project: sqlalchemy
+  category: databases
+  tags: [orm]
+- project: sqlmodel
+  category: databases
+  tags: [orm]
+- {project: sqlparse, category: databases}
+- project: starlette
+  category: web
+  tags: [async]
+- {project: statsforecast, category: time-series}
+- {project: statsmodels, category: statistics}
+- {project: streamlit, category: dashboards}
+- {project: structlog, category: observability}
+- {project: sympy, category: optimization}
+- {project: tabulate, category: cli}
+- {project: tenacity, category: distributed}
+- {project: tensorboard, category: machine-learning}
+- project: tensorflow
+  category: machine-learning
+  tags: [deep-learning]
+- {project: termcolor, category: cli}
+- {project: text-unidecode, category: i18n}
+- {project: textual, category: cli}
+- {project: threadpoolctl, category: machine-learning}
+- {project: tiktoken, category: llm}
+- project: timm
+  category: machine-learning
+  tags: [deep-learning]
+- {project: tokenizers, category: llm}
+- {project: toml, category: foundations}
+- {project: tomli, category: foundations}
+- {project: tomlkit, category: foundations}
+- {project: toolz, category: foundations}
+- project: torch
+  category: machine-learning
+  tags: [deep-learning]
+- project: torchvision
+  category: machine-learning
+  tags: [deep-learning]
+- project: tornado
+  category: web
+  tags: [async]
+- {project: tox, category: dev-tools}
+- {project: tqdm, category: cli}
+- project: transformers
+  category: llm
+  tags: [deep-learning]
+- project: trio
+  category: distributed
+  tags: [async]
+- {project: trove-classifiers, category: foundations}
+- {project: typeguard, category: serialization}
+- {project: typer, category: cli}
+- {project: types-pyyaml, category: dev-tools}
+- {project: types-requests, category: dev-tools}
+- {project: typing, category: foundations}
+- {project: typing-extensions, category: foundations}
+- {project: typing-inspection, category: foundations}
+- {project: tzdata, category: foundations}
+- {project: uritemplate, category: foundations}
+- {project: urllib3, category: foundations}
+- project: uv
+  category: dev-tools
+  tags: [packaging]
+- project: uvicorn
+  category: web
+  tags: [async]
+- project: uvloop
+  category: distributed
+  tags: [async]
+- project: vaex
+  category: data-science
+  tags: [dataframe]
+- {project: vcversioner, category: foundations}
+- {project: vectorbt, category: quant-finance}
+- project: virtualenv
+  category: dev-tools
+  tags: [packaging]
+- {project: wandb, category: mlops}
+- {project: wcwidth, category: foundations}
+- {project: weaviate-client, category: llm}
+- {project: webencodings, category: foundations}
+- {project: websocket-client, category: http-clients}
+- project: websockets
+  category: web
+  tags: [async]
+- {project: werkzeug, category: web}
+- project: wheel
+  category: dev-tools
+  tags: [packaging]
+- {project: wrapt, category: foundations}
+- {project: wsproto, category: web}
+- {project: xarray, category: data-science}
+- {project: xgboost, category: machine-learning}
+- {project: xlrd, category: files-documents}
+- {project: xlsxwriter, category: files-documents}
+- {project: xmltodict, category: serialization}
+- {project: yarl, category: foundations}
+- {project: yfinance, category: quant-finance}
+- {project: yt-dlp, category: audio-video}
+- {project: zeep, category: http-clients}
+- {project: zipp, category: foundations}
+- {project: zope-interface, category: foundations}

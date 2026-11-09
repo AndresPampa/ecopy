@@ -6,8 +6,9 @@ ecopy muestra cómo evoluciona el ecosistema Python desde 2017: qué librerías 
 terreno, qué versiones del lenguaje se adoptan y qué categorías ganan peso. Es un sitio estático,
 bilingüe (EN/ES), que se regenera una vez al día y se publicará en `ecopy.pages.dev`.
 
-> **Estado:** en desarrollo local. Ya funciona de punta a punta para un paquete, de ClickPy a una
-> página generada; todavía no está publicado. Ver [`docs/ROADMAP.md`](docs/ROADMAP.md).
+> **Estado:** en desarrollo local. Ya funciona de punta a punta con un catálogo de 500 paquetes:
+> descargas desde 2016, totales de PyPI, versiones de Python, validación y fichas EN/ES generadas
+> y servidas en localhost.
 
 ## Qué va a ofrecer (MVP)
 
@@ -50,7 +51,7 @@ Detalle y estado en [`docs/ROADMAP.md`](docs/ROADMAP.md). Cada etapa se trabaja 
 - **Etapa 0 — Spikes de validación** ✅: cobertura de ClickPy, versiones de Python,
   histórico de estrellas, ECharts vs Plotly, tamaño de los datos.
 - **Etapa 1 — Tracer bullet** ✅: un paquete, de ClickPy a una página generada en local.
-- **Etapa 2 — Datos completos:** backfill, catálogo y categorías, ingesta diaria.
+- **Etapa 2 — Datos completos** 🚧: backfill, catálogo y categorías, ingesta y validación; en revisión.
 - **Etapa 3 — Vista anual.**
 - **Etapa 4 — Librerías, comparador, releases y estrellas.**
 - **Etapa 5 — Publicación del MVP:** EN/ES, metodología, seguridad, accesibilidad, diseño y

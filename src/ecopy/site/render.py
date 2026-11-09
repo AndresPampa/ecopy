@@ -11,7 +11,7 @@ from pathlib import Path
 from jinja2 import Environment, PackageLoader, StrictUndefined
 from pydantic import BaseModel
 
-from ecopy.models import LibraryView
+from ecopy.models import LibraryView, SiteStatus
 
 LANGS = ("en", "es")
 
@@ -51,7 +51,9 @@ TEXTS = {
         "month": "Month",
         "downloads": "Downloads",
         "status": "Status",
-        "partial": "Partial data",
+        "package_start": "Since first release",
+        "source_gap": "Source gaps ({with_data} of {expected} days)",
+        "degraded": "Degraded days ({degraded})",
         "ytd": "Year to date",
         "in_progress": "In progress",
         "complete": "Complete",
@@ -59,6 +61,9 @@ TEXTS = {
         "chart_alt": "Line chart of downloads per month. The table has the same data.",
         "in_progress_note": "The dashed segment is the month in progress.",
         "source": "Data: ClickPy, from PyPI download logs.",
+        "last_updated": "Last updated",
+        "update_failed": "Update failed: the latest ingest did not pass validation.",
+        "update_failed_since": "Figures are from the last good update, on {date}.",
     },
     "es": {
         "switch_label": "English",
@@ -70,7 +75,9 @@ TEXTS = {
         "month": "Mes",
         "downloads": "Descargas",
         "status": "Estado",
-        "partial": "Datos parciales",
+        "package_start": "Desde el primer release",
+        "source_gap": "Huecos de la fuente ({with_data} de {expected} días)",
+        "degraded": "Días degradados ({degraded})",
         "ytd": "Año en curso",
         "in_progress": "En curso",
         "complete": "Completo",
@@ -78,6 +85,9 @@ TEXTS = {
         "chart_alt": "Gráfico de líneas de descargas por mes. La tabla tiene los mismos datos.",
         "in_progress_note": "El tramo punteado es el mes en curso.",
         "source": "Datos: ClickPy, a partir de los registros de descargas de PyPI.",
+        "last_updated": "Última actualización",
+        "update_failed": "Actualización fallida: la última ingesta no pasó la validación.",
+        "update_failed_since": "Las cifras son las de la última actualización válida, del {date}.",
     },
 }
 
@@ -118,9 +128,11 @@ def _line(data: list, *, line_type: str) -> dict:
 def _chart(view: LibraryView, texts: dict[str, str]) -> dict:
     """Línea mensual; el mes en curso va punteado para no leerse como una caída."""
     months = view.monthly
-    closed = [[m.month.isoformat(), None if m.partial else m.downloads] for m in months]
+    closed = [
+        [m.month.isoformat(), None if m.status == "in_progress" else m.downloads] for m in months
+    ]
     series = [_line(closed, line_type="solid")]
-    current = months[-1] if months and months[-1].partial else None
+    current = months[-1] if months and months[-1].status == "in_progress" else None
     if current and current.downloads is not None:
         previous = months[-2:-1]
         bridge = [[m.month.isoformat(), m.downloads] for m in previous if m.downloads is not None]
@@ -162,9 +174,16 @@ def _copy_static(out: Path) -> None:
     shutil.copytree(STATIC, out / "static", dirs_exist_ok=True)
 
 
-def render_site(pages: Sequence[LibraryView], out: Path, *, langs: Sequence[str] = LANGS) -> None:
+def render_site(
+    pages: Sequence[LibraryView],
+    out: Path,
+    *,
+    langs: Sequence[str] = LANGS,
+    status: SiteStatus | None = None,
+) -> None:
     """Escribe en `out` una página por librería e idioma, los estáticos y `_headers`."""
     out = Path(out)
+    status = status or SiteStatus()
     _copy_static(out)
     (out / "_headers").write_text(HEADERS, encoding="utf-8")
     env = Environment(
@@ -183,6 +202,7 @@ def render_site(pages: Sequence[LibraryView], out: Path, *, langs: Sequence[str]
             path.write_text(
                 template.render(
                     view=view,
+                    status=status,
                     lang=lang,
                     other=other,
                     slug=slug,

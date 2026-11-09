@@ -114,10 +114,13 @@ append-only en Parquet → cálculo de métricas → render HTML → Cloudflare 
 **Módulos** (profundos, con interfaces pequeñas; `site` nunca toca `store`)
 - `sources` — adaptadores por proveedor (ClickPy, BigQuery de respaldo, releases de Python, GitHub). Entrada: rango de fechas/paquetes. Salida: registros tipados, completos y verificados, con la fuente (`source`) por lote; ante un resultado parcial o que no cuadra, una excepción, nunca datos incompletos. No conoce `acquisition` ni la política de ventanas (las decide `cli`). Toda la E/S HTTP pasa por un cliente `httpx` inyectable.
 - `store` — escritura append-only de Parquet particionado y lectura vía DuckDB. Nunca sobrescribe; una corrección es un archivo nuevo. Sella la procedencia de cada archivo a partir de la corrida (`Run`: id, `captured_at`, `acquisition`) que le pasa `cli`. Expone una vista de solo lectura del dataset normalizado: **`normalized` es una vista** (deduplicación + la corrección más reciente gana por paquete y fecha), no una capa física; se materializa recién cuando haya una segunda fuente que mapear o la lectura sea lenta (diseño de la Etapa 1, `docs/design/etapa-1-tracer-bullet.md`).
-- `catalog` — carga el YAML curado, calcula la unión de top-100 anuales, resuelve categorías y renombres (enlaces, no sumas).
+- `catalog` — carga y valida el YAML curado, la taxonomía y el top 100 anual (archivo generado con `ecopy catalog refresh` y revisado por diff: los años cerrados quedan fijos), resuelve categorías y renombres (enlaces, no sumas).
 - `metrics` — funciones puras sobre el dataset normalizado + catálogo: cuota por categoría, movers, recién llegados, adopción de versiones, YTD vs mismo período, rankings anuales congelados con versión metodológica. Sin puntaje combinado.
 - `site` — recibe únicamente modelos de vista (Pydantic) producidos por `metrics`; renderiza Jinja2 (autoescape) + opciones de ECharts serializadas desde Pydantic + sparklines SVG generadas en Python; i18n EN/ES; emite `_headers` con CSP.
-- `cli` — orquesta: `ingest`, `backfill`, `validate`, `build`. Decide publicar el build del día anterior con estado "Actualización fallida" si `validate` falla.
+- `quality` — calendario de huecos y días degradados de la fuente (constante documentada, puro). Reemplaza al flag físico: un hueco no tiene filas donde marcarlo y los períodos son globales.
+- `validate` — reglas puras sobre lo que se va a escribir y la historia: volumen del día (0,4–2,0 de los mismos días de semana previos), ≥ 98 % de los paquetes esperados, ningún paquete por encima del total del día, versiones contra total (≤ 0,5 %) y atraso ≤ 3 días.
+- `pipeline` — orquesta la ingesta: ventana por paquete (sin datos → backfill; con datos → reobserva los últimos 7 días), validación **antes** de escribir y registro de la corrida en `data/runs/<id>.json`.
+- `cli` — parser y raíz de composición: `ingest` (el backfill se decide por paquete, no es un comando), `validate`, `build`, `serve`, `catalog refresh|check`. Una corrida rechazada no entra al store: `build` reconstruye con las cifras anteriores y el aviso "Actualización fallida" (diseño de la Etapa 2).
 
 **Datos**
 - Esquema de procedencia por fila: `source`, `acquisition` (`backfill` | `observed`), `captured_at`, `ingestion_run_id`. Un archivo = una corrida → procedencia constante dentro del archivo (en S5 costó ~0 bytes).
@@ -129,16 +132,17 @@ append-only en Parquet → cálculo de métricas → render HTML → Cloudflare 
 - Se guarda la **serie diaria** de descargas (la mensual se deriva en `metrics`): hace falta para
   YTD vs mismo período y para marcar huecos. Disposición: cada corrida escribe un archivo por año
   que toca (`year=YYYY/<run_id>.parquet`): el backfill deja ~11; la ingesta diaria, uno chico.
-- Adopción de versiones de Python (historia 5): agregado global de todo PyPI, mensual. El desglose
+- Adopción de versiones de Python (historia 5): agregado global de todo PyPI, mensual y solo de
+  meses cerrados; se trae cuando falta un mes (cada pasada lee 10.644 M de filas). El desglose
   por paquete no se guarda en el MVP (2,65 MB si se pide después).
 - Año calendario en UTC. Rankings de años cerrados se congelan junto con su versión metodológica.
 - Cobertura (spike S1): datos diarios desde 2016-01-22. Vistas anuales desde **2017** (primer año
   completo); 2016 solo en fichas, marcado como parcial. Las métricas relativas (cuota, rankings,
   movers) son comparables a través del salto ×3 de volumen del 2018-07-27 (cuotas estables); los
   crecimientos de volumen absoluto que lo crucen no se calculan.
-- Calidad del dato: huecos (2016-03-06→05-21, 2019-04-26/27) y la ventana degradada
-  (2018-07-13→26) se marcan en el store como calidad, no se borran ni se interpolan.
-- La ingesta diaria toma hasta ayer (UTC); el día en curso está incompleto en la fuente.
+- Calidad del dato: huecos (2016-03-06→05-21, 2019-04-26/27) y días degradados (2018-07-11→26, más 2016-12-08, 2017-05-11, 2018-04-17, 2019-04-13, 2019-04-25 y 2019-04-28) se marcan en el calendario de `quality`, no se borran ni se interpolan. Un día sin filas de un paquete son cero descargas, no un hueco de la fuente.
+- La ingesta diaria toma hasta ayer (UTC) y reobserva los últimos 7 días guardados; el store solo
+  escribe filas nuevas o que cambiaron (medido: 0 de 1,66 M de filas cambiaron en ~40 h).
 - Estrellas de GitHub (spike S3): `GET /repos/{o}/{r}/stargazers/history` (semanas con días, 30 por
   página, neto; cuadra exacto con `stargazers_count`). Backfill una vez (~9.000 consultas para ~500
   repos, repartido en varias corridas) y en cada corrida la página 1 + `stargazers_count`, con el
@@ -167,7 +171,7 @@ append-only en Parquet → cálculo de métricas → render HTML → Cloudflare 
   - **Data & AI:** Machine learning e IA · LLMs e IA generativa · Ciencia de datos · Ingeniería de
     datos · Big Data · NLP · Estadística y econometría · Series temporales y forecasting ·
     Visualización · MLOps.
-  - **Development:** Desarrollo web · Clientes HTTP y APIs · Aplicaciones de escritorio · CLI y
+  - **Development:** Desarrollo web · Aplicaciones interactivas y dashboards · Clientes HTTP y APIs · Aplicaciones de escritorio · CLI y
     terminal · Herramientas de desarrollo · Testing · Documentación · Serialización y validación.
   - **Infrastructure & Operations:** Cloud y DevOps · Bases de datos y ORMs · Mensajería y streaming ·
     Sistemas distribuidos · Seguridad y criptografía · Monitoreo y observabilidad · Infraestructura

@@ -5,6 +5,7 @@
   --text-secondary: #52514e;
   --chart-line: #2a78d6;
   --chart-grid: #e4e3df;
+  --notice: #b4231f;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -14,6 +15,7 @@
     --text-secondary: #c3c2b7;
     --chart-line: #3987e5;
     --chart-grid: #3a3a37;
+    --notice: #f0635a;
   }
 }
 
@@ -48,6 +50,13 @@ dt {
 dd {
   margin: 0;
   font-variant-numeric: tabular-nums;
+}
+
+.update-failed {
+  margin: 0 0 16px;
+  padding: 8px 12px;
+  border-left: 4px solid var(--notice);
+  font-weight: 600;
 }
 
 .chart {
