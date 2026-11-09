@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{% endblock %} · ecopy</title>
+<link rel="stylesheet" href="/static/site.css">
+{%- block scripts %}{% endblock %}
+</head>
+<body>
+<main>
+{%- if status.failed %}
+<p class="update-failed" role="status">{{ t.update_failed }}{% if status.last_updated %} {{ t.update_failed_since.format(date=status.last_updated) }}{% endif %}</p>
+{%- endif %}
+{%- block content %}{% endblock %}
+<footer><p>{{ t.source }}{% if status.last_updated %} {{ t.last_updated }}: <time datetime="{{ status.last_updated }}">{{ status.last_updated }}</time>.{% endif %}</p></footer>
+</main>
+</body>
+</html>

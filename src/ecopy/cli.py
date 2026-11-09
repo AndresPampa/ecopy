@@ -7,16 +7,16 @@ import contextlib
 import functools
 import sys
 from collections.abc import Callable, Iterator, Sequence
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from importlib.metadata import version
 from pathlib import Path
 
 import httpx
 
-from ecopy.catalog import Catalog, CatalogError, refresh_top100
-from ecopy.metrics import library_view, site_status
-from ecopy.models import Problem
+from ecopy.catalog import FIRST_RANKED_YEAR, Catalog, CatalogError, refresh_top100
+from ecopy.metrics import METHODOLOGY_VERSION, YearInputs, library_view, site_status, year_view
+from ecopy.models import DailySeries, Problem, YearView
 from ecopy.pipeline import REOBSERVE_DAYS, ingest, validate_store
 from ecopy.site import render_site
 from ecopy.sources.clickpy import ClickPy, SourceError
@@ -84,6 +84,30 @@ def _validate(args: argparse.Namespace, now: datetime) -> int:
     return 1 if problems else 0
 
 
+class FrozenYearMissing(Exception):
+    """Un año cerrado no tiene su vista congelada."""
+
+
+def _closed_years(totals: DailySeries, as_of: date) -> list[int]:
+    years = {day.year for day in totals if day.year >= FIRST_RANKED_YEAR}
+    return sorted(year for year in years if date(year, 12, 31) <= as_of)
+
+
+def _year_views(store: Store, catalog: Catalog, series: dict, as_of: date) -> list[YearView]:
+    """Años cerrados desde lo congelado; el año en curso, recalculado."""
+    totals = store.pypi_daily_totals()
+    views = []
+    for year in _closed_years(totals, as_of):
+        view = store.frozen_year(year)
+        if view is None:
+            raise FrozenYearMissing(f"{year} no está congelado; correr `ecopy freeze`")
+        views.append(view)
+    if as_of.year >= FIRST_RANKED_YEAR and date(as_of.year, 12, 31) > as_of:
+        inputs = YearInputs(series, totals, store.python_minor_monthly(), catalog)
+        views.append(year_view(as_of.year, inputs, as_of=as_of))
+    return views
+
+
 def _build(args: argparse.Namespace) -> int:
     projects = _projects(args)
     store = Store(args.data)
@@ -95,9 +119,41 @@ def _build(args: argparse.Namespace) -> int:
         print(f"ecopy: {project} no tiene datos; se omite", file=sys.stderr)
     # El mismo `as_of` para todos: un paquete sin descargas recientes no cierra antes su historia.
     as_of = max(max(days) for days in series.values())
+    # Las cuotas solo tienen sentido con todo el catálogo.
+    catalog = None if args.project else Catalog.load(args.catalog)
+    years = _year_views(store, catalog, series, as_of) if catalog else []
     pages = [library_view(project, days, as_of=as_of) for project, days in sorted(series.items())]
-    render_site(pages, args.out, status=site_status(store.runs()))
-    print(f"sitio en {args.out}: {len(pages)} fichas en /en/library/ y /es/library/")
+    labels = catalog.labels() if catalog else {}
+    render_site(pages, args.out, status=site_status(store.runs()), years=years, labels=labels)
+    print(f"sitio en {args.out}: {len(pages)} fichas y {len(years)} años")
+    return 0
+
+
+def _freeze(args: argparse.Namespace) -> int:
+    catalog = Catalog.load(args.catalog)
+    store = Store(args.data)
+    totals = store.pypi_daily_totals()
+    if not totals:
+        print("ecopy: no hay datos para congelar; correr `ecopy ingest`", file=sys.stderr)
+        return 1
+    as_of = max(totals)
+    pending = []
+    for year in _closed_years(totals, as_of):
+        frozen = store.frozen_year(year)
+        if frozen is None or frozen.methodology_version < METHODOLOGY_VERSION:
+            pending.append(year)
+    missing = [year for year in pending if not catalog.top(year)]
+    if missing:
+        print(
+            f"ecopy: falta el top 100 de {missing}; correr `ecopy catalog refresh`", file=sys.stderr
+        )
+        return 1
+    if pending:
+        series = store.daily_downloads(catalog.projects)
+        inputs = YearInputs(series, totals, store.python_minor_monthly(), catalog)
+        for year in pending:
+            store.freeze_year(year_view(year, inputs, as_of=as_of))
+    print(f"{len(pending)} años congelados: {pending}")
     return 0
 
 
@@ -147,6 +203,10 @@ def _parser() -> argparse.ArgumentParser:
     data_options(build)
     build.add_argument("--out", type=Path, default=Path("build/site"))
 
+    freeze = commands.add_parser("freeze", help="congela los años cerrados que falten")
+    freeze.add_argument("--catalog", type=Path, default=Path("catalog"))
+    freeze.add_argument("--data", type=Path, default=Path("data"))
+
     catalog = commands.add_parser("catalog", help="mantiene el catálogo")
     catalog.add_argument("action", choices=["refresh", "check"])
     catalog.add_argument("--catalog", type=Path, default=Path("catalog"))
@@ -175,9 +235,17 @@ def main(
             return _validate(args, now())
         if args.command == "build":
             return _build(args)
+        if args.command == "freeze":
+            return _freeze(args)
         if args.command == "catalog":
             return _catalog(args, http, now())
         return _serve(args)
-    except (SourceError, ImmutabilityError, CatalogError, FileNotFoundError) as error:
+    except (
+        SourceError,
+        ImmutabilityError,
+        CatalogError,
+        FrozenYearMissing,
+        FileNotFoundError,
+    ) as error:
         print(f"ecopy: {error}", file=sys.stderr)
         return 1

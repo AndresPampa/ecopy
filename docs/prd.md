@@ -112,7 +112,7 @@ append-only en Parquet → cálculo de métricas → render HTML → Cloudflare 
 - Pipeline: GitHub Actions (cron diario, repo público bajo la cuenta del usuario) → ingesta → normalización → métricas → render → deploy a Cloudflare Pages (`ecopy.pages.dev`, sin dominio pago).
 
 **Módulos** (profundos, con interfaces pequeñas; `site` nunca toca `store`)
-- `sources` — adaptadores por proveedor (ClickPy, BigQuery de respaldo, releases de Python, GitHub). Entrada: rango de fechas/paquetes. Salida: registros tipados, completos y verificados, con la fuente (`source`) por lote; ante un resultado parcial o que no cuadra, una excepción, nunca datos incompletos. No conoce `acquisition` ni la política de ventanas (las decide `cli`). Toda la E/S HTTP pasa por un cliente `httpx` inyectable.
+- `sources` — adaptadores por proveedor (ClickPy, BigQuery de respaldo, GitHub). Las fechas de releases de Python van en `catalog/python_releases.yaml`, curado: ~25 filas que cambian una vez por año. Entrada: rango de fechas/paquetes. Salida: registros tipados, completos y verificados, con la fuente (`source`) por lote; ante un resultado parcial o que no cuadra, una excepción, nunca datos incompletos. No conoce `acquisition` ni la política de ventanas (las decide `cli`). Toda la E/S HTTP pasa por un cliente `httpx` inyectable.
 - `store` — escritura append-only de Parquet particionado y lectura vía DuckDB. Nunca sobrescribe; una corrección es un archivo nuevo. Sella la procedencia de cada archivo a partir de la corrida (`Run`: id, `captured_at`, `acquisition`) que le pasa `cli`. Expone una vista de solo lectura del dataset normalizado: **`normalized` es una vista** (deduplicación + la corrección más reciente gana por paquete y fecha), no una capa física; se materializa recién cuando haya una segunda fuente que mapear o la lectura sea lenta (diseño de la Etapa 1, `docs/design/etapa-1-tracer-bullet.md`).
 - `catalog` — carga y valida el YAML curado, la taxonomía y el top 100 anual (archivo generado con `ecopy catalog refresh` y revisado por diff: los años cerrados quedan fijos), resuelve categorías y renombres (enlaces, no sumas).
 - `metrics` — funciones puras sobre el dataset normalizado + catálogo: cuota por categoría, movers, recién llegados, adopción de versiones, YTD vs mismo período, rankings anuales congelados con versión metodológica. Sin puntaje combinado.
@@ -135,11 +135,12 @@ append-only en Parquet → cálculo de métricas → render HTML → Cloudflare 
 - Adopción de versiones de Python (historia 5): agregado global de todo PyPI, mensual y solo de
   meses cerrados; se trae cuando falta un mes (cada pasada lee 10.644 M de filas). El desglose
   por paquete no se guarda en el MVP (2,65 MB si se pide después).
-- Año calendario en UTC. Rankings de años cerrados se congelan junto con su versión metodológica.
+- Año calendario en UTC. Rankings de años cerrados se congelan junto con su versión metodológica: `ecopy freeze` guarda la vista anual completa en `data/frozen/year=YYYY/methodology=N.json`. Las cuotas se calculan sobre el total del catálogo; movers y recién llegados excluyen "Infraestructura base".
 - Cobertura (spike S1): datos diarios desde 2016-01-22. Vistas anuales desde **2017** (primer año
   completo); 2016 solo en fichas, marcado como parcial. Las métricas relativas (cuota, rankings,
   movers) son comparables a través del salto ×3 de volumen del 2018-07-27 (cuotas estables); los
   crecimientos de volumen absoluto que lo crucen no se calculan.
+- Discontinuidades de volumen (2018-07-27 y 2026-08-25): se marcan y no se calcula crecimiento absoluto que las cruce.
 - Calidad del dato: huecos (2016-03-06→05-21, 2019-04-26/27) y días degradados (2018-07-11→26, más 2016-12-08, 2017-05-11, 2018-04-17, 2019-04-13, 2019-04-25 y 2019-04-28) se marcan en el calendario de `quality`, no se borran ni se interpolan. Un día sin filas de un paquete son cero descargas, no un hueco de la fuente.
 - La ingesta diaria toma hasta ayer (UTC) y reobserva los últimos 7 días guardados; el store solo
   escribe filas nuevas o que cambiaron (medido: 0 de 1,66 M de filas cambiaron en ~40 h).

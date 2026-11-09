@@ -14,7 +14,7 @@
 - ✅ **Etapa 1 — Tracer bullet (local):** un paquete, de ClickPy a una página generada y servida
   en local, atravesando `sources → store → metrics → site → cli`. Sin Actions ni Cloudflare.
   Las Etapas 2–4 también se prueban en local.
-- 📋 **Etapa 2 — Datos completos:** (incluye cerrar la taxonomía de categorías y tags en el YAML) backfill desde 2016-01-22 (vistas desde 2017), catálogo ~500 (YAML + top 100 anual,
+- ✅ **Etapa 2 — Datos completos:** (incluye cerrar la taxonomía de categorías y tags en el YAML) backfill desde 2016-01-22 (vistas desde 2017), catálogo ~500 (YAML + top 100 anual,
   renombres), procedencia por fila, ingesta diaria y validación con "Actualización fallida".
 - 📋 **Etapa 3 — Vista anual:** cuota por categoría, movers, recién llegados, adopción de versiones,
   línea de tiempo, volumen total con advertencia, YTD y rankings congelados.
@@ -25,28 +25,35 @@
   Pages, incluido S6 (crear el proyecto y confirmar `ecopy.pages.dev`, lo hace el usuario).
 - 📋 **Después del MVP:** Trending y Seguridad (Fase 3); cuentas y encuestas (Fase 4).
 
-## Próxima etapa — Etapa 2: Datos completos
+## Próxima etapa — Etapa 3: Vista anual
 
-**Rama sugerida:** `etapa-2-datos-completos`
+**Rama sugerida:** `etapa-3-vista-anual`
 
-**Objetivo:** pasar del tracer bullet de un paquete al dataset real: catálogo de ~500 paquetes,
-backfill desde 2016-01-22, ingesta incremental, validación y calidad del dato. Todo en local.
+**Objetivo:** una página por año desde 2017, EN/ES, con cuotas, movers, recién llegados, adopción
+de Python, línea de tiempo y volumen; YTD y años cerrados congelados. Todo en local.
 
-**Diseño:** `docs/design/etapa-2-datos-completos.md` (aprobado 2026-11-09).
+**Diseño:** `docs/design/etapa-3-vista-anual.md` (aprobado 2026-11-09).
 
 **Slices (TDD):**
 
-- [x] 1. Calidad y estados de período: `quality`, `metrics`, etiquetas en `site`; mediciones a `docs/spikes/`.
-- [x] 2. Store multi-dataset: escritura de cambios y `last_days`.
-- [x] 3. Fuentes nuevas: totales de PyPI, versiones de Python, top 100.
-- [x] 4. Catálogo: `catalog`, taxonomía, `ecopy catalog refresh|check`.
-- [x] 5. Ingesta real: `validate`, `pipeline.ingest`, `data/runs/`, multi paquete.
-- [x] 6. "Actualización fallida": aviso EN/ES y humo end-to-end.
-- [ ] 7. Contenido del catálogo: 500 librerías en borrador; falta la revisión del usuario.
-- [ ] 8. Corrida real: backfill, reobservación y build hechos; falta reobservar en un día posterior.
+- [x] 1. Releases de Python y top 100 en `catalog`.
+- [x] 2. `year_view`: cuotas, ventanas y volumen.
+- [x] 3. Movers y recién llegados.
+- [x] 4. Adopción de Python y línea de tiempo.
+- [x] 5. Congelado: `ecopy freeze` y `build` leyendo lo congelado.
+- [x] 6. `site`: páginas por año EN/ES y gráficos.
+- [ ] 7. Corrida real hecha sobre una copia; falta `ecopy freeze` en `data/`, tras la revisión del catálogo.
+
+**Heredado de la Etapa 2:**
+
+- [ ] Revisar `catalog/libraries.yaml` (usuario): tiene que ser antes de congelar los años cerrados.
+- [ ] Correr `ecopy ingest` en un día posterior y mirar `revised_rows` en `data/runs/`.
 
 ## Shipped
 
+- ✅ **Etapa 2 — Datos completos local** (PR #4, 2026-11-09): catálogo de 500, backfill desde 2016,
+  totales de PyPI, versiones de Python, ingesta con reobservación, validación y aviso de fallo.
+  Diseño en `docs/design/etapa-2-datos-completos.md`.
 - ✅ **Etapa 1 — Tracer bullet local** (PR #3, 2026-11-09): `ingest → build → serve` de punta a
   punta con `fastapi`; ficha EN/ES con ECharts y CSP estricta. Diseño en
   `docs/design/etapa-1-tracer-bullet.md`.

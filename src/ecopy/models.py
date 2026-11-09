@@ -152,6 +152,100 @@ class YearTotal(BaseModel):
     coverage: Coverage
 
 
+class CategoryShare(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    slug: str
+    downloads: int
+    share: float
+    """Fracción del total del catálogo."""
+
+
+class DomainShare(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    slug: str
+    downloads: int
+    share: float
+    categories: tuple[CategoryShare, ...]
+
+
+class Mover(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    project: str
+    category: str
+    share: float
+    share_change: float
+    """Diferencia en puntos de cuota contra el período anterior."""
+    rank: int | None
+    """Posición entre los paquetes elegibles; None si no tuvo descargas en el período."""
+    rank_change: int | None
+    """Posiciones ganadas; None si falta alguno de los dos períodos."""
+
+
+class Newcomer(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    project: str
+    category: str
+    rank: int
+    """Posición en el top 100 de todo PyPI."""
+
+
+class VolumeView(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    total: int
+    previous: int | None
+    growth: float | None
+    """None si no hay período anterior o la comparación cruza una discontinuidad."""
+    discontinuities: tuple[date, ...]
+
+
+class PythonVersionShare(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    version: str
+    downloads: int
+    share: float
+    """Fracción de las descargas con una versión real de CPython."""
+
+
+class TimelineEvent(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    date: date
+    version: str
+    kind: Literal["release", "end_of_life"]
+
+
+class YearView(BaseModel):
+    """Todo lo que muestra la página de un año; serializable para congelarlo."""
+
+    model_config = ConfigDict(frozen=True)
+
+    year: int
+    status: Literal["closed", "ytd"]
+    methodology_version: int
+    period_start: date
+    period_end: date
+    previous_start: date | None
+    previous_end: date | None
+    coverage: Coverage
+    volume: VolumeView
+    catalog_share: float
+    """Fracción de todo PyPI que representa el catálogo."""
+    domains: tuple[DomainShare, ...]
+    movers_up: tuple[Mover, ...]
+    movers_down: tuple[Mover, ...]
+    newcomers: tuple[Newcomer, ...]
+    python_versions: tuple[PythonVersionShare, ...]
+    python_unknown_share: float
+    python_other_share: float
+    timeline: tuple[TimelineEvent, ...]
+
+
 class SiteStatus(BaseModel):
     """Estado de la última actualización que muestra el sitio."""
 

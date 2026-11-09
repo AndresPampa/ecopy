@@ -1,0 +1,135 @@
+{% extends "_base.html" %}
+{%- macro chart_box(name, alt, payload) %}
+<div id="chart-{{ name }}" class="chart" data-chart role="img" aria-label="{{ alt }}"></div>
+<script id="chart-{{ name }}-data" type="application/json">{{ payload|tojson }}</script>
+{%- endmacro %}
+{%- macro mover_rows(movers) %}
+<table>
+<thead><tr><th scope="col">{{ t.package }}</th><th scope="col">{{ t.category }}</th><th scope="col">{{ t.share_points }}</th><th scope="col">{{ t.position }}</th></tr></thead>
+<tbody>
+{%- for mover in movers %}
+<tr><th scope="row"><a href="/{{ lang }}/library/{{ mover.project|slug }}/">{{ mover.project }}</a></th><td>{{ mover.category|label(lang) }}</td><td>{{ mover.share_change|points(lang) }}</td><td>{% if mover.rank %}#{{ mover.rank }}{% else %}—{% endif %}{% if mover.rank_change %} ({{ "%+d"|format(mover.rank_change) }}){% endif %}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+{%- endmacro %}
+{%- block title %}{{ view.year }}{% endblock %}
+{%- block scripts %}
+<script src="/static/vendor/{{ echarts }}" defer></script>
+<script src="/static/charts.js" defer></script>
+{%- endblock %}
+{%- block content %}
+<nav><a href="/{{ other }}/year/{{ view.year }}/" hreflang="{{ other }}">{{ t.switch_label }}</a>
+{%- for item in years|reverse %} · {% if item.year == view.year %}<span aria-current="page">{{ item.year }}</span>{% else %}<a href="/{{ lang }}/year/{{ item.year }}/">{{ item.year }}</a>{% endif %}{% endfor %}</nav>
+<h1>{{ view.year }}</h1>
+<p>{% if view.status == "ytd" %}{{ t.ytd }}: {{ view.period_start }} → {{ view.period_end }}. {{ t.compared_with.format(start=view.previous_start, end=view.previous_end) }}{% else %}{{ view.period_start }} → {{ view.period_end }}.{% endif %} {{ t.methodology.format(version=view.methodology_version) }}</p>
+
+<section>
+<h2>{{ t.volume_title }}</h2>
+<p class="figure">{{ view.volume.total|number(lang) }}</p>
+{%- if view.volume.growth is not none %}
+<p>{{ view.volume.growth|growth(lang) }} {{ t.against_previous }}</p>
+{%- elif view.volume.previous is not none %}
+<p>{{ t.growth_hidden }}</p>
+{%- endif %}
+{%- if view.volume.discontinuities %}
+<p class="note">{{ t.discontinuity }} {% for day in view.volume.discontinuities %}<time datetime="{{ day }}">{{ day }}</time>{% if not loop.last %}, {% endif %}{% endfor %}.</p>
+{%- endif %}
+<p class="note">{{ t.volume_warning }}</p>
+{{ chart_box("volume", t.volume_alt, charts.volume) }}
+<p class="note">{{ t.volume_note }}</p>
+<table>
+<thead><tr><th scope="col">{{ t.year }}</th><th scope="col">{{ t.downloads }}</th></tr></thead>
+<tbody>
+{%- for item in years %}
+<tr><th scope="row">{{ item.year }}{% if item.status == "ytd" %} · {{ t.ytd }}{% endif %}</th><td>{{ item.volume.total|number(lang) }}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>{{ t.shares_title }}</h2>
+<p class="note">{{ t.catalog_share.format(share=view.catalog_share|percent(lang)) }}</p>
+{{ chart_box("shares", t.shares_alt, charts.shares) }}
+<table>
+<thead><tr><th scope="col">{{ t.category }}</th><th scope="col">{{ t.share }}</th></tr></thead>
+<tbody>
+{%- for domain in view.domains %}
+<tr><th scope="row"><strong>{{ domain.slug|label(lang) }}</strong></th><td><strong>{{ domain.share|percent(lang) }}</strong></td></tr>
+{%- for category in domain.categories %}
+<tr class="nested"><th scope="row">{{ category.slug|label(lang) }}</th><td>{{ category.share|percent(lang) }}</td></tr>
+{%- endfor %}
+{%- endfor %}
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>{{ t.movers_title }}</h2>
+{%- if view.previous_start is none %}
+<p>{{ t.no_previous }}</p>
+{%- else %}
+<p class="note">{{ t.movers_note }}</p>
+<h3>{{ t.movers_up }}</h3>
+{{ mover_rows(view.movers_up) }}
+<h3>{{ t.movers_down }}</h3>
+{{ mover_rows(view.movers_down) }}
+{%- endif %}
+</section>
+
+<section>
+<h2>{{ t.newcomers_title }}</h2>
+{%- if view.previous_start is none %}
+<p>{{ t.no_previous }}</p>
+{%- elif view.newcomers %}
+<table>
+<thead><tr><th scope="col">{{ t.package }}</th><th scope="col">{{ t.category }}</th><th scope="col">{{ t.top_position }}</th></tr></thead>
+<tbody>
+{%- for newcomer in view.newcomers %}
+<tr><th scope="row"><a href="/{{ lang }}/library/{{ newcomer.project|slug }}/">{{ newcomer.project }}</a></th><td>{{ newcomer.category|label(lang) }}</td><td>#{{ newcomer.rank }}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+{%- else %}
+<p>{{ t.no_newcomers }}</p>
+{%- endif %}
+</section>
+
+<section>
+<h2>{{ t.python_title }}</h2>
+{{ chart_box("python", t.python_alt, charts.python) }}
+<table>
+<thead><tr><th scope="col">{{ t.version }}</th><th scope="col">{{ t.share }}</th></tr></thead>
+<tbody>
+{%- for version in view.python_versions %}
+<tr><th scope="row">{{ version.version }}</th><td>{{ version.share|percent(lang) }}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+<p class="note">{{ t.python_note.format(unknown=view.python_unknown_share|percent(lang), other=view.python_other_share|percent(lang)) }}</p>
+<h3>{{ t.leading_title }}</h3>
+<table>
+<thead><tr><th scope="col">{{ t.year }}</th><th scope="col">{{ t.version }}</th><th scope="col">{{ t.share }}</th></tr></thead>
+<tbody>
+{%- for item in years if item.python_versions %}
+{%- set leader = item.python_versions|sort(attribute="share", reverse=true)|first %}
+<tr><th scope="row">{{ item.year }}</th><td>{{ leader.version }}</td><td>{{ leader.share|percent(lang) }}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>{{ t.timeline_title }}</h2>
+{%- if view.timeline %}
+<ul>
+{%- for event in view.timeline %}
+<li><time datetime="{{ event.date }}">{{ event.date }}</time> · Python {{ event.version }} · {% if event.kind == "release" %}{{ t.event_release }}{% else %}{{ t.event_end_of_life }}{% endif %}</li>
+{%- endfor %}
+</ul>
+{%- else %}
+<p>{{ t.no_events }}</p>
+{%- endif %}
+</section>
+{%- endblock %}

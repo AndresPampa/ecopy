@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -36,6 +36,13 @@ class Library:
     renamed_from: str | None
 
 
+@dataclass(frozen=True)
+class PythonRelease:
+    version: str
+    released: date
+    end_of_life: date | None
+
+
 class _TopSource(Protocol):
     def top_projects(self, years: Sequence[int], n: int = 100) -> Any: ...
 
@@ -60,20 +67,25 @@ def _check_entry(kind: str, entry: dict, seen: set[str], problems: list[str]) ->
             problems.append(f"{kind} {slug}: falta la etiqueta {lang}")
 
 
-def _read_taxonomy(data: dict, problems: list[str]) -> tuple[dict[str, str], set[str]]:
-    """Devuelve categoría → dominio y el vocabulario de tags."""
+def _read_taxonomy(
+    data: dict, problems: list[str]
+) -> tuple[dict[str, str], set[str], dict[str, dict[str, str]]]:
+    """Devuelve categoría → dominio, el vocabulario de tags y las etiquetas por slug."""
+    labels: dict[str, dict[str, str]] = {}
     domains: set[str] = set()
     categories: set[str] = set()
     tags: set[str] = set()
     domain_of: dict[str, str] = {}
     for domain in data.get("domains", []):
         _check_entry("dominio", domain, domains, problems)
+        labels[domain.get("slug", "?")] = {k: domain.get(k, "") for k in ("en", "es")}
         for category in domain.get("categories", []):
             _check_entry("categoría", category, categories, problems)
             domain_of[category["slug"]] = domain["slug"]
+            labels[category["slug"]] = {k: category.get(k, "") for k in ("en", "es")}
     for tag in data.get("tags", []):
         _check_entry("tag", tag, tags, problems)
-    return domain_of, tags
+    return domain_of, tags, labels
 
 
 def _library(entry: dict, domain_of: dict, vocabulary: set, problems: list[str]) -> Library:
@@ -90,10 +102,33 @@ def _library(entry: dict, domain_of: dict, vocabulary: set, problems: list[str])
     return Library(project, category, tags, entry.get("repo"), entry.get("renamed_from"))
 
 
+def _read_releases(data: dict, problems: list[str]) -> tuple[PythonRelease, ...]:
+    releases: dict[str, PythonRelease] = {}
+    for entry in data.get("releases", []):
+        release = PythonRelease(entry["version"], entry["released"], entry.get("end_of_life"))
+        if release.version in releases:
+            problems.append(f"release de Python duplicado: {release.version}")
+        if release.end_of_life and release.end_of_life < release.released:
+            problems.append(f"release {release.version}: termina antes de empezar")
+        releases[release.version] = release
+    return tuple(sorted(releases.values(), key=lambda r: r.released))
+
+
 class Catalog:
-    def __init__(self, libraries: dict[str, Library], domain_of: dict[str, str]) -> None:
+    def __init__(
+        self,
+        libraries: dict[str, Library],
+        domain_of: dict[str, str],
+        *,
+        top: Mapping[int, Sequence[str]] | None = None,
+        releases: Sequence[PythonRelease] = (),
+        labels: Mapping[str, Mapping[str, str]] | None = None,
+    ) -> None:
         self._libraries = libraries
         self._domain_of = domain_of
+        self._top = top or {}
+        self._releases = tuple(releases)
+        self._labels = labels or {}
         self.projects = tuple(sorted(libraries))
 
     @classmethod
@@ -104,7 +139,8 @@ class Catalog:
         taxonomy = _read(root / "taxonomy.yaml", problems) or {}
         entries = _read(root / "libraries.yaml", problems) or []
         top = _read(root / "top100.yaml", problems) or {}
-        domain_of, vocabulary = _read_taxonomy(taxonomy, problems)
+        releases = _read_releases(_read(root / "python_releases.yaml", problems) or {}, problems)
+        domain_of, vocabulary, labels = _read_taxonomy(taxonomy, problems)
         libraries: dict[str, Library] = {}
         for entry in entries:
             library = _library(entry, domain_of, vocabulary, problems)
@@ -122,13 +158,26 @@ class Catalog:
         )
         if problems:
             raise CatalogError(problems)
-        return cls(libraries, domain_of)
+        ranking = {int(year): tuple(names) for year, names in top.get("years", {}).items()}
+        return cls(libraries, domain_of, top=ranking, releases=releases, labels=labels)
 
     def library(self, project: str) -> Library:
         return self._libraries[project]
 
     def domain_of(self, category: str) -> str:
         return self._domain_of[category]
+
+    def top(self, year: int) -> tuple[str, ...]:
+        """El top 100 de todo PyPI de ese año, en orden; vacío si no está generado."""
+        return tuple(self._top.get(year, ()))
+
+    def python_releases(self) -> tuple[PythonRelease, ...]:
+        """Versiones menores de CPython, de la más vieja a la más nueva."""
+        return self._releases
+
+    def labels(self) -> Mapping[str, Mapping[str, str]]:
+        """Etiquetas EN/ES de dominios y categorías, por slug."""
+        return self._labels
 
 
 def refresh_top100(root: Path, source: _TopSource, *, now: datetime) -> list[str]:
