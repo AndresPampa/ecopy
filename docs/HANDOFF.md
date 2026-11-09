@@ -1,7 +1,7 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-09 · branch: `etapa-1-tracer-bullet` (2 commits: cierre de la Etapa 0 y
-> diseño; slice 1 sin commit) · `main` = `origin/main` (`a54967c`, PR #2) ·
+> Last updated: 2026-11-09 · branch: `etapa-1-tracer-bullet` (3 commits: cierre de la Etapa 0,
+> diseño y slice 1; pre-commit sin commit) · `main` = `origin/main` (`a54967c`, PR #2) ·
 > remoto `origin` = https://github.com/AndresPampa/ecopy.git
 
 ## Current State
@@ -17,20 +17,18 @@
   (interfaces de `sources`/`store`/`metrics`/`site`/`cli`, seams y tests); 6 slices en ROADMAP.
   **Slice 1 (esqueleto) hecho:** `pyproject.toml` (uv_build, deps dev pytest/hypothesis/ruff),
   `src/ecopy/cli.py` (`ecopy --version`), `tests/test_cli.py` en verde, ruff limpio.
-- **Sin commit:** `pyproject.toml`, `uv.lock`, `src/`, `tests/`, `README.md`, `docs/ROADMAP.md`,
-  `docs/HANDOFF.md`.
+- **Sin commit:** `.pre-commit-config.yaml` (nuevo), `.gitignore`, `pyproject.toml`, `uv.lock`,
+  `README.md`, `docs/HANDOFF.md`.
 - **Código del producto:** solo el esqueleto (slice 1). Tooling del agente local y fuera de git (`.claude/`,
   `.codex/`, `.agents/`, `skills/`, `openspec/`, `scripts/hooks|bash/`, `docs/workflows|guides|
   prompt_templates/`, `AGENTS*/CLAUDE*`, `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-- [ ] **Usuario:** commit del slice 1 (mensaje propuesto en la sesión del 2026-11-09).
+- [ ] **Usuario:** commit de pre-commit (mensaje propuesto en la sesión del 2026-11-09) y, una vez,
+      `uv run pre-commit install`.
 - [ ] **Etapa 1 — slice 2 (`sources.clickpy`)** con `tdd`: script que graba fixtures reales de
       `fastapi` + tests de contrato con `httpx.MockTransport` (truncado, cuadre, errores). Luego
       slices 3–6 según `docs/ROADMAP.md` y el diseño.
-- [ ] **Decidir (usuario):** `pre-commit` del producto. `.pre-commit-config.yaml` está en
-      `.gitignore` (tooling local); propuesta: versionar uno propio (ruff + pytest) y sacarlo del
-      ignore. Pendiente de respuesta.
 - [ ] **Usuario (Etapa 5, con el primer MVP):** S6 — crear el proyecto en Cloudflare Pages y
       confirmar `ecopy.pages.dev`; recién ahí entra GitHub Actions.
 - [ ] **Usuario (opcional):** borrar ramas mergeadas `etapa-0-spikes` y `docs/project-setup`
@@ -51,6 +49,9 @@
   procedencia la sella `store` desde un `Run` que crea `cli` (`sources` no sabe si es backfill);
   `data/` se versiona desde ya; partición única `raw/<fuente>/<dataset>/year=YYYY/<run_id>.parquet`.
   Detalle y razones en `docs/design/etapa-1-tracer-bullet.md`; PRD actualizado.
+- **pre-commit del producto versionado** (decisión del usuario, 2026-11-09): hooks locales con
+  `uv run` (ruff check --fix, ruff format, pytest), así usan las versiones de `uv.lock`; solo
+  sobre `src/` y `tests/`. El template del toolkit sigue ignorado.
 - **Licencia MIT** (recomendada por simple y permisiva; aceptada por el usuario). Titular: `AndresPampa`.
 - **Git lo opera el usuario:** todos los `git add`, `commit`, `push` y PRs los hace el usuario. El agente
   solo prepara cambios en el working tree y sugiere comandos/mensajes; nunca los ejecuta.
@@ -121,6 +122,10 @@
 - El commit `46bc2dd` quedó sin línea de asunto (el cuerpo del mensaje se aplanó en una sola
   línea). No se reescribe: ya está mergeado en `main`. Para mensajes multilínea usar
   `git commit -F archivo` o el editor, no `-m` con el texto pegado.
+
+- **pre-commit pasa los archivos por nombre y ruff ignora `extend-exclude`**: la primera corrida
+  reformateó los scripts de `docs/spikes/` (restaurados con `git restore`). Por eso
+  `force-exclude = true` en ruff y `files: ^(src|tests)/` en `.pre-commit-config.yaml`.
 
 ## Files & Pointers
 - `docs/ROADMAP.md` — etapas y slices de la etapa en curso.
@@ -248,3 +253,9 @@ TDD: test de humo `ecopy --version` (RED: falta `ecopy.cli`) → `src/ecopy/cli.
 (GREEN). `pyproject.toml` con `uv_build`, script `ecopy`, grupo dev (pytest 9.2, hypothesis,
 ruff 0.17), config de ruff (excluye spikes y tooling). Sin dependencias de runtime todavía: cada
 slice agrega las suyas. `pre-commit` del producto queda pendiente de decisión.
+
+### 2026-11-09 — pre-commit del producto
+Usuario aceptó versionar pre-commit: `.pre-commit-config.yaml` con hooks locales vía `uv run`
+(ruff check --fix, ruff format, pytest), `pre-commit` en el grupo dev, fuera de `.gitignore`.
+Primera corrida reformateó los spikes (pre-commit saltea `extend-exclude`): restaurados, y se
+agregó `force-exclude` + `files: ^(src|tests)/`. `pre-commit run --all-files` en verde.

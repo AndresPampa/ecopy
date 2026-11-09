@@ -1,0 +1,24 @@
+# Hooks del producto. Usan las versiones de uv.lock (`uv run`), así local y pre-commit no divergen.
+# Instalar una vez:  uv run pre-commit install
+default_install_hook_types: [pre-commit]
+# Solo el código del producto: los spikes (docs/spikes/) quedan como se escribieron.
+files: ^(src|tests)/
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types: [python]
+      - id: pytest
+        name: pytest
+        entry: uv run pytest -q
+        language: system
+        pass_filenames: false
+        always_run: true

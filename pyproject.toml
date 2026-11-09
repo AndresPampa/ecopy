@@ -11,7 +11,7 @@ dependencies = []
 ecopy = "ecopy.cli:main"
 
 [dependency-groups]
-dev = ["pytest>=8", "hypothesis>=6", "ruff>=0.8"]
+dev = ["pytest>=8", "hypothesis>=6", "ruff>=0.8", "pre-commit>=4"]
 
 [build-system]
 requires = ["uv_build>=0.9,<0.13"]
@@ -25,6 +25,8 @@ addopts = ["--strict-markers", "--import-mode=importlib"]
 line-length = 100
 target-version = "py312"
 extend-exclude = ["docs/spikes", "skills", "scripts", "openspec", "build"]
+# Respetar los excludes aunque pre-commit pase los archivos por nombre.
+force-exclude = true
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]

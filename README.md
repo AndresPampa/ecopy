@@ -69,6 +69,7 @@ Requiere [uv](https://docs.astral.sh/uv/) y Python ≥ 3.12.
 
 ```bash
 uv sync                 # entorno + dependencias de desarrollo
+uv run pre-commit install   # una vez: ruff + pytest antes de cada commit
 uv run pytest           # tests
 uv run ruff check . && uv run ruff format --check src tests
 uv run ecopy --version
