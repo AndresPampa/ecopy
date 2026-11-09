@@ -10,7 +10,21 @@ from pathlib import Path
 
 import pytest
 
-from ecopy.models import Coverage, LibraryView, MonthPoint, SiteStatus, YearTotal
+from ecopy.models import (
+    CategoryShare,
+    Coverage,
+    DomainShare,
+    LibraryView,
+    MonthPoint,
+    Mover,
+    Newcomer,
+    PythonVersionShare,
+    SiteStatus,
+    TimelineEvent,
+    VolumeView,
+    YearTotal,
+    YearView,
+)
 from ecopy.site import render as site_render
 from ecopy.site import render_site
 
@@ -250,3 +264,313 @@ def test_a_failure_without_a_good_date_still_warns(tmp_path):
     render_site([view()], tmp_path, status=SiteStatus(None, failed=True))
 
     assert "Update failed" in page(tmp_path)
+
+
+LABELS = {
+    "development": {"en": "Development", "es": "Desarrollo"},
+    "web": {"en": "Web development", "es": "Desarrollo web"},
+    "testing": {"en": "Testing", "es": "Testing"},
+}
+
+
+def year(number: int = 2024, status: str = "closed", **changes) -> YearView:
+    base = {
+        "year": number,
+        "status": status,
+        "methodology_version": 1,
+        "period_start": date(number, 1, 1),
+        "period_end": date(number, 12, 31),
+        "previous_start": date(number - 1, 1, 1),
+        "previous_end": date(number - 1, 12, 31),
+        "coverage": Coverage(expected=366, gap=0, degraded=0),
+        "volume": VolumeView(total=9_000, previous=6_000, growth=0.5, discontinuities=()),
+        "catalog_share": 0.68,
+        "domains": (
+            DomainShare(
+                slug="development",
+                downloads=100,
+                share=1.0,
+                categories=(
+                    CategoryShare(slug="web", downloads=75, share=0.75),
+                    CategoryShare(slug="testing", downloads=25, share=0.25),
+                ),
+            ),
+        ),
+        "movers_up": (
+            Mover(
+                project="fastapi",
+                category="web",
+                share=0.2,
+                share_change=1.25,
+                rank=3,
+                rank_change=2,
+            ),
+        ),
+        "movers_down": (
+            Mover(
+                project="flask",
+                category="web",
+                share=0.1,
+                share_change=-0.5,
+                rank=8,
+                rank_change=None,
+            ),
+        ),
+        "newcomers": (Newcomer(project="uvicorn", category="web", rank=42),),
+        "python_versions": (
+            PythonVersionShare(version="3.12", downloads=75, share=0.75),
+            PythonVersionShare(version="3.9", downloads=25, share=0.25),
+        ),
+        "python_unknown_share": 0.05,
+        "python_other_share": 0.001,
+        "timeline": (TimelineEvent(date=date(2024, 10, 7), version="3.13", kind="release"),),
+    }
+    return YearView(**{**base, **changes})
+
+
+def year_page(out, number: int = 2024, lang: str = "en") -> str:
+    return (out / lang / "year" / str(number) / "index.html").read_text()
+
+
+def render_years(out, *views) -> None:
+    render_site([], out, years=views or (year(),), labels=LABELS)
+
+
+def test_each_year_gets_a_page_per_language_with_localized_figures(tmp_path):
+    render_years(tmp_path)
+
+    english, spanish = year_page(tmp_path), year_page(tmp_path, lang="es")
+
+    assert "<h1>2024</h1>" in english
+    assert "9,000" in english and "9.000" in spanish
+    assert "75.0%" in english and "75,0 %" in spanish
+    assert "Web development" in english and "Desarrollo web" in spanish
+
+
+def test_a_year_page_shows_movers_newcomers_versions_and_timeline(tmp_path):
+    render_years(tmp_path)
+
+    english = year_page(tmp_path)
+
+    assert "fastapi" in english and "+1.25" in english and "+2" in english
+    assert "flask" in english and "-0.50" in english
+    assert "uvicorn" in english and "#42" in english
+    assert "3.12" in english and "3.13" in english
+    assert 'href="/en/library/fastapi/"' in english
+
+
+def test_the_year_page_states_its_methodology_and_catalog_coverage(tmp_path):
+    render_years(tmp_path)
+
+    english, spanish = year_page(tmp_path), year_page(tmp_path, lang="es")
+
+    assert "Methodology version 1" in english and "Versión metodológica 1" in spanish
+    assert "68.0%" in english and "68,0 %" in spanish
+
+
+def test_volume_always_carries_its_warning(tmp_path):
+    render_years(tmp_path)
+
+    assert "not a measure of real users" in year_page(tmp_path)
+    assert "no mide usuarios reales" in year_page(tmp_path, lang="es")
+
+
+def test_growth_is_shown_when_comparable(tmp_path):
+    render_years(tmp_path)
+
+    assert "+50.0%" in year_page(tmp_path)
+
+
+def test_a_discontinuity_replaces_the_growth_with_its_explanation(tmp_path):
+    volume = VolumeView(
+        total=9_000,
+        previous=6_000,
+        growth=None,
+        discontinuities=(date(2018, 7, 27),),
+    )
+
+    render_years(tmp_path, year(2018, volume=volume))
+
+    english = year_page(tmp_path, 2018)
+    assert "+50.0%" not in english
+    assert "2018-07-27" in english
+    assert "Growth is not shown" in english
+
+
+def test_a_year_in_progress_says_what_it_compares(tmp_path):
+    view = year(
+        2026,
+        status="ytd",
+        period_end=date(2026, 11, 8),
+        previous_start=date(2025, 1, 1),
+        previous_end=date(2025, 11, 8),
+    )
+
+    render_years(tmp_path, view)
+
+    english, spanish = year_page(tmp_path, 2026), year_page(tmp_path, 2026, "es")
+    assert "Year to date" in english and "2025-11-08" in english
+    assert "Año en curso" in spanish
+
+
+def test_the_first_year_explains_why_it_has_no_movers(tmp_path):
+    view = year(
+        2017,
+        previous_start=None,
+        previous_end=None,
+        volume=VolumeView(total=5, previous=None, growth=None, discontinuities=()),
+        movers_up=(),
+        movers_down=(),
+        newcomers=(),
+    )
+
+    render_years(tmp_path, view)
+
+    assert "no complete previous year" in year_page(tmp_path, 2017)
+
+
+def test_year_pages_link_to_each_other_and_to_the_other_language(tmp_path):
+    render_years(tmp_path, year(2023), year(2024))
+
+    english = year_page(tmp_path, 2024)
+
+    assert 'href="/en/year/2023/"' in english
+    assert 'href="/es/year/2024/"' in english
+
+
+def test_the_language_index_lists_the_years(tmp_path):
+    render_years(tmp_path, year(2023), year(2024))
+
+    index = (tmp_path / "en" / "index.html").read_text()
+
+    assert 'href="/en/year/2024/"' in index and 'href="/en/year/2023/"' in index
+
+
+def test_no_index_is_written_without_years(tmp_path):
+    render_site([view()], tmp_path)
+
+    assert not (tmp_path / "en" / "index.html").exists()
+
+
+def test_external_project_names_are_escaped_on_year_pages(tmp_path):
+    evil = Mover(
+        project="<script>alert(1)</script>",
+        category="web",
+        share=0.1,
+        share_change=1.0,
+        rank=1,
+        rank_change=None,
+    )
+
+    render_years(tmp_path, year(movers_up=(evil,)))
+
+    english = year_page(tmp_path)
+    assert "<script>alert" not in english
+    assert "&lt;script&gt;alert" in english
+
+
+@pytest.mark.parametrize("lang", ["en", "es"])
+def test_year_pages_have_no_inline_script_or_style(tmp_path, lang):
+    render_years(tmp_path)
+
+    html = year_page(tmp_path, lang=lang)
+
+    assert " style=" not in html
+    scripts = re.findall(r"<script([^>]*)>(.*?)</script>", html, flags=re.S)
+    assert all(
+        'type="application/json"' in attrs or (' src="' in attrs and not body)
+        for attrs, body in scripts
+    )
+
+
+def charts(out, number: int = 2024) -> dict[str, dict]:
+    html = year_page(out, number)
+    found = re.findall(
+        r'<script id="(chart-[a-z]+)-data" type="application/json">(.*?)</script>', html, re.S
+    )
+    return {name: json.loads(body) for name, body in found}
+
+
+def test_year_charts_are_typed_data_with_a_container_each(tmp_path):
+    render_years(tmp_path, year(2023), year(2024))
+
+    found = charts(tmp_path)
+
+    assert set(found) == {"chart-shares", "chart-python", "chart-volume"}
+    for name in found:
+        assert f'id="{name}"' in year_page(tmp_path)
+    assert found["chart-shares"]["format"] == "percent"
+    assert found["chart-volume"]["format"] == "compact"
+
+
+def test_the_share_chart_ranks_categories_with_their_labels(tmp_path):
+    render_years(tmp_path)
+
+    option = charts(tmp_path)["chart-shares"]["option"]
+
+    assert option["yAxis"]["data"] == ["Web development", "Testing"]
+    assert option["series"][0]["data"] == [75.0, 25.0]
+
+
+def test_the_share_chart_stops_at_twelve_categories(tmp_path):
+    many = tuple(CategoryShare(slug=f"c{i}", downloads=20 - i, share=0.05) for i in range(20))
+    domain = DomainShare(slug="development", downloads=100, share=1.0, categories=many)
+
+    render_years(tmp_path, year(domains=(domain,)))
+
+    assert len(charts(tmp_path)["chart-shares"]["option"]["yAxis"]["data"]) == 12
+
+
+def test_the_python_chart_skips_versions_under_one_percent(tmp_path):
+    versions = (
+        PythonVersionShare(version="3.12", downloads=995, share=0.995),
+        PythonVersionShare(version="3.1", downloads=5, share=0.005),
+    )
+
+    render_years(tmp_path, year(python_versions=versions))
+
+    assert charts(tmp_path)["chart-python"]["option"]["yAxis"]["data"] == ["3.12"]
+
+
+def test_the_volume_chart_covers_all_years_and_flags_special_ones(tmp_path):
+    jump = VolumeView(total=5, previous=2, growth=None, discontinuities=(date(2018, 7, 27),))
+    views = (
+        year(2018, volume=jump),
+        year(2019),
+        year(
+            2026,
+            status="ytd",
+            period_end=date(2026, 11, 8),
+            previous_start=date(2025, 1, 1),
+            previous_end=date(2025, 11, 8),
+        ),
+    )
+
+    render_years(tmp_path, *views)
+
+    option = charts(tmp_path, 2019)["chart-volume"]["option"]
+    assert option["xAxis"]["data"] == ["2018*", "2019", "2026 YTD"]
+    assert option["series"][0]["data"][-1]["itemStyle"] == {"opacity": 0.55}
+
+
+def test_categories_are_visually_nested_under_their_domain(tmp_path):
+    render_years(tmp_path)
+
+    assert year_page(tmp_path).count('<tr class="nested">') == 2
+
+
+def test_year_table_shows_the_leading_python_version_of_every_year(tmp_path):
+    render_years(tmp_path, year(2023), year(2024))
+
+    assert year_page(tmp_path).count("<td>3.12</td>") >= 2
+
+
+@pytest.mark.parametrize("lang", ["en", "es"])
+def test_year_page_matches_its_snapshot(tmp_path, lang):
+    render_years(tmp_path, year(2023), year(2024))
+    snapshot = SNAPSHOTS / f"year-{lang}.html"
+
+    if os.environ.get("UPDATE_SNAPSHOTS"):
+        snapshot.write_text(year_page(tmp_path, lang=lang))
+
+    assert year_page(tmp_path, lang=lang) == snapshot.read_text()

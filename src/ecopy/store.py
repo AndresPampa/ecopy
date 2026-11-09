@@ -25,6 +25,7 @@ from ecopy.models import (
     PythonMinorBatch,
     Run,
     RunReport,
+    YearView,
 )
 
 
@@ -89,6 +90,20 @@ def _write_new(table: pa.Table, path: Path) -> None:
     temporary = path.with_name(f".{path.name}.tmp")
     try:
         pq.write_table(table, temporary, compression="zstd", compression_level=9)
+        try:
+            os.link(temporary, path)
+        except FileExistsError as error:
+            raise ImmutabilityError(f"ya existe: {path}") from error
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def _write_text_new(path: Path, text: str) -> None:
+    """Escritura atómica de texto que no puede pisar un archivo existente."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.tmp")
+    try:
+        temporary.write_text(text, encoding="utf-8")
         try:
             os.link(temporary, path)
         except FileExistsError as error:
@@ -203,19 +218,23 @@ class Store:
 
     def record_run(self, report: RunReport) -> None:
         """Guarda el registro de una ejecución; igual que los datos, no se reescribe."""
-        path = self._root / "runs" / f"{report.id}.json"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = path.with_name(f".{path.name}.tmp")
-        try:
-            temporary.write_text(
-                json.dumps(asdict(report), default=str, indent=1) + "\n", encoding="utf-8"
-            )
-            try:
-                os.link(temporary, path)
-            except FileExistsError as error:
-                raise ImmutabilityError(f"ya existe: {path}") from error
-        finally:
-            temporary.unlink(missing_ok=True)
+        text = json.dumps(asdict(report), default=str, indent=1) + "\n"
+        _write_text_new(self._root / "runs" / f"{report.id}.json", text)
+
+    def freeze_year(self, view: YearView) -> Path:
+        """Fija la vista de un año cerrado. Una metodología nueva es un archivo nuevo."""
+        name = f"year={view.year}/methodology={view.methodology_version}.json"
+        path = self._root / "frozen" / name
+        _write_text_new(path, view.model_dump_json(indent=1) + "\n")
+        return path
+
+    def frozen_year(self, year: int) -> YearView | None:
+        """La vista congelada de un año, en su metodología más alta; None si no hay."""
+        files = (self._root / "frozen" / f"year={year}").glob("methodology=*.json")
+        newest = max(files, key=lambda f: int(f.stem.split("=")[1]), default=None)
+        if newest is None:
+            return None
+        return YearView.model_validate_json(newest.read_text(encoding="utf-8"))
 
     def runs(self) -> tuple[RunReport, ...]:
         """Registros de las ejecuciones, de la más vieja a la más nueva."""

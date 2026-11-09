@@ -150,3 +150,11 @@ def test_data_older_than_three_days_is_stale():
 
 def test_no_totals_at_all_is_stale():
     assert codes(Candidates(), History(totals={}, last_days={})) == ["stale"]
+
+
+def test_a_known_degraded_day_with_good_references_is_accepted():
+    degraded = date(2018, 4, 17)
+    reference = {degraded - timedelta(days=7 * k): 1000 for k in range(1, 5)}
+    history = History(totals=reference, last_days={})
+
+    assert codes(Candidates(totals=totals(1, degraded)), history, as_of=degraded) == []

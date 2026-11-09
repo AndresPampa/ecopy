@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2024 · ecopy</title>
+<link rel="stylesheet" href="/static/site.css">
+<script src="/static/vendor/echarts-6.1.0.common.min.js" defer></script>
+<script src="/static/charts.js" defer></script>
+</head>
+<body>
+<main>
+<nav><a href="/es/year/2024/" hreflang="es">Español</a> · <span aria-current="page">2024</span> · <a href="/en/year/2023/">2023</a></nav>
+<h1>2024</h1>
+<p>2024-01-01 → 2024-12-31. Methodology version 1.</p>
+
+<section>
+<h2>Total downloads on PyPI</h2>
+<p class="figure">9,000</p>
+<p>+50.0% against the previous period.</p>
+<p class="note">This volume is inflated by CI and grows for reasons unrelated to popularity: it is not a measure of real users.</p>
+
+<div id="chart-volume" class="chart" data-chart role="img" aria-label="Bar chart of total downloads per year. The table has the same data."></div>
+<script id="chart-volume-data" type="application/json">{"format": "compact", "option": {"grid": {"bottom": 8, "containLabel": true, "left": 8, "right": 24, "top": 16}, "series": [{"barMaxWidth": 32, "data": [{"value": 9000}, {"value": 9000}], "itemStyle": {"borderRadius": [4, 4, 0, 0]}, "type": "bar"}], "tooltip": {"confine": true, "trigger": "item"}, "xAxis": {"data": ["2023", "2024"], "type": "category"}, "yAxis": {"min": 0, "type": "value"}}}</script>
+<p class="note">* Year with a change in data collection. A lighter bar is a year in progress.</p>
+<table>
+<thead><tr><th scope="col">Year</th><th scope="col">Downloads</th></tr></thead>
+<tbody>
+<tr><th scope="row">2023</th><td>9,000</td></tr>
+<tr><th scope="row">2024</th><td>9,000</td></tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>Share by domain and category</h2>
+<p class="note">Shares are over the ecopy catalog, which is 68.0% of all PyPI downloads this period.</p>
+
+<div id="chart-shares" class="chart" data-chart role="img" aria-label="Bar chart of the twelve largest categories. The table has all of them."></div>
+<script id="chart-shares-data" type="application/json">{"format": "percent", "option": {"grid": {"bottom": 8, "containLabel": true, "left": 8, "right": 24, "top": 16}, "series": [{"barMaxWidth": 20, "data": [75.0, 25.0], "itemStyle": {"borderRadius": [0, 4, 4, 0]}, "type": "bar"}], "tooltip": {"confine": true, "trigger": "item"}, "xAxis": {"axisLabel": {"hideOverlap": true}, "min": 0, "type": "value"}, "yAxis": {"data": ["Web development", "Testing"], "inverse": true, "type": "category"}}}</script>
+<table>
+<thead><tr><th scope="col">Category</th><th scope="col">Share</th></tr></thead>
+<tbody>
+<tr><th scope="row"><strong>Development</strong></th><td><strong>100.0%</strong></td></tr>
+<tr class="nested"><th scope="row">Web development</th><td>75.0%</td></tr>
+<tr class="nested"><th scope="row">Testing</th><td>25.0%</td></tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>Movers</h2>
+<p class="note">Packages most people never install on purpose (the Foundations category) are left out of this list.</p>
+<h3>Biggest gains</h3>
+
+<table>
+<thead><tr><th scope="col">Package</th><th scope="col">Category</th><th scope="col">Change (share points)</th><th scope="col">Position</th></tr></thead>
+<tbody>
+<tr><th scope="row"><a href="/en/library/fastapi/">fastapi</a></th><td>Web development</td><td>+1.25</td><td>#3 (+2)</td></tr>
+</tbody>
+</table>
+<h3>Biggest losses</h3>
+
+<table>
+<thead><tr><th scope="col">Package</th><th scope="col">Category</th><th scope="col">Change (share points)</th><th scope="col">Position</th></tr></thead>
+<tbody>
+<tr><th scope="row"><a href="/en/library/flask/">flask</a></th><td>Web development</td><td>-0.50</td><td>#8</td></tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>New in the top 100</h2>
+<table>
+<thead><tr><th scope="col">Package</th><th scope="col">Category</th><th scope="col">Position in PyPI</th></tr></thead>
+<tbody>
+<tr><th scope="row"><a href="/en/library/uvicorn/">uvicorn</a></th><td>Web development</td><td>#42</td></tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>Python versions</h2>
+
+<div id="chart-python" class="chart" data-chart role="img" aria-label="Bar chart of the Python versions with at least 1% of downloads. The table has all of them."></div>
+<script id="chart-python-data" type="application/json">{"format": "percent", "option": {"grid": {"bottom": 8, "containLabel": true, "left": 8, "right": 24, "top": 16}, "series": [{"barMaxWidth": 20, "data": [75.0, 25.0], "itemStyle": {"borderRadius": [0, 4, 4, 0]}, "type": "bar"}], "tooltip": {"confine": true, "trigger": "item"}, "xAxis": {"axisLabel": {"hideOverlap": true}, "min": 0, "type": "value"}, "yAxis": {"data": ["3.12", "3.9"], "inverse": true, "type": "category"}}}</script>
+<table>
+<thead><tr><th scope="col">Version</th><th scope="col">Share</th></tr></thead>
+<tbody>
+<tr><th scope="row">3.12</th><td>75.0%</td></tr>
+<tr><th scope="row">3.9</th><td>25.0%</td></tr>
+</tbody>
+</table>
+<p class="note">Closed months only. Without a version: 5.0%. Other values that are not CPython releases: 0.1%.</p>
+<h3>Most used version per year</h3>
+<table>
+<thead><tr><th scope="col">Year</th><th scope="col">Version</th><th scope="col">Share</th></tr></thead>
+<tbody>
+<tr><th scope="row">2023</th><td>3.12</td><td>75.0%</td></tr>
+<tr><th scope="row">2024</th><td>3.12</td><td>75.0%</td></tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>Python timeline</h2>
+<ul>
+<li><time datetime="2024-10-07">2024-10-07</time> · Python 3.13 · released</li>
+</ul>
+</section>
+<footer><p>Data: ClickPy, from PyPI download logs.</p></footer>
+</main>
+</body>
+</html>

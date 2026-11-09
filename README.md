@@ -51,8 +51,8 @@ Detalle y estado en [`docs/ROADMAP.md`](docs/ROADMAP.md). Cada etapa se trabaja 
 - **Etapa 0 — Spikes de validación** ✅: cobertura de ClickPy, versiones de Python,
   histórico de estrellas, ECharts vs Plotly, tamaño de los datos.
 - **Etapa 1 — Tracer bullet** ✅: un paquete, de ClickPy a una página generada en local.
-- **Etapa 2 — Datos completos** 🚧: backfill, catálogo y categorías, ingesta y validación; en revisión.
-- **Etapa 3 — Vista anual.**
+- **Etapa 2 — Datos completos** ✅: backfill, catálogo y categorías, ingesta y validación.
+- **Etapa 3 — Vista anual** 🚧: cuotas, movers, versiones de Python y años congelados; en revisión.
 - **Etapa 4 — Librerías, comparador, releases y estrellas.**
 - **Etapa 5 — Publicación del MVP:** EN/ES, metodología, seguridad, accesibilidad, diseño y
   despliegue (GitHub Actions + Cloudflare Pages).

@@ -3,20 +3,30 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from datetime import date, timedelta
 
+from ecopy.catalog import FIRST_RANKED_YEAR, Catalog
 from ecopy.models import (
+    CategoryShare,
     Coverage,
     DailySeries,
+    DomainShare,
     LibraryView,
     MonthPoint,
+    Mover,
+    Newcomer,
     PeriodStatus,
+    PythonVersionShare,
     RunReport,
     SiteStatus,
+    TimelineEvent,
+    VolumeView,
     YearTotal,
+    YearView,
 )
-from ecopy.quality import SOURCE_START, period_coverage
+from ecopy.quality import DISCONTINUITIES, SOURCE_START, period_coverage
 
 
 def _next_month(month: date) -> date:
@@ -95,4 +105,210 @@ def site_status(runs: Sequence[RunReport]) -> SiteStatus:
     return SiteStatus(
         last_updated=good[-1].captured_at.date() if good else None,
         failed=bool(runs) and runs[-1].status == "failed",
+    )
+
+
+METHODOLOGY_VERSION = 1
+"""Sube cuando cambia una fórmula o la taxonomía; los años ya congelados no se recalculan."""
+_FOUNDATIONS = "foundations"
+"""Dependencias que casi nadie instala a propósito: cuentan en cuotas, no en movers ni llegados."""
+_MOVERS_PER_DIRECTION = 10
+
+
+@dataclass(frozen=True)
+class YearInputs:
+    downloads: Mapping[str, DailySeries]
+    totals: DailySeries
+    python_minor: Mapping[date, Mapping[str, int]]
+    catalog: Catalog
+
+
+@dataclass(frozen=True)
+class _Period:
+    start: date
+    end: date
+
+    def __contains__(self, day: date) -> bool:
+        return self.start <= day <= self.end
+
+
+def _periods(year: int, as_of: date) -> tuple[_Period, _Period | None, bool]:
+    """Período del año, el anterior con el que se compara y si el año está cerrado."""
+    start, last = date(year, 1, 1), date(year, 12, 31)
+    closed = last <= as_of
+    period = _Period(start, last if closed else as_of)
+    if year <= FIRST_RANKED_YEAR:
+        return period, None, closed
+    previous_start = date(year - 1, 1, 1)
+    previous_end = date(year - 1, 12, 31) if closed else previous_start + (period.end - start)
+    return period, _Period(previous_start, previous_end), closed
+
+
+def _totals_by_project(
+    downloads: Mapping[str, DailySeries], period: _Period | None
+) -> dict[str, int]:
+    if period is None:
+        return {}
+    totals = {
+        project: sum(value for day, value in series.items() if day in period)
+        for project, series in downloads.items()
+    }
+    return {project: total for project, total in totals.items() if total}
+
+
+def _domains(current: Mapping[str, int], catalog: Catalog) -> tuple[DomainShare, ...]:
+    grand_total = sum(current.values())
+    by_category: dict[str, int] = defaultdict(int)
+    for project, downloads in current.items():
+        by_category[catalog.library(project).category] += downloads
+    by_domain: dict[str, list[CategoryShare]] = defaultdict(list)
+    for slug, downloads in sorted(by_category.items(), key=lambda kv: (-kv[1], kv[0])):
+        share = CategoryShare(slug=slug, downloads=downloads, share=downloads / grand_total)
+        by_domain[catalog.domain_of(slug)].append(share)
+    domains = [
+        DomainShare(
+            slug=slug,
+            downloads=sum(c.downloads for c in categories),
+            share=sum(c.downloads for c in categories) / grand_total,
+            categories=tuple(categories),
+        )
+        for slug, categories in by_domain.items()
+    ]
+    return tuple(sorted(domains, key=lambda d: (-d.downloads, d.slug)))
+
+
+def _ranks(totals: Mapping[str, int], eligible: set[str]) -> dict[str, int]:
+    ordered = sorted((p for p in totals if p in eligible), key=lambda p: (-totals[p], p))
+    return {project: position for position, project in enumerate(ordered, start=1)}
+
+
+def _movers(
+    current: Mapping[str, int], previous: Mapping[str, int], catalog: Catalog
+) -> tuple[tuple[Mover, ...], tuple[Mover, ...]]:
+    if not previous:
+        return (), ()
+    current_total, previous_total = sum(current.values()), sum(previous.values())
+    eligible = {p for p in {*current, *previous} if catalog.library(p).category != _FOUNDATIONS}
+    now, before = _ranks(current, eligible), _ranks(previous, eligible)
+    movers = []
+    for project in eligible:
+        share = current.get(project, 0) / current_total
+        rank, earlier = now.get(project), before.get(project)
+        movers.append(
+            Mover(
+                project=project,
+                category=catalog.library(project).category,
+                share=share,
+                share_change=100 * (share - previous.get(project, 0) / previous_total),
+                rank=rank,
+                rank_change=earlier - rank if rank and earlier else None,
+            )
+        )
+    movers.sort(key=lambda m: (-m.share_change, m.project))
+    up = tuple(m for m in movers if m.share_change > 0)[:_MOVERS_PER_DIRECTION]
+    down = tuple(m for m in reversed(movers) if m.share_change < 0)[:_MOVERS_PER_DIRECTION]
+    return up, down
+
+
+def _newcomers(year: int, catalog: Catalog) -> tuple[Newcomer, ...]:
+    if year <= FIRST_RANKED_YEAR:
+        return ()
+    earlier = {p for y in range(FIRST_RANKED_YEAR, year) for p in catalog.top(y)}
+    newcomers = []
+    for position, project in enumerate(catalog.top(year), start=1):
+        library = catalog.library(project)
+        is_new = project not in earlier and library.renamed_from not in earlier
+        if is_new and library.category != _FOUNDATIONS:
+            newcomers.append(Newcomer(project=project, category=library.category, rank=position))
+    return tuple(newcomers)
+
+
+def _version_key(version: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in version.split("."))
+
+
+def _python_shares(
+    minors: Mapping[date, Mapping[str, int]], period: _Period, catalog: Catalog
+) -> tuple[tuple[PythonVersionShare, ...], float, float]:
+    """Versiones reales de CPython, y las fracciones sin versión y de valores que no lo son."""
+    totals: dict[str, int] = defaultdict(int)
+    for month, values in minors.items():
+        closed = month >= period.start and _next_month(month) - timedelta(days=1) <= period.end
+        if closed:
+            for minor, downloads in values.items():
+                totals[minor] += downloads
+    grand_total = sum(totals.values())
+    if not grand_total:
+        return (), 0.0, 0.0
+    real = {r.version for r in catalog.python_releases()}
+    valid = {minor: n for minor, n in totals.items() if minor in real}
+    valid_total = sum(valid.values())
+    versions = tuple(
+        PythonVersionShare(version=minor, downloads=n, share=n / valid_total)
+        for minor, n in sorted(valid.items(), key=lambda kv: _version_key(kv[0]), reverse=True)
+    )
+    unknown = totals.get("", 0)
+    return versions, unknown / grand_total, (grand_total - valid_total - unknown) / grand_total
+
+
+def _timeline(period: _Period, catalog: Catalog) -> tuple[TimelineEvent, ...]:
+    events = []
+    for release in catalog.python_releases():
+        if release.released in period:
+            events.append(
+                TimelineEvent(date=release.released, version=release.version, kind="release")
+            )
+        if release.end_of_life and release.end_of_life in period:
+            events.append(
+                TimelineEvent(date=release.end_of_life, version=release.version, kind="end_of_life")
+            )
+    return tuple(sorted(events, key=lambda e: (e.date, e.version)))
+
+
+def _volume(totals: DailySeries, period: _Period, previous: _Period | None) -> VolumeView:
+    total = sum(value for day, value in totals.items() if day in period)
+    before = sum(value for day, value in totals.items() if day in previous) if previous else None
+    crosses = previous is not None and any(
+        previous.start < d <= period.end for d in DISCONTINUITIES
+    )
+    growth = None if crosses or not before else (total - before) / before
+    return VolumeView(
+        total=total,
+        previous=before or None,
+        growth=growth,
+        discontinuities=tuple(d for d in DISCONTINUITIES if d in period),
+    )
+
+
+def year_view(year: int, inputs: YearInputs, *, as_of: date) -> YearView:
+    """La vista de un año, desde 2017, a la fecha `as_of`."""
+    if not FIRST_RANKED_YEAR <= year <= as_of.year:
+        raise ValueError(f"año fuera de rango: {year}")
+    period, previous, closed = _periods(year, as_of)
+    current = _totals_by_project(inputs.downloads, period)
+    if not current:
+        raise ValueError(f"sin datos en {year}")
+    earlier = _totals_by_project(inputs.downloads, previous)
+    volume = _volume(inputs.totals, period, previous)
+    up, down = _movers(current, earlier, inputs.catalog)
+    versions, unknown, other = _python_shares(inputs.python_minor, period, inputs.catalog)
+    return YearView(
+        year=year,
+        status="closed" if closed else "ytd",
+        methodology_version=METHODOLOGY_VERSION,
+        period_start=period.start,
+        period_end=period.end,
+        previous_start=previous.start if previous else None,
+        previous_end=previous.end if previous else None,
+        coverage=period_coverage(period.start, period.end),
+        volume=volume,
+        catalog_share=sum(current.values()) / volume.total if volume.total else 0.0,
+        domains=_domains(current, inputs.catalog),
+        movers_up=up,
+        movers_down=down,
+        newcomers=_newcomers(year, inputs.catalog),
+        python_versions=versions,
+        python_unknown_share=unknown,
+        python_other_share=other,
+        timeline=_timeline(period, inputs.catalog),
     )

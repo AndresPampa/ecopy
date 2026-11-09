@@ -13,6 +13,8 @@ import pytest
 import yaml
 
 from ecopy.cli import main, make_server
+from ecopy.models import DailyDownload, DailyTotal, DownloadBatch, PypiTotalsBatch, Run
+from ecopy.store import Store
 
 FIXTURE = Path(__file__).parent / "fixtures" / "clickpy" / "fastapi_2024-01.json"
 NOW = datetime(2024, 2, 1, 1, 0, tzinfo=UTC)
@@ -190,6 +192,9 @@ def write_catalog(root, *projects: str, top=None):
     libraries = [{"project": p, "category": "web"} for p in projects]
     (root / "libraries.yaml").write_text(yaml.safe_dump(libraries))
     (root / "top100.yaml").write_text(yaml.safe_dump(top or {"years": {}}))
+    (root / "python_releases.yaml").write_text(
+        yaml.safe_dump({"releases": [{"version": "3.12", "released": date(2023, 10, 2)}]})
+    )
     return root
 
 
@@ -291,3 +296,118 @@ def test_catalog_refresh_writes_the_ranking(tmp_path, capsys):
     saved = yaml.safe_load((catalog / "top100.yaml").read_text())["years"]
     assert sorted(saved) == list(years)
     assert "100" in capsys.readouterr().out
+
+
+def seed(store: Store, *, through: date = date(2024, 1, 15), category_project: str = "fastapi"):
+    run = Run("seed", datetime(2024, 2, 1, tzinfo=UTC), "backfill")
+    days = [date(2023, 6, 1), date(2023, 12, 31), through]
+    store.append(
+        DownloadBatch("clickpy", tuple(DailyDownload(category_project, d, 10) for d in days)), run
+    )
+    store.append(PypiTotalsBatch("clickpy", tuple(DailyTotal(d, 100) for d in days)), run)
+
+
+def yearly_catalog(root, top=None):
+    return write_catalog(root, "fastapi", top=top or {"years": {2023: ["fastapi"]}})
+
+
+def test_a_full_build_needs_the_closed_years_frozen(tmp_path, capsys):
+    data = tmp_path / "data"
+    seed(Store(data))
+    catalog = yearly_catalog(tmp_path / "c")
+
+    code = main(
+        ["build", "--data", str(data), "--catalog", str(catalog), "--out", str(tmp_path / "s")]
+    )
+
+    assert code == 1
+    assert "ecopy freeze" in capsys.readouterr().err
+
+
+def test_freezing_lets_a_full_build_write_every_year(tmp_path):
+    data, out = tmp_path / "data", tmp_path / "site"
+    seed(Store(data))
+    catalog = yearly_catalog(tmp_path / "c")
+    options = ["--data", str(data), "--catalog", str(catalog)]
+
+    assert main(["freeze", *options]) == 0
+    assert main(["build", *options, "--out", str(out)]) == 0
+
+    assert (data / "frozen" / "year=2023" / "methodology=1.json").exists()
+    assert not (data / "frozen" / "year=2024").exists()
+    assert (out / "en" / "year" / "2023" / "index.html").exists()
+    assert (out / "es" / "year" / "2024" / "index.html").exists()
+    assert (out / "en" / "index.html").exists()
+
+
+def test_freezing_twice_is_harmless_and_keeps_the_file(tmp_path, capsys):
+    data = tmp_path / "data"
+    seed(Store(data))
+    catalog = yearly_catalog(tmp_path / "c")
+    options = ["freeze", "--data", str(data), "--catalog", str(catalog)]
+    main(options)
+    frozen = data / "frozen" / "year=2023" / "methodology=1.json"
+    before = frozen.read_bytes()
+
+    assert main(options) == 0
+
+    assert frozen.read_bytes() == before
+    assert "0 años" in capsys.readouterr().out
+
+
+def test_a_frozen_year_does_not_change_when_the_catalog_does(tmp_path):
+    data, out = tmp_path / "data", tmp_path / "site"
+    seed(Store(data))
+    catalog = yearly_catalog(tmp_path / "c")
+    main(["freeze", "--data", str(data), "--catalog", str(catalog)])
+    (catalog / "top100.yaml").write_text(yaml.safe_dump({"years": {2023: []}}))
+    frozen = (data / "frozen" / "year=2023" / "methodology=1.json").read_bytes()
+
+    main(["build", "--data", str(data), "--catalog", str(catalog), "--out", str(out)])
+
+    assert (data / "frozen" / "year=2023" / "methodology=1.json").read_bytes() == frozen
+
+
+def test_freezing_needs_the_ranking_of_the_year(tmp_path, capsys):
+    data = tmp_path / "data"
+    seed(Store(data))
+    catalog = yearly_catalog(tmp_path / "c", top={"years": {}})
+
+    assert main(["freeze", "--data", str(data), "--catalog", str(catalog)]) == 1
+
+    assert "catalog refresh" in capsys.readouterr().err
+
+
+def test_a_single_project_build_writes_no_year_pages(tmp_path):
+    data, out = tmp_path / "data", tmp_path / "site"
+    seed(Store(data))
+
+    args = ["build", "--project", "fastapi", "--data", str(data), "--out", str(out)]
+    assert main(args) == 0
+
+    assert not (out / "en" / "year").exists()
+
+
+def test_a_dormant_package_uses_the_same_as_of_as_the_rest(tmp_path):
+    data, out = tmp_path / "data", tmp_path / "site"
+    run = Run("seed", datetime(2024, 4, 1, tzinfo=UTC), "backfill")
+    rows = (
+        DailyDownload("old", date(2024, 1, 10), 1),
+        DailyDownload("alive", date(2024, 3, 31), 1),
+    )
+    Store(data).append(DownloadBatch("clickpy", rows), run)
+    args = [
+        "build",
+        "--project",
+        "old",
+        "--project",
+        "alive",
+        "--data",
+        str(data),
+        "--out",
+        str(out),
+    ]
+
+    assert main(args) == 0
+
+    assert ">2024-03<" in (out / "en" / "library" / "old" / "index.html").read_text()

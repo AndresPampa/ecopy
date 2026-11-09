@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2024 · ecopy</title>
+<link rel="stylesheet" href="/static/site.css">
+<script src="/static/vendor/echarts-6.1.0.common.min.js" defer></script>
+<script src="/static/charts.js" defer></script>
+</head>
+<body>
+<main>
+<nav><a href="/en/year/2024/" hreflang="en">English</a> · <span aria-current="page">2024</span> · <a href="/es/year/2023/">2023</a></nav>
+<h1>2024</h1>
+<p>2024-01-01 → 2024-12-31. Versión metodológica 1.</p>
+
+<section>
+<h2>Descargas totales en PyPI</h2>
+<p class="figure">9.000</p>
+<p>+50,0 % contra el período anterior.</p>
+<p class="note">Este volumen está inflado por CI y crece por razones ajenas a la popularidad: no mide usuarios reales.</p>
+
+<div id="chart-volume" class="chart" data-chart role="img" aria-label="Gráfico de barras de descargas totales por año. La tabla tiene los mismos datos."></div>
+<script id="chart-volume-data" type="application/json">{"format": "compact", "option": {"grid": {"bottom": 8, "containLabel": true, "left": 8, "right": 24, "top": 16}, "series": [{"barMaxWidth": 32, "data": [{"value": 9000}, {"value": 9000}], "itemStyle": {"borderRadius": [4, 4, 0, 0]}, "type": "bar"}], "tooltip": {"confine": true, "trigger": "item"}, "xAxis": {"data": ["2023", "2024"], "type": "category"}, "yAxis": {"min": 0, "type": "value"}}}</script>
+<p class="note">* Año con un cambio en la recolección de datos. Una barra más clara es un año en curso.</p>
+<table>
+<thead><tr><th scope="col">Año</th><th scope="col">Descargas</th></tr></thead>
+<tbody>
+<tr><th scope="row">2023</th><td>9.000</td></tr>
+<tr><th scope="row">2024</th><td>9.000</td></tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>Cuota por dominio y categoría</h2>
+<p class="note">Las cuotas son sobre el catálogo de ecopy, que representa 68,0 % de las descargas de PyPI en este período.</p>
+
+<div id="chart-shares" class="chart" data-chart role="img" aria-label="Gráfico de barras de las doce categorías más grandes. La tabla las tiene todas."></div>
+<script id="chart-shares-data" type="application/json">{"format": "percent", "option": {"grid": {"bottom": 8, "containLabel": true, "left": 8, "right": 24, "top": 16}, "series": [{"barMaxWidth": 20, "data": [75.0, 25.0], "itemStyle": {"borderRadius": [0, 4, 4, 0]}, "type": "bar"}], "tooltip": {"confine": true, "trigger": "item"}, "xAxis": {"axisLabel": {"hideOverlap": true}, "min": 0, "type": "value"}, "yAxis": {"data": ["Desarrollo web", "Testing"], "inverse": true, "type": "category"}}}</script>
+<table>
+<thead><tr><th scope="col">Categoría</th><th scope="col">Cuota</th></tr></thead>
+<tbody>
+<tr><th scope="row"><strong>Desarrollo</strong></th><td><strong>100,0 %</strong></td></tr>
+<tr class="nested"><th scope="row">Desarrollo web</th><td>75,0 %</td></tr>
+<tr class="nested"><th scope="row">Testing</th><td>25,0 %</td></tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>Movers</h2>
+<p class="note">Los paquetes que casi nadie instala a propósito (la categoría Infraestructura base) no entran en esta lista.</p>
+<h3>Mayores subas</h3>
+
+<table>
+<thead><tr><th scope="col">Paquete</th><th scope="col">Categoría</th><th scope="col">Cambio (puntos de cuota)</th><th scope="col">Posición</th></tr></thead>
+<tbody>
+<tr><th scope="row"><a href="/es/library/fastapi/">fastapi</a></th><td>Desarrollo web</td><td>+1,25</td><td>#3 (+2)</td></tr>
+</tbody>
+</table>
+<h3>Mayores bajas</h3>
+
+<table>
+<thead><tr><th scope="col">Paquete</th><th scope="col">Categoría</th><th scope="col">Cambio (puntos de cuota)</th><th scope="col">Posición</th></tr></thead>
+<tbody>
+<tr><th scope="row"><a href="/es/library/flask/">flask</a></th><td>Desarrollo web</td><td>-0,50</td><td>#8</td></tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>Nuevos en el top 100</h2>
+<table>
+<thead><tr><th scope="col">Paquete</th><th scope="col">Categoría</th><th scope="col">Posición en PyPI</th></tr></thead>
+<tbody>
+<tr><th scope="row"><a href="/es/library/uvicorn/">uvicorn</a></th><td>Desarrollo web</td><td>#42</td></tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>Versiones de Python</h2>
+
+<div id="chart-python" class="chart" data-chart role="img" aria-label="Gráfico de barras de las versiones de Python con al menos 1 % de las descargas. La tabla las tiene todas."></div>
+<script id="chart-python-data" type="application/json">{"format": "percent", "option": {"grid": {"bottom": 8, "containLabel": true, "left": 8, "right": 24, "top": 16}, "series": [{"barMaxWidth": 20, "data": [75.0, 25.0], "itemStyle": {"borderRadius": [0, 4, 4, 0]}, "type": "bar"}], "tooltip": {"confine": true, "trigger": "item"}, "xAxis": {"axisLabel": {"hideOverlap": true}, "min": 0, "type": "value"}, "yAxis": {"data": ["3.12", "3.9"], "inverse": true, "type": "category"}}}</script>
+<table>
+<thead><tr><th scope="col">Versión</th><th scope="col">Cuota</th></tr></thead>
+<tbody>
+<tr><th scope="row">3.12</th><td>75,0 %</td></tr>
+<tr><th scope="row">3.9</th><td>25,0 %</td></tr>
+</tbody>
+</table>
+<p class="note">Solo meses cerrados. Sin versión: 5,0 %. Otros valores que no son versiones de CPython: 0,1 %.</p>
+<h3>Versión más usada por año</h3>
+<table>
+<thead><tr><th scope="col">Año</th><th scope="col">Versión</th><th scope="col">Cuota</th></tr></thead>
+<tbody>
+<tr><th scope="row">2023</th><td>3.12</td><td>75,0 %</td></tr>
+<tr><th scope="row">2024</th><td>3.12</td><td>75,0 %</td></tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>Línea de tiempo de Python</h2>
+<ul>
+<li><time datetime="2024-10-07">2024-10-07</time> · Python 3.13 · lanzamiento</li>
+</ul>
+</section>
+<footer><p>Datos: ClickPy, a partir de los registros de descargas de PyPI.</p></footer>
+</main>
+</body>
+</html>

@@ -30,6 +30,13 @@ _DEGRADED = (
 )
 
 
+DISCONTINUITIES = (
+    date(2018, 7, 27),  # el volumen se triplica y no vuelve (S1)
+    date(2026, 8, 25),  # cae 36 % de un día para el otro, causa desconocida (S7)
+)
+"""Saltos de nivel del volumen total: el crecimiento absoluto no se calcula a través de ellos."""
+
+
 class DayQuality(StrEnum):
     OK = "ok"
     GAP = "gap"

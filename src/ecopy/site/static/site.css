@@ -87,3 +87,14 @@ th:nth-child(2),
 td:nth-child(2) {
   text-align: right;
 }
+
+.figure {
+  margin: 0;
+  font-size: 2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.nested th {
+  padding-left: 16px;
+  font-weight: 400;
+}

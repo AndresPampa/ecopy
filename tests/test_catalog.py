@@ -1,6 +1,6 @@
 """Catálogo: YAML de ejemplo → librerías, categorías, validaciones y top 100."""
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 import yaml
@@ -26,13 +26,20 @@ LIBRARIES = [
     {"project": "pytest", "category": "testing"},
 ]
 TOP = {"years": {2024: ["fastapi"]}}
+RELEASES = {
+    "releases": [
+        {"version": "3.12", "released": date(2023, 10, 2), "end_of_life": date(2028, 10, 31)},
+        {"version": "2.5", "released": date(2006, 9, 19)},
+    ]
+}
 
 
-def write(root, *, taxonomy=TAXONOMY, libraries=LIBRARIES, top=TOP):
+def write(root, *, taxonomy=TAXONOMY, libraries=LIBRARIES, top=TOP, releases=RELEASES):
     root.mkdir(exist_ok=True)
     (root / "taxonomy.yaml").write_text(yaml.safe_dump(taxonomy, allow_unicode=True))
     (root / "libraries.yaml").write_text(yaml.safe_dump(libraries, allow_unicode=True))
     (root / "top100.yaml").write_text(yaml.safe_dump(top))
+    (root / "python_releases.yaml").write_text(yaml.safe_dump(releases))
     return root
 
 
@@ -146,6 +153,43 @@ def test_a_missing_file_is_reported(tmp_path):
     (root / "top100.yaml").unlink()
 
     assert "top100.yaml" in problems(root)
+
+
+def test_top_gives_the_ranking_of_a_year(tmp_path):
+    catalog = Catalog.load(write(tmp_path / "c"))
+
+    assert catalog.top(2024) == ("fastapi",)
+    assert catalog.top(2030) == ()
+
+
+def test_python_releases_are_read_in_order_with_optional_end_of_life(tmp_path):
+    releases = Catalog.load(write(tmp_path / "c")).python_releases()
+
+    assert [(r.version, r.released, r.end_of_life) for r in releases] == [
+        ("2.5", date(2006, 9, 19), None),
+        ("3.12", date(2023, 10, 2), date(2028, 10, 31)),
+    ]
+
+
+def test_a_duplicated_python_release_is_rejected(tmp_path):
+    entry = {"version": "3.12", "released": date(2023, 10, 2)}
+
+    root = write(tmp_path / "c", releases={"releases": [entry, entry]})
+
+    assert "3.12" in problems(root)
+
+
+def test_a_python_release_ending_before_it_starts_is_rejected(tmp_path):
+    entry = {"version": "3.0", "released": date(2020, 1, 2), "end_of_life": date(2020, 1, 1)}
+
+    assert "3.0" in problems(write(tmp_path / "c", releases={"releases": [entry]}))
+
+
+def test_labels_are_available_by_slug_for_domains_and_categories(tmp_path):
+    labels = Catalog.load(write(tmp_path / "c")).labels()
+
+    assert labels["web"] == {"en": "Web", "es": "Web"}
+    assert labels["development"] == {"en": "Development", "es": "Desarrollo"}
 
 
 class FakeTop:

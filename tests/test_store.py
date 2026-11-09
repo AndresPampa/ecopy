@@ -13,6 +13,7 @@ from ecopy.models import (
     PythonMinorBatch,
     PythonMinorMonth,
     Run,
+    YearView,
 )
 from ecopy.store import ImmutabilityError, Store
 
@@ -266,3 +267,60 @@ def test_last_days_gives_the_newest_day_of_each_package(tmp_path):
     )
 
     assert store.last_days() == {"fastapi": date(2024, 1, 5), "django": date(2024, 1, 3)}
+
+
+def frozen(year: int = 2024, methodology: int = 1, total: int = 100) -> YearView:
+    return YearView(
+        year=year,
+        status="closed",
+        methodology_version=methodology,
+        period_start=date(year, 1, 1),
+        period_end=date(year, 12, 31),
+        previous_start=None,
+        previous_end=None,
+        coverage={"expected": 366, "gap": 0, "degraded": 0},
+        volume={"total": total, "previous": None, "growth": None, "discontinuities": ()},
+        catalog_share=0.5,
+        domains=(),
+        movers_up=(),
+        movers_down=(),
+        newcomers=(),
+        python_versions=(),
+        python_unknown_share=0.0,
+        python_other_share=0.0,
+        timeline=(),
+    )
+
+
+def test_a_year_without_freezing_is_none(tmp_path):
+    assert Store(tmp_path).frozen_year(2024) is None
+
+
+def test_a_frozen_year_is_read_back_identically(tmp_path):
+    store = Store(tmp_path)
+
+    path = store.freeze_year(frozen())
+
+    assert store.frozen_year(2024) == frozen()
+    assert path.relative_to(tmp_path).as_posix() == "frozen/year=2024/methodology=1.json"
+
+
+def test_freezing_the_same_methodology_twice_fails_and_changes_nothing(tmp_path):
+    store = Store(tmp_path)
+    store.freeze_year(frozen())
+    before = snapshot(tmp_path)
+
+    with pytest.raises(ImmutabilityError):
+        store.freeze_year(frozen(total=999))
+
+    assert snapshot(tmp_path) == before
+
+
+def test_the_highest_methodology_wins_and_the_old_file_stays(tmp_path):
+    store = Store(tmp_path)
+    store.freeze_year(frozen(total=1))
+    store.freeze_year(frozen(methodology=2, total=2))
+    store.freeze_year(frozen(methodology=10, total=10))
+
+    assert store.frozen_year(2024).volume.total == 10
+    assert len(list(tmp_path.rglob("*.json"))) == 3

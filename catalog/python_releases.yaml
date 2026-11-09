@@ -1,0 +1,29 @@
+# Versiones menores de CPython: filtran `python_minor` y arman la línea de tiempo del lenguaje.
+# Fechas de 2.6 en adelante: https://endoflife.date/api/python.json (consultado 2026-11-09).
+# 2.0 a 2.5: https://www.python.org/doc/versions/ (primer micro de cada menor); sin fin de soporte
+# publicado de forma comparable, se deja vacío.
+releases:
+  - {version: "2.0", released: 2000-10-16}
+  - {version: "2.1", released: 2001-04-15}
+  - {version: "2.2", released: 2001-12-21}
+  - {version: "2.3", released: 2003-07-29}
+  - {version: "2.4", released: 2004-11-30}
+  - {version: "2.5", released: 2006-09-19}
+  - {version: "2.6", released: 2008-10-01, end_of_life: 2013-10-29}
+  - {version: "2.7", released: 2010-07-03, end_of_life: 2020-01-01}
+  - {version: "3.0", released: 2008-12-03, end_of_life: 2009-06-27}
+  - {version: "3.1", released: 2009-06-27, end_of_life: 2012-04-09}
+  - {version: "3.2", released: 2011-02-20, end_of_life: 2016-02-20}
+  - {version: "3.3", released: 2012-09-29, end_of_life: 2017-09-29}
+  - {version: "3.4", released: 2014-03-16, end_of_life: 2019-03-18}
+  - {version: "3.5", released: 2015-09-13, end_of_life: 2020-09-30}
+  - {version: "3.6", released: 2016-12-23, end_of_life: 2021-12-23}
+  - {version: "3.7", released: 2018-06-27, end_of_life: 2023-06-27}
+  - {version: "3.8", released: 2019-10-14, end_of_life: 2024-10-07}
+  - {version: "3.9", released: 2020-10-05, end_of_life: 2025-10-31}
+  - {version: "3.10", released: 2021-10-04, end_of_life: 2026-10-01}
+  - {version: "3.11", released: 2022-10-24, end_of_life: 2027-10-31}
+  - {version: "3.12", released: 2023-10-02, end_of_life: 2028-10-31}
+  - {version: "3.13", released: 2024-10-07, end_of_life: 2029-10-31}
+  - {version: "3.14", released: 2025-10-07, end_of_life: 2030-10-31}
+  - {version: "3.15", released: 2026-10-09, end_of_life: 2031-10-31}
