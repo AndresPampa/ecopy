@@ -1,7 +1,7 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-09 · branch: `etapa-1-tracer-bullet` (1 commit: cierre de la Etapa 0;
-> diseño de la Etapa 1 sin commit) · `main` = `origin/main` (`a54967c`, PR #2) ·
+> Last updated: 2026-11-09 · branch: `etapa-1-tracer-bullet` (2 commits: cierre de la Etapa 0 y
+> diseño; slice 1 sin commit) · `main` = `origin/main` (`a54967c`, PR #2) ·
 > remoto `origin` = https://github.com/AndresPampa/ecopy.git
 
 ## Current State
@@ -14,20 +14,23 @@
 - **Etapa 1 (tracer bullet, LOCAL) recién abierta** en `etapa-1-tracer-bullet`. Decisión del
   usuario: todo se prueba en local hasta tener un primer MVP; GitHub Actions y Cloudflare Pages
   (S6) pasan a la Etapa 5. **Diseño aprobado** en `docs/design/etapa-1-tracer-bullet.md`
-  (interfaces de `sources`/`store`/`metrics`/`site`/`cli`, seams y tests); 6 slices en ROADMAP,
-  ninguno empezado.
-- **Sin commit:** `docs/design/etapa-1-tracer-bullet.md` (nuevo), `docs/prd.md` (decisiones del
-  diseño), `docs/ROADMAP.md`, `docs/HANDOFF.md`.
-- **No hay código del producto todavía.** Tooling del agente local y fuera de git (`.claude/`,
+  (interfaces de `sources`/`store`/`metrics`/`site`/`cli`, seams y tests); 6 slices en ROADMAP.
+  **Slice 1 (esqueleto) hecho:** `pyproject.toml` (uv_build, deps dev pytest/hypothesis/ruff),
+  `src/ecopy/cli.py` (`ecopy --version`), `tests/test_cli.py` en verde, ruff limpio.
+- **Sin commit:** `pyproject.toml`, `uv.lock`, `src/`, `tests/`, `README.md`, `docs/ROADMAP.md`,
+  `docs/HANDOFF.md`.
+- **Código del producto:** solo el esqueleto (slice 1). Tooling del agente local y fuera de git (`.claude/`,
   `.codex/`, `.agents/`, `skills/`, `openspec/`, `scripts/hooks|bash/`, `docs/workflows|guides|
   prompt_templates/`, `AGENTS*/CLAUDE*`, `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-- [ ] **Usuario:** commit del diseño de la Etapa 1 (mensaje propuesto en la sesión del 2026-11-09).
-- [ ] **Etapa 1 — slice 1 (esqueleto)** con `tdd`: `pyproject.toml` (uv), `src/ecopy/`, `ruff` +
-      `pytest` + `hypothesis` (hay `uv` 0.12.19, Python 3.14.4). Luego slices 2–6 según
-      `docs/ROADMAP.md` y el diseño. Ojo: `.pre-commit-config.yaml` está en `.gitignore` (tooling
-      local); decidir si el del producto se versiona.
+- [ ] **Usuario:** commit del slice 1 (mensaje propuesto en la sesión del 2026-11-09).
+- [ ] **Etapa 1 — slice 2 (`sources.clickpy`)** con `tdd`: script que graba fixtures reales de
+      `fastapi` + tests de contrato con `httpx.MockTransport` (truncado, cuadre, errores). Luego
+      slices 3–6 según `docs/ROADMAP.md` y el diseño.
+- [ ] **Decidir (usuario):** `pre-commit` del producto. `.pre-commit-config.yaml` está en
+      `.gitignore` (tooling local); propuesta: versionar uno propio (ruff + pytest) y sacarlo del
+      ignore. Pendiente de respuesta.
 - [ ] **Usuario (Etapa 5, con el primer MVP):** S6 — crear el proyecto en Cloudflare Pages y
       confirmar `ecopy.pages.dev`; recién ahí entra GitHub Actions.
 - [ ] **Usuario (opcional):** borrar ramas mergeadas `etapa-0-spikes` y `docs/project-setup`
@@ -135,6 +138,8 @@
 - Memoria persistente del agente: `ecopython-brainstorm-decisions`, `user-owns-git-operations`.
 
 ## Resume Setup
+- Producto: `uv sync` · `uv run pytest` · `uv run ruff check . && uv run ruff format --check src tests`
+  · `uv run ecopy --version`. Paquete en `src/ecopy/` (build backend `uv_build`), tests en `tests/`.
 - Checks del toolkit: `scripts/bash/check_skill_symlinks.sh`, `check_hook_parity.sh`,
   `check_agent_parity.sh`; tests: `python3 scripts/hooks/test_<nombre>.py` (sin pytest).
 - Spikes: scripts con dependencias inline (PEP 723), `uv run docs/spikes/<script>.py`. ClickPy:
@@ -237,3 +242,9 @@ Con `codebase-design`: interfaces de `sources.ClickPy`, `store.Store`, `metrics.
 `site.render_site` y `cli` (`ingest`/`build`/`serve`), seams y tests por módulo, 6 slices TDD.
 Usuario aprobó las tres decisiones (normalized como vista, procedencia sellada por `store`,
 `data/` versionado) → PRD (Módulos, Datos) actualizado.
+
+### 2026-11-09 — Slice 1 (esqueleto) en verde
+TDD: test de humo `ecopy --version` (RED: falta `ecopy.cli`) → `src/ecopy/cli.py` con argparse
+(GREEN). `pyproject.toml` con `uv_build`, script `ecopy`, grupo dev (pytest 9.2, hypothesis,
+ruff 0.17), config de ruff (excluye spikes y tooling). Sin dependencias de runtime todavía: cada
+slice agrega las suyas. `pre-commit` del producto queda pendiente de decisión.

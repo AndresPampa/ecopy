@@ -1,0 +1,30 @@
+[project]
+name = "ecopy"
+version = "0.1.0"
+description = "The Python ecosystem, year by year: static site with PyPI metrics since 2016."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+ecopy = "ecopy.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8", "hypothesis>=6", "ruff>=0.8"]
+
+[build-system]
+requires = ["uv_build>=0.9,<0.13"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--strict-markers", "--import-mode=importlib"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["docs/spikes", "skills", "scripts", "openspec", "build"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]

@@ -38,7 +38,7 @@ publicar recién con un primer MVP).
 aprobado 2026-11-09).
 
 **Slices** (TDD, en orden):
-- [ ] **1 — Esqueleto:** `pyproject.toml` (uv), `src/ecopy/`, `ruff` + `pytest` + `hypothesis`.
+- [x] **1 — Esqueleto:** `pyproject.toml` (uv), `src/ecopy/`, `ruff` + `pytest` + `hypothesis`.
 - [ ] **2 — `sources.clickpy`:** fixtures grabadas de `fastapi` + tests de contrato (truncado, cuadre).
 - [ ] **3 — `store`:** append-only, lectura con corrección, inmutabilidad sobre `tmp_path`.
 - [ ] **4 — `metrics.library_view`:** unitarios + propiedades con Hypothesis.

@@ -63,6 +63,17 @@ Detalle y estado en [`docs/ROADMAP.md`](docs/ROADMAP.md). Cada etapa se trabaja 
 - Dataset público de PyPI en BigQuery, como respaldo reproducible.
 - Releases de Python y conteos de estrellas de GitHub (nunca identidades de usuarios).
 
+## Desarrollo
+
+Requiere [uv](https://docs.astral.sh/uv/) y Python ≥ 3.12.
+
+```bash
+uv sync                 # entorno + dependencias de desarrollo
+uv run pytest           # tests
+uv run ruff check . && uv run ruff format --check src tests
+uv run ecopy --version
+```
+
 ## Documentación
 
 - [`docs/prd.md`](docs/prd.md) — requisitos del producto, historias de usuario y decisiones.
