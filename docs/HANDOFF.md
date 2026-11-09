@@ -1,7 +1,7 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-07 · branch: `etapa-1-tracer-bullet` (recién creada desde `main`; los
-> cambios de cierre de la Etapa 0 están sin commit) · `main` = `origin/main` (`a54967c`, PR #2) ·
+> Last updated: 2026-11-09 · branch: `etapa-1-tracer-bullet` (1 commit: cierre de la Etapa 0;
+> diseño de la Etapa 1 sin commit) · `main` = `origin/main` (`a54967c`, PR #2) ·
 > remoto `origin` = https://github.com/AndresPampa/ecopy.git
 
 ## Current State
@@ -13,21 +13,21 @@
   decisiones de S1–S5 (S5: Datos + reglas del adaptador de ClickPy en Fuentes).
 - **Etapa 1 (tracer bullet, LOCAL) recién abierta** en `etapa-1-tracer-bullet`. Decisión del
   usuario: todo se prueba en local hasta tener un primer MVP; GitHub Actions y Cloudflare Pages
-  (S6) pasan a la Etapa 5. Slices sin definir.
-- **Sin commit en la rama nueva:** `docs/prd.md`, `docs/ROADMAP.md`, `docs/HANDOFF.md`,
-  `docs/spikes/s5-parquet-backfill.md`, `README.md` (cierre de la Etapa 0). Van como primer
-  commit de la Etapa 1.
+  (S6) pasan a la Etapa 5. **Diseño aprobado** en `docs/design/etapa-1-tracer-bullet.md`
+  (interfaces de `sources`/`store`/`metrics`/`site`/`cli`, seams y tests); 6 slices en ROADMAP,
+  ninguno empezado.
+- **Sin commit:** `docs/design/etapa-1-tracer-bullet.md` (nuevo), `docs/prd.md` (decisiones del
+  diseño), `docs/ROADMAP.md`, `docs/HANDOFF.md`.
 - **No hay código del producto todavía.** Tooling del agente local y fuera de git (`.claude/`,
   `.codex/`, `.agents/`, `skills/`, `openspec/`, `scripts/hooks|bash/`, `docs/workflows|guides|
   prompt_templates/`, `AGENTS*/CLAUDE*`, `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-- [ ] **Usuario:** commit del cierre de la Etapa 0 en `etapa-1-tracer-bullet` (mensaje propuesto
-      en la sesión del 2026-11-07).
-- [ ] **Etapa 1 — Tracer bullet:** definir los slices en `docs/ROADMAP.md` (un paquete de punta a
-      punta, en local: `sources` ClickPy con las reglas de S5 → `store` Parquet → `metrics` →
-      `site` con ECharts `common` en `build/` → `cli`). Arrancar con `codebase-design` y `tdd`; instalar
-      `ruff`, `pytest`, `pre-commit` (hay `uv` 0.12.19, Python 3.14.4, node).
+- [ ] **Usuario:** commit del diseño de la Etapa 1 (mensaje propuesto en la sesión del 2026-11-09).
+- [ ] **Etapa 1 — slice 1 (esqueleto)** con `tdd`: `pyproject.toml` (uv), `src/ecopy/`, `ruff` +
+      `pytest` + `hypothesis` (hay `uv` 0.12.19, Python 3.14.4). Luego slices 2–6 según
+      `docs/ROADMAP.md` y el diseño. Ojo: `.pre-commit-config.yaml` está en `.gitignore` (tooling
+      local); decidir si el del producto se versiona.
 - [ ] **Usuario (Etapa 5, con el primer MVP):** S6 — crear el proyecto en Cloudflare Pages y
       confirmar `ecopy.pages.dev`; recién ahí entra GitHub Actions.
 - [ ] **Usuario (opcional):** borrar ramas mergeadas `etapa-0-spikes` y `docs/project-setup`
@@ -43,6 +43,11 @@
 - **Local primero:** Etapas 1–4 se construyen y prueban en local (`build/` + localhost). GitHub
   Actions y Cloudflare Pages entran recién en la Etapa 5, con un primer MVP (decisión del usuario,
   2026-11-07). La arquitectura del PRD no cambia, solo el orden.
+- **Diseño de la Etapa 1 (aprobado 2026-11-09):** `normalized` es una vista (dedup + la
+  corrección más reciente gana), no capa física, hasta que haya una segunda fuente; la
+  procedencia la sella `store` desde un `Run` que crea `cli` (`sources` no sabe si es backfill);
+  `data/` se versiona desde ya; partición única `raw/<fuente>/<dataset>/year=YYYY/<run_id>.parquet`.
+  Detalle y razones en `docs/design/etapa-1-tracer-bullet.md`; PRD actualizado.
 - **Licencia MIT** (recomendada por simple y permisiva; aceptada por el usuario). Titular: `AndresPampa`.
 - **Git lo opera el usuario:** todos los `git add`, `commit`, `push` y PRs los hace el usuario. El agente
   solo prepara cambios en el working tree y sugiere comandos/mensajes; nunca los ejecuta.
@@ -116,6 +121,7 @@
 
 ## Files & Pointers
 - `docs/ROADMAP.md` — etapas y slices de la etapa en curso.
+- `docs/design/etapa-1-tracer-bullet.md` — interfaces, seams y tests de la Etapa 1.
 - `docs/spikes/` — informe (`sN-*.md`) + script reproducible (`sN_*.py`) por spike: S1 cobertura,
   S2 versiones de Python, S3 estrellas, S4 ECharts vs Plotly, S5 Parquet + backfill.
 - `categorias.md` (raíz, ignorado por git) — abordaje de categorías del usuario; ya volcado al PRD.
@@ -225,3 +231,9 @@ S5 → PRD (Datos: tamaño, serie diaria, disposición, versión de Python globa
 adaptador de ClickPy; Further Notes), informe y ROADMAP actualizados. Etapa 0 colapsada en
 *Shipped*. Usuario decidió probar todo en local hasta un primer MVP: Etapa 1 sin Actions ni
 Cloudflare; GitHub Actions + Cloudflare Pages (S6) movidos a la Etapa 5 (ROADMAP, README).
+
+### 2026-11-09 — Diseño de la Etapa 1 aprobado
+Con `codebase-design`: interfaces de `sources.ClickPy`, `store.Store`, `metrics.library_view`,
+`site.render_site` y `cli` (`ingest`/`build`/`serve`), seams y tests por módulo, 6 slices TDD.
+Usuario aprobó las tres decisiones (normalized como vista, procedencia sellada por `store`,
+`data/` versionado) → PRD (Módulos, Datos) actualizado.

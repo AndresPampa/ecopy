@@ -34,7 +34,16 @@ localhost, atravesando `sources → store → metrics → site → cli`. Todo co
 GitHub Actions y Cloudflare Pages quedan para la Etapa 5 (decisión del usuario, 2026-11-07:
 publicar recién con un primer MVP).
 
-**Slices:** por definir al arrancar la etapa (`tdd` + `codebase-design`).
+**Diseño:** `docs/design/etapa-1-tracer-bullet.md` (interfaces, seams y tests por módulo;
+aprobado 2026-11-09).
+
+**Slices** (TDD, en orden):
+- [ ] **1 — Esqueleto:** `pyproject.toml` (uv), `src/ecopy/`, `ruff` + `pytest` + `hypothesis`.
+- [ ] **2 — `sources.clickpy`:** fixtures grabadas de `fastapi` + tests de contrato (truncado, cuadre).
+- [ ] **3 — `store`:** append-only, lectura con corrección, inmutabilidad sobre `tmp_path`.
+- [ ] **4 — `metrics.library_view`:** unitarios + propiedades con Hypothesis.
+- [ ] **5 — `site.render_site`:** Jinja2, ECharts `common` vendorizado con hash, `_headers`, snapshots.
+- [ ] **6 — `cli`:** `ingest`, `build`, `serve` + humo end-to-end; corrida real y CSP en Chrome headless.
 
 ## Shipped
 
