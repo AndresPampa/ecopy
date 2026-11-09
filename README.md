@@ -6,8 +6,8 @@ ecopy muestra cómo evoluciona el ecosistema Python desde 2017: qué librerías 
 terreno, qué versiones del lenguaje se adoptan y qué categorías ganan peso. Es un sitio estático,
 bilingüe (EN/ES), que se regenera una vez al día y se publicará en `ecopy.pages.dev`.
 
-> **Estado:** Etapa 0, spikes de validación de fuentes y tecnología. Todavía no hay código del
-> producto. Ver [`docs/ROADMAP.md`](docs/ROADMAP.md) y [`docs/spikes/`](docs/spikes/).
+> **Estado:** en desarrollo local. Ya funciona de punta a punta para un paquete, de ClickPy a una
+> página generada; todavía no está publicado. Ver [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Qué va a ofrecer (MVP)
 
@@ -47,13 +47,14 @@ Módulos previstos: `sources`, `store`, `catalog`, `metrics`, `site` y `cli`.
 
 Detalle y estado en [`docs/ROADMAP.md`](docs/ROADMAP.md). Cada etapa se trabaja en su propia rama.
 
-- **Etapa 0 — Spikes de validación** (en curso): cobertura de ClickPy, versiones de Python,
+- **Etapa 0 — Spikes de validación** ✅: cobertura de ClickPy, versiones de Python,
   histórico de estrellas, ECharts vs Plotly, tamaño de los datos.
-- **Etapa 1 — Tracer bullet:** un paquete, de ClickPy a una página publicada.
+- **Etapa 1 — Tracer bullet** ✅: un paquete, de ClickPy a una página generada en local.
 - **Etapa 2 — Datos completos:** backfill, catálogo y categorías, ingesta diaria.
 - **Etapa 3 — Vista anual.**
 - **Etapa 4 — Librerías, comparador, releases y estrellas.**
-- **Etapa 5 — Publicación del MVP:** EN/ES, metodología, seguridad, accesibilidad y diseño.
+- **Etapa 5 — Publicación del MVP:** EN/ES, metodología, seguridad, accesibilidad, diseño y
+  despliegue (GitHub Actions + Cloudflare Pages).
 - **Después del MVP:** Trending y Seguridad; cuentas y encuestas.
 
 ## Fuentes de datos
@@ -61,6 +62,25 @@ Detalle y estado en [`docs/ROADMAP.md`](docs/ROADMAP.md). Cada etapa se trabaja 
 - Descargas de PyPI (linehaul), consultadas vía [ClickPy](https://clickpy.clickhouse.com/).
 - Dataset público de PyPI en BigQuery, como respaldo reproducible.
 - Releases de Python y conteos de estrellas de GitHub (nunca identidades de usuarios).
+
+## Desarrollo
+
+Requiere [uv](https://docs.astral.sh/uv/) y Python ≥ 3.12.
+
+```bash
+uv sync                 # entorno + dependencias de desarrollo
+uv run pre-commit install   # una vez: ruff + pytest antes de cada commit
+uv run pytest           # tests
+uv run ruff check . && uv run ruff format --check src tests
+```
+
+Para generar una ficha en local, con datos reales de ClickPy:
+
+```bash
+uv run ecopy ingest --project fastapi   # primera vez: histórico; después: solo lo nuevo
+uv run ecopy build --project fastapi    # genera build/site/
+uv run ecopy serve                      # http://127.0.0.1:8000/en/library/fastapi/ con la CSP real
+```
 
 ## Documentación
 
@@ -72,4 +92,5 @@ Detalle y estado en [`docs/ROADMAP.md`](docs/ROADMAP.md). Cada etapa se trabaja 
 ## Licencia
 
 [MIT](LICENSE). Los datos mostrados pertenecen a sus fuentes (PyPI/linehaul, ClickPy, GitHub) y se
-publican con atribución.
+publican con atribución. El sitio incluye [Apache ECharts](https://echarts.apache.org/)
+(Apache-2.0; licencia y aviso en `src/ecopy/site/static/vendor/`).

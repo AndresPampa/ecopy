@@ -97,7 +97,7 @@ nada, pero tampoco hay reescrituras que dupliquen).
 4. `python_minor` trae valores basura con comas y barras (ya visto en S2): al empaquetar, usar
    separadores de control y partir el cuerpo con `split("\n")`, no `splitlines()`.
 
-## Decisión propuesta (pendiente de confirmación del usuario)
+## Decisión (confirmada por el usuario el 2026-11-07)
 
 1. **Alcanza el repo; no se activa R2.** Backfill ≈ 10 MB y ~3 MB/año por serie diaria; a 10 años
    ≤ 125 MB con supuestos generosos. Revisar si `data/` supera 500 MB o algún archivo pasa 50 MB.

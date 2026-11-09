@@ -112,16 +112,25 @@ append-only en Parquet → cálculo de métricas → render HTML → Cloudflare 
 - Pipeline: GitHub Actions (cron diario, repo público bajo la cuenta del usuario) → ingesta → normalización → métricas → render → deploy a Cloudflare Pages (`ecopy.pages.dev`, sin dominio pago).
 
 **Módulos** (profundos, con interfaces pequeñas; `site` nunca toca `store`)
-- `sources` — adaptadores por proveedor (ClickPy, BigQuery de respaldo, releases de Python, GitHub). Entrada: rango de fechas/paquetes. Salida: registros tipados con procedencia. Toda la E/S HTTP pasa por un cliente `httpx` inyectable.
-- `store` — escritura append-only de Parquet particionado (`raw` → `normalized`) y lectura vía DuckDB. Nunca sobrescribe; una corrección es un archivo nuevo. Expone una vista de solo lectura del dataset normalizado.
+- `sources` — adaptadores por proveedor (ClickPy, BigQuery de respaldo, releases de Python, GitHub). Entrada: rango de fechas/paquetes. Salida: registros tipados, completos y verificados, con la fuente (`source`) por lote; ante un resultado parcial o que no cuadra, una excepción, nunca datos incompletos. No conoce `acquisition` ni la política de ventanas (las decide `cli`). Toda la E/S HTTP pasa por un cliente `httpx` inyectable.
+- `store` — escritura append-only de Parquet particionado y lectura vía DuckDB. Nunca sobrescribe; una corrección es un archivo nuevo. Sella la procedencia de cada archivo a partir de la corrida (`Run`: id, `captured_at`, `acquisition`) que le pasa `cli`. Expone una vista de solo lectura del dataset normalizado: **`normalized` es una vista** (deduplicación + la corrección más reciente gana por paquete y fecha), no una capa física; se materializa recién cuando haya una segunda fuente que mapear o la lectura sea lenta (diseño de la Etapa 1, `docs/design/etapa-1-tracer-bullet.md`).
 - `catalog` — carga el YAML curado, calcula la unión de top-100 anuales, resuelve categorías y renombres (enlaces, no sumas).
 - `metrics` — funciones puras sobre el dataset normalizado + catálogo: cuota por categoría, movers, recién llegados, adopción de versiones, YTD vs mismo período, rankings anuales congelados con versión metodológica. Sin puntaje combinado.
 - `site` — recibe únicamente modelos de vista (Pydantic) producidos por `metrics`; renderiza Jinja2 (autoescape) + opciones de ECharts serializadas desde Pydantic + sparklines SVG generadas en Python; i18n EN/ES; emite `_headers` con CSP.
 - `cli` — orquesta: `ingest`, `backfill`, `validate`, `build`. Decide publicar el build del día anterior con estado "Actualización fallida" si `validate` falla.
 
 **Datos**
-- Esquema de procedencia por fila: `source`, `acquisition` (`backfill` | `observed`), `captured_at`, `ingestion_run_id`.
-- Particionado por fuente y fecha dentro del repo. Git LFS descartado; Cloudflare R2 como plan B si el tamaño o los términos de ClickPy lo exigen.
+- Esquema de procedencia por fila: `source`, `acquisition` (`backfill` | `observed`), `captured_at`, `ingestion_run_id`. Un archivo = una corrida → procedencia constante dentro del archivo (en S5 costó ~0 bytes).
+- Particionado por fuente y fecha dentro del repo (`data/`, versionado desde la Etapa 1): `raw/<fuente>/<dataset>/year=YYYY/<run_id>.parquet`. Git LFS descartado. Tamaño medido (spike S5):
+  ~500 paquetes desde 2016-01-22 ≈ 10 MB en Parquet (zstd) y ~3 MB/año de ingesta; ≤ 125 MB a
+  10 años en el peor supuesto → **alcanza el repo, R2 no se activa**. Se reevalúa si `data/`
+  supera 500 MB o algún archivo pasa 50 MB (GitHub bloquea a 100 MB), o si lo exigen los
+  términos de ClickPy.
+- Se guarda la **serie diaria** de descargas (la mensual se deriva en `metrics`): hace falta para
+  YTD vs mismo período y para marcar huecos. Disposición: cada corrida escribe un archivo por año
+  que toca (`year=YYYY/<run_id>.parquet`): el backfill deja ~11; la ingesta diaria, uno chico.
+- Adopción de versiones de Python (historia 5): agregado global de todo PyPI, mensual. El desglose
+  por paquete no se guarda en el MVP (2,65 MB si se pide después).
 - Año calendario en UTC. Rankings de años cerrados se congelan junto con su versión metodológica.
 - Cobertura (spike S1): datos diarios desde 2016-01-22. Vistas anuales desde **2017** (primer año
   completo); 2016 solo en fichas, marcado como parcial. Las métricas relativas (cuota, rankings,
@@ -138,6 +147,14 @@ append-only en Parquet → cálculo de métricas → render HTML → Cloudflare 
 
 **Fuentes**
 - Límites de la instancia pública de ClickPy (S2): resultados parciales **sin error** si se leen > 10.000 M de filas o se devuelven > 1.000 filas. El adaptador verifica el resumen de cada consulta, pagina y lee tablas grandes por rangos de `project`.
+- Reglas del adaptador de ClickPy (spike S5, `docs/spikes/s5-parquet-backfill.md`):
+  - Siempre `GROUP BY` + `sum(count)`: la tabla diaria es SummingMergeTree y tiene filas
+    duplicadas por (paquete, día) hasta que el servidor fusiona partes.
+  - Pedir `wait_end_of_query=1`: sin él, el resumen `X-ClickHouse-Summary` sale con el primer
+    bloque y no informa filas ni bytes del resultado.
+  - Una fila por paquete con la serie en un array, lotes de ≤ 50 paquetes (~5 MB; el límite de
+    10 MB no corta de forma fiable), y cada lote se cuadra contra sumas de control calculadas en
+    el servidor. Backfill de 500 paquetes: ~10 consultas para la serie diaria.
 - ClickPy (usuario `play`, gratis) como fuente principal del backfill desde 2016-01-22 (inicio de los datos; ver `docs/spikes/s1-clickpy-cobertura.md`). Sin solicitar permiso: el dato es público (PyPI/linehaul); se atribuye y se limita el ritmo.
 - BigQuery (`pypi` público) solo como respaldo reproducible, porque cobra por bytes escaneados.
 
@@ -209,7 +226,7 @@ append-only en Parquet → cálculo de métricas → render HTML → Cloudflare 
 - ~~Si ClickPy desglosa por versión de Python.~~ Resuelto en S2 (`docs/spikes/s2-clickpy-versiones-python.md`): sí, desde 2016; historia 5 confirmada, granularidad mensual.
 - ~~Fuente de histórico de estrellas.~~ Resuelto en S3 (`docs/spikes/s3-github-estrellas.md`): existe `stargazers/history`; historia 17 confirmada.
 - ~~Peso real de ECharts vs Plotly en un prototipo de ranking + ficha.~~ Resuelto en S4 (`docs/spikes/s4-echarts-vs-plotly.md`): ECharts 6 `common`, servido desde el sitio.
-- Tamaño real del Parquet en el repo (condiciona el plan B en R2).
+- ~~Tamaño real del Parquet en el repo (condiciona el plan B en R2).~~ Resuelto en S5 (`docs/spikes/s5-parquet-backfill.md`): ≈ 10 MB de backfill, ~3 MB/año; alcanza el repo, sin R2.
 
 **Pendientes externos:** crear el proyecto en Cloudflare Pages y confirmar que `ecopy.pages.dev` está libre; crear el repo público en GitHub (el usuario `ecopy` está tomado).
 

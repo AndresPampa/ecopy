@@ -27,9 +27,8 @@ secrets/
 skills/
 # OpenSpec workspace and config
 openspec/
-# Pre-commit config (template and adopted)
+# Pre-commit template of the agent toolkit (the product's .pre-commit-config.yaml IS versioned)
 .pre-commit-config.template.yaml
-.pre-commit-config.yaml
 # Agent instruction files
 AGENTS.template.md
 CLAUDE.template.md

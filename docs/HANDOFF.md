@@ -1,39 +1,41 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-07 · branch: `etapa-0-spikes` (SIN commits: todo el trabajo de la Etapa 0 está
-> en el working tree) · `main` = `origin/main` (PR #1) · remoto `origin` = https://github.com/AndresPampa/ecopy.git
+> Last updated: 2026-11-09 · branch: `etapa-1-tracer-bullet` (slices 5–6 sin commit; falta el PR
+> de la etapa) · `main` = `origin/main` (`a54967c`, PR #2) · remoto `origin` =
+> https://github.com/AndresPampa/ecopy.git
 
 ## Current State
-- **PRD vigente** en `docs/prd.md`: 53 historias (49–53 = categorías y tags), seams de test acordados
-  (CLI end-to-end → `sources` contrato → `store` inmutabilidad → `metrics` puros + Hypothesis →
-  `site` snapshots), sección Taxonomía y decisiones de S1–S4 ya incorporadas (S5 todavía no).
-- **Etapa 0 (spikes) en curso** en la rama `etapa-0-spikes` (`docs/ROADMAP.md`):
-  - S1 ClickPy cobertura ✅ confirmado → datos desde 2016-01-22, vistas anuales desde 2017.
-  - S2 versiones de Python ✅ → historia 5 confirmada (mensual).
-  - S3 estrellas ✅ confirmado → `stargazers/history` existe; historia 17 confirmada.
-  - S4 ECharts vs Plotly ✅ confirmado (2026-11-07) → ECharts 6 `common`, servido desde el sitio;
-    PRD actualizado (Frontend + Further Notes).
-  - S5 tamaño Parquet + backfill ✅ hecho, **decisión pendiente del usuario** (propuesta: alcanza
-    el repo, sin R2; guardar serie diaria; backfill ≈ 10 MB, ~3 MB/año). El PRD NO refleja S5.
-  - S6 Cloudflare Pages ⏳ (lo hace el usuario).
-- **Sin commits en la rama.** Cambios pendientes: `.gitignore` (usuario agregó `categorias.md`; agente
-  agregó `build/`), `README.md`, `docs/HANDOFF.md`, `docs/prd.md`, nuevos `docs/ROADMAP.md` y
-  `docs/spikes/`. El usuario hace commit/push/PR al cerrar la etapa (una rama + commit + PR).
-- **No hay código del producto todavía.** Tooling del agente local y fuera de git (`.claude/`,
-  `.codex/`, `.agents/`, `skills/`, `openspec/`, `scripts/hooks|bash/`, `docs/workflows|guides|
-  prompt_templates/`, `AGENTS*/CLAUDE*`, `brainstorming.md`, `categorias.md`, `build/`).
+- **Etapa 0 (spikes) mergeada** (PR #2): S1–S5 confirmados, informes en `docs/spikes/`.
+- **Etapa 1 (tracer bullet, LOCAL) terminada en la rama:** los 6 slices del ROADMAP están hechos.
+  `ecopy ingest → build → serve` funciona de punta a punta con datos reales de `fastapi` (2.891
+  días, `data/` = 120 KB): página EN/ES con tabla anual, tabla mensual y gráfico ECharts,
+  servida con la CSP real. Sin violaciones en Chrome headless (con control positivo), tooltip y
+  móvil verificados. Diseño: `docs/design/etapa-1-tracer-bullet.md`.
+- **Falta cerrar la etapa:** commit de los slices 5–6 y PR a `main` (los hace el usuario).
+- **PRD vigente** en `docs/prd.md` con las decisiones de S1–S5 y del diseño de la Etapa 1.
+- **GitHub Actions y Cloudflare Pages (S6) quedan para la Etapa 5** (decisión del usuario).
+- Tooling del agente local y fuera de git (`.claude/`, `.codex/`, `.agents/`, `skills/`,
+  `openspec/`, `scripts/hooks|bash/`, `docs/workflows|guides|prompt_templates/`, `AGENTS*/CLAUDE*`,
+  `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-- [ ] **Etapa 0 — Spikes** (rama `etapa-0-spikes`): slices en `docs/ROADMAP.md`, informes en
-      `docs/spikes/`. S1–S4 hechos y confirmados (PRD actualizado). S5 hecho: **confirmar la
-      decisión** de `docs/spikes/s5-parquet-backfill.md`; al confirmar, volcar al PRD (Datos:
-      serie diaria, disposición por año/día, sin R2; Fuentes: hallazgos 1–3 del adaptador) y
-      tildar S5 en ROADMAP. Falta S6 (Cloudflare Pages, usuario).
-- [ ] **Usuario:** commit de la Etapa 0 en `etapa-0-spikes` (comandos y mensaje propuestos en la
-      sesión del 2026-11-07) y PR cuando S5/S6 cierren.
-- [ ] **Usuario (opcional):** borrar la rama `docs/project-setup` (local y remota), ya mergeada.
-- [ ] Opcional: instalar `ruff`, `pytest`, `pre-commit` cuando arranque la Etapa 1 (hay `uv` 0.12.19,
-      Python 3.14.4, node).
+- [ ] **Usuario:** commit de los slices 5–6 y PR de la Etapa 1 (mensajes propuestos en la sesión
+      del 2026-11-09). Al mergear, colapsar la Etapa 1 en *Shipped* del ROADMAP.
+- [ ] **Etapa 2 — Datos completos:** detallar slices en `docs/ROADMAP.md` (arrancar con
+      `codebase-design` y `tdd`): `catalog` (YAML + top 100 anual: la unión da solo 213 paquetes,
+      faltan ~290 curados; renombres; taxonomía), backfill de ~500, adopción de versiones de
+      Python, denominador total de PyPI, `validate` y "Actualización fallida".
+- [ ] **Etapa 2 — calidad del dato:** flags de huecos y ventana degradada. Hoy la tabla anual dice
+      "Completo" para el primer año de un paquete (2018 en `fastapi`) y para años con huecos, y
+      enero de 2016 o el primer mes de un paquete no salen como parciales.
+- [ ] **Medir si ClickPy revisa días ya cerrados** (S1 no lo midió): la ingesta incremental solo
+      pide desde el último día guardado + 1, así que no captaría esas correcciones.
+- [ ] **Usuario (Etapa 5, con el primer MVP):** S6 — crear el proyecto en Cloudflare Pages y
+      confirmar `ecopy.pages.dev`; recién ahí entra GitHub Actions.
+- [ ] **Etapa 5 — diseño:** el tramo punteado del mes en curso todavía se lee como una caída fuerte
+      (aviso debajo del gráfico); revisar con `impeccable` + `dataviz`.
+- [ ] **Usuario (opcional):** borrar ramas mergeadas `etapa-0-spikes` y `docs/project-setup`
+      (local y remota).
 - [ ] Opcional: activar hooks de Claude Code copiando `.claude/settings.template.json` →
       `.claude/settings.json` (hoy los guards solo corren en Codex).
 
@@ -42,6 +44,21 @@
   `etapa-N-<tema>` + commit(s) + PR a `main`. **Sin issues ni OpenSpec** (CLI no instalado,
   `openspec/` ignorado por git, y su guía exige proposal/aprobación/verify/archive por change:
   demasiado peso para una persona). `to-issues` descartado por lo mismo.
+- **Local primero:** Etapas 1–4 se construyen y prueban en local (`build/` + localhost). GitHub
+  Actions y Cloudflare Pages entran recién en la Etapa 5, con un primer MVP (decisión del usuario,
+  2026-11-07). La arquitectura del PRD no cambia, solo el orden.
+- **Diseño de la Etapa 1 (aprobado 2026-11-09):** `normalized` es una vista (dedup + la
+  corrección más reciente gana), no capa física, hasta que haya una segunda fuente; la
+  procedencia la sella `store` desde un `Run` que crea `cli` (`sources` no sabe si es backfill);
+  `data/` se versiona desde ya; partición única `raw/<fuente>/<dataset>/year=YYYY/<run_id>.parquet`.
+  Detalle y razones en `docs/design/etapa-1-tracer-bullet.md`; PRD actualizado.
+- **pre-commit del producto versionado** (decisión del usuario, 2026-11-09): hooks locales con
+  `uv run` (ruff check --fix, ruff format, pytest), así usan las versiones de `uv.lock`; solo
+  sobre `src/` y `tests/`. El template del toolkit sigue ignorado.
+- **Ficha (Etapa 1):** un mes sin datos es `None` (corte en la línea, no cero); el mes en curso va
+  en un tramo punteado aparte; `build` usa `as_of` = último día con datos (no depende del reloj).
+  ECharts 6.1.0 `common` vendorizado en `src/ecopy/site/static/vendor/` con SHA-256 fijo y su
+  LICENSE/NOTICE (Apache-2.0).
 - **Licencia MIT** (recomendada por simple y permisiva; aceptada por el usuario). Titular: `AndresPampa`.
 - **Git lo opera el usuario:** todos los `git add`, `commit`, `push` y PRs los hace el usuario. El agente
   solo prepara cambios en el working tree y sugiere comandos/mensajes; nunca los ejecuta.
@@ -113,8 +130,23 @@
   línea). No se reescribe: ya está mergeado en `main`. Para mensajes multilínea usar
   `git commit -F archivo` o el editor, no `-m` con el texto pegado.
 
+- **pre-commit pasa los archivos por nombre y ruff ignora `extend-exclude`**: la primera corrida
+  reformateó los scripts de `docs/spikes/` (restaurados con `git restore`). Por eso
+  `force-exclude = true` en ruff y `files: ^(src|tests)/` en `.pre-commit-config.yaml`.
+
+- **El replay de fixtures no ejecuta SQL:** cambiar `sum(count)` por `max(count)` no rompe los
+  tests de contrato. Lo atrapa en producción el cuadre (`ChecksumMismatch`, verificado contra
+  ClickPy real con 21 filas duplicadas). Al cambiar consultas: regrabar con
+  `uv run python tests/fixtures/clickpy/record.py` y probar contra ClickPy real.
+
+- **Un test de humo no prueba seguridad por sí solo:** un nombre con `/` no ejercitaba el caso de
+  un proyecto llamado exactamente `..`; lo reveló una mutación. Probar mutaciones en defensas.
+
 ## Files & Pointers
 - `docs/ROADMAP.md` — etapas y slices de la etapa en curso.
+- `docs/design/etapa-1-tracer-bullet.md` — interfaces, seams y tests de la Etapa 1.
+- `src/ecopy/` — `sources/clickpy.py`, `store.py`, `metrics.py`, `site/`, `cli.py`, `models.py`.
+- `tests/snapshots/` — HTML esperado; regenerar con `UPDATE_SNAPSHOTS=1 uv run pytest tests/test_site.py`.
 - `docs/spikes/` — informe (`sN-*.md`) + script reproducible (`sN_*.py`) por spike: S1 cobertura,
   S2 versiones de Python, S3 estrellas, S4 ECharts vs Plotly, S5 Parquet + backfill.
 - `categorias.md` (raíz, ignorado por git) — abordaje de categorías del usuario; ya volcado al PRD.
@@ -128,6 +160,8 @@
 - Memoria persistente del agente: `ecopython-brainstorm-decisions`, `user-owns-git-operations`.
 
 ## Resume Setup
+- Producto: `uv sync` · `uv run pytest` · `uv run ruff check . && uv run ruff format --check src tests`
+  · `uv run ecopy ingest|build|serve --help`. Paquete en `src/ecopy/` (build backend `uv_build`), tests en `tests/`.
 - Checks del toolkit: `scripts/bash/check_skill_symlinks.sh`, `check_hook_parity.sh`,
   `check_agent_parity.sh`; tests: `python3 scripts/hooks/test_<nombre>.py` (sin pytest).
 - Spikes: scripts con dependencias inline (PEP 723), `uv run docs/spikes/<script>.py`. ClickPy:
@@ -217,3 +251,54 @@ del top 100 anual 2017–2026 da solo 213); 1,66 M filas diarias → 7,3 MB Parq
 mensual 0,3 MB, Python por paquete 2,65 MB; 64 consultas, ~37 s en modo array. Ingesta diaria
 ~3 MB/año; ≤ 125 MB a 10 años en el peor supuesto → alcanza el repo. Descubiertos duplicados sin
 fusionar, resumen temprano sin `wait_end_of_query` y límite de 10 MB no fiable. Decisión pendiente.
+
+### 2026-11-07 — S5 confirmado; Etapa 0 mergeada; arranca la Etapa 1
+Usuario commiteó y mergeó la Etapa 0 (PR #2, `a54967c`) y creó `etapa-1-tracer-bullet`. Confirmó
+S5 → PRD (Datos: tamaño, serie diaria, disposición, versión de Python global; Fuentes: reglas del
+adaptador de ClickPy; Further Notes), informe y ROADMAP actualizados. Etapa 0 colapsada en
+*Shipped*. Usuario decidió probar todo en local hasta un primer MVP: Etapa 1 sin Actions ni
+Cloudflare; GitHub Actions + Cloudflare Pages (S6) movidos a la Etapa 5 (ROADMAP, README).
+
+### 2026-11-09 — Diseño de la Etapa 1 aprobado
+Con `codebase-design`: interfaces de `sources.ClickPy`, `store.Store`, `metrics.library_view`,
+`site.render_site` y `cli` (`ingest`/`build`/`serve`), seams y tests por módulo, 6 slices TDD.
+Usuario aprobó las tres decisiones (normalized como vista, procedencia sellada por `store`,
+`data/` versionado) → PRD (Módulos, Datos) actualizado.
+
+### 2026-11-09 — Slice 1 (esqueleto) en verde
+TDD: test de humo `ecopy --version` (RED: falta `ecopy.cli`) → `src/ecopy/cli.py` con argparse
+(GREEN). `pyproject.toml` con `uv_build`, script `ecopy`, grupo dev (pytest 9.2, hypothesis,
+ruff 0.17), config de ruff (excluye spikes y tooling). Sin dependencias de runtime todavía: cada
+slice agrega las suyas. `pre-commit` del producto queda pendiente de decisión.
+
+### 2026-11-09 — pre-commit del producto
+Usuario aceptó versionar pre-commit: `.pre-commit-config.yaml` con hooks locales vía `uv run`
+(ruff check --fix, ruff format, pytest), `pre-commit` en el grupo dev, fuera de `.gitignore`.
+Primera corrida reformateó los spikes (pre-commit saltea `extend-exclude`): restaurados, y se
+agregó `force-exclude` + `files: ^(src|tests)/`. `pre-commit run --all-files` en verde.
+
+### 2026-11-09 — Slice 2 (`sources.clickpy`) en verde
+TDD en 8 ciclos: `ClickPy(client, sleep=...).daily_downloads(projects, start, end)`. Consultas con
+etiqueta (`/* ecopy:daily */`, `/* ecopy:checksums */`) para que el replay no dependa del SQL.
+Mutaciones: quitar el control de lectura parcial o el cuadre rompe tests; `sum`→`max` no (replay),
+pero contra ClickPy real da `ChecksumMismatch`. Fixture real: `fastapi` enero 2024 (31 días,
+35.561.750 descargas, confirmado con consulta independiente). Agregado `httpx` como dependencia.
+
+### 2026-11-09 — Slice 3 (`store`) en verde
+TDD: `Store(root).append(batch, run)` y `.daily_downloads(projects)`. Se revisan todos los destinos
+antes de escribir (sin archivos sueltos) y `os.link` impide pisar aun en carrera. El test "una
+captura posterior corrige" pasó antes de implementar (el orden de archivos lo favorecía); lo
+protege "el orden de escritura no decide", confirmado por mutación. `Run` valida id seguro como
+nombre de archivo y `captured_at` con zona. Agregados `pyarrow` y `duckdb`.
+
+### 2026-11-09 — Slice 4 (`metrics.library_view`) en verde
+TDD en 7 ciclos + 5 propiedades con Hypothesis: serie mensual contigua hasta `as_of`, totales por
+año (2016 parcial, año en curso YTD), último mes cerrado con datos. Decisión: un mes sin datos es
+`None`, no 0 (el PRD no interpola huecos; en el gráfico es un corte). Agregado `pydantic`.
+
+### 2026-11-09 — Slices 5–6: Etapa 1 completa en local
+`site.render_site` (Jinja2, EN/ES, ECharts vendorizado con hash, `_headers`, snapshots) y `cli`
+(`ingest`, `build`, `serve`). Corrida real de `fastapi` (2.891 días). Chrome headless: SVG dibujado,
+sin violaciones de CSP (control positivo inyectando un script inline), tooltip con mes en curso,
+sin desborde a 390 px, modo oscuro. Mutaciones: 2 sobrevivieron (proyecto `..`, salida con paquete
+desconocido) → tests agregados. Paleta validada con el script de `dataviz`. Agregado `jinja2`.

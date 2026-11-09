@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ view.project }} · ecopy</title>
+<link rel="stylesheet" href="/static/site.css">
+<script src="/static/vendor/{{ echarts }}" defer></script>
+<script src="/static/library.js" defer></script>
+</head>
+<body>
+<main>
+<nav><a href="/{{ other }}/library/{{ slug }}/" hreflang="{{ other }}">{{ t.switch_label }}</a></nav>
+<h1>{{ view.project }}</h1>
+<dl>
+<dt>{{ t.first_data }}</dt><dd><time datetime="{{ view.first_date }}">{{ view.first_date }}</time></dd>
+{%- if view.last_closed_month %}
+<dt>{{ t.last_closed }} ({{ view.last_closed_month.month.strftime("%Y-%m") }})</dt><dd>{{ view.last_closed_month.downloads|number(lang) }}</dd>
+{%- endif %}
+</dl>
+<section>
+<h2>{{ t.yearly_title }}</h2>
+<table>
+<thead><tr><th scope="col">{{ t.year }}</th><th scope="col">{{ t.downloads }}</th><th scope="col">{{ t.status }}</th></tr></thead>
+<tbody>
+{%- for total in view.yearly %}
+<tr><th scope="row">{{ total.year }}</th><td>{{ total.downloads|number(lang) }}</td><td>{% if total.partial %}{{ t.partial }}{% elif total.ytd %}{{ t.ytd }}{% else %}{{ t.complete }}{% endif %}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+</section>
+<section>
+<h2>{{ t.monthly_title }}</h2>
+<div id="chart" class="chart" role="img" aria-label="{{ t.chart_alt }}"></div>
+{%- if chart.inProgressMonth %}
+<p class="note">{{ t.in_progress_note }}</p>
+{%- endif %}
+<script id="chart-data" type="application/json">{{ chart|tojson }}</script>
+<details>
+<summary>{{ t.monthly_title }}</summary>
+<table>
+<thead><tr><th scope="col">{{ t.month }}</th><th scope="col">{{ t.downloads }}</th><th scope="col">{{ t.status }}</th></tr></thead>
+<tbody>
+{%- for point in view.monthly %}
+<tr><th scope="row">{{ point.month.strftime("%Y-%m") }}</th><td>{% if point.downloads is none %}{{ t.no_data }}{% else %}{{ point.downloads|number(lang) }}{% endif %}</td><td>{% if point.partial %}{{ t.in_progress }}{% else %}{{ t.complete }}{% endif %}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+</details>
+</section>
+<footer><p>{{ t.source }}</p></footer>
+</main>
+</body>
+</html>
