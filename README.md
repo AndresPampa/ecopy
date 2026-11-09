@@ -6,8 +6,8 @@ ecopy muestra cómo evoluciona el ecosistema Python desde 2017: qué librerías 
 terreno, qué versiones del lenguaje se adoptan y qué categorías ganan peso. Es un sitio estático,
 bilingüe (EN/ES), que se regenera una vez al día y se publicará en `ecopy.pages.dev`.
 
-> **Estado:** Etapa 0, spikes de validación de fuentes y tecnología. Todavía no hay código del
-> producto. Ver [`docs/ROADMAP.md`](docs/ROADMAP.md) y [`docs/spikes/`](docs/spikes/).
+> **Estado:** en desarrollo local. Ya funciona de punta a punta para un paquete, de ClickPy a una
+> página generada; todavía no está publicado. Ver [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Qué va a ofrecer (MVP)
 
@@ -49,7 +49,7 @@ Detalle y estado en [`docs/ROADMAP.md`](docs/ROADMAP.md). Cada etapa se trabaja 
 
 - **Etapa 0 — Spikes de validación** ✅: cobertura de ClickPy, versiones de Python,
   histórico de estrellas, ECharts vs Plotly, tamaño de los datos.
-- **Etapa 1 — Tracer bullet** (en curso): un paquete, de ClickPy a una página generada en local.
+- **Etapa 1 — Tracer bullet** ✅: un paquete, de ClickPy a una página generada en local.
 - **Etapa 2 — Datos completos:** backfill, catálogo y categorías, ingesta diaria.
 - **Etapa 3 — Vista anual.**
 - **Etapa 4 — Librerías, comparador, releases y estrellas.**
@@ -72,7 +72,14 @@ uv sync                 # entorno + dependencias de desarrollo
 uv run pre-commit install   # una vez: ruff + pytest antes de cada commit
 uv run pytest           # tests
 uv run ruff check . && uv run ruff format --check src tests
-uv run ecopy --version
+```
+
+Para generar una ficha en local, con datos reales de ClickPy:
+
+```bash
+uv run ecopy ingest --project fastapi   # primera vez: histórico; después: solo lo nuevo
+uv run ecopy build --project fastapi    # genera build/site/
+uv run ecopy serve                      # http://127.0.0.1:8000/en/library/fastapi/ con la CSP real
 ```
 
 ## Documentación
@@ -85,4 +92,5 @@ uv run ecopy --version
 ## Licencia
 
 [MIT](LICENSE). Los datos mostrados pertenecen a sus fuentes (PyPI/linehaul, ClickPy, GitHub) y se
-publican con atribución.
+publican con atribución. El sitio incluye [Apache ECharts](https://echarts.apache.org/)
+(Apache-2.0; licencia y aviso en `src/ecopy/site/static/vendor/`).

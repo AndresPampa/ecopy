@@ -157,7 +157,8 @@ def main(argv: Sequence[str] | None = None, *, http: httpx.Client | None = None,
 
 Política que vive acá (pura y testeada aparte): la ventana termina **ayer UTC** (S1); sin datos
 previos → `acquisition="backfill"` desde `--since`; con datos → `observed` desde el último día
-guardado + 1. `serve` es un `http.server` que lee `_headers`, para probar la CSP real en local
+guardado + 1. `build` usa como `as_of` el último día con datos: la página refleja lo ingerido y no
+depende del reloj. `serve` es un `http.server` que lee `_headers`, para probar la CSP real en local
 (lo que hizo S4 a mano).
 
 **Seam y test (humo end-to-end):** `main([...], http=Client(transport=MockTransport(fixtures)),

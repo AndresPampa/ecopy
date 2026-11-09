@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fastapi · ecopy</title>
+<link rel="stylesheet" href="/static/site.css">
+<script src="/static/vendor/echarts-6.1.0.common.min.js" defer></script>
+<script src="/static/library.js" defer></script>
+</head>
+<body>
+<main>
+<nav><a href="/en/library/fastapi/" hreflang="en">English</a></nav>
+<h1>fastapi</h1>
+<dl>
+<dt>Primer día con datos</dt><dd><time datetime="2024-01-01">2024-01-01</time></dd>
+<dt>Último mes cerrado (2024-03)</dt><dd>40.000.000</dd>
+</dl>
+<section>
+<h2>Descargas por año</h2>
+<table>
+<thead><tr><th scope="col">Año</th><th scope="col">Descargas</th><th scope="col">Estado</th></tr></thead>
+<tbody>
+<tr><th scope="row">2016</th><td>1.234</td><td>Datos parciales</td></tr>
+<tr><th scope="row">2024</th><td>75.562.750</td><td>Año en curso</td></tr>
+</tbody>
+</table>
+</section>
+<section>
+<h2>Descargas por mes</h2>
+<div id="chart" class="chart" role="img" aria-label="Gráfico de líneas de descargas por mes. La tabla tiene los mismos datos."></div>
+<p class="note">El tramo punteado es el mes en curso.</p>
+<script id="chart-data" type="application/json">{"inProgressMonth": "2024-04-01", "labels": {"inProgress": "En curso", "noData": "Sin datos"}, "option": {"grid": {"bottom": 8, "containLabel": true, "left": 8, "right": 24, "top": 16}, "series": [{"connectNulls": false, "data": [["2024-01-01", 35561750], ["2024-02-01", null], ["2024-03-01", 40000000], ["2024-04-01", null]], "lineStyle": {"cap": "round", "join": "round", "type": "solid", "width": 2}, "showSymbol": false, "type": "line"}, {"connectNulls": false, "data": [["2024-03-01", 40000000], ["2024-04-01", 1000]], "lineStyle": {"cap": "round", "join": "round", "type": "dashed", "width": 2}, "showSymbol": false, "type": "line"}], "tooltip": {"axisPointer": {"type": "line"}, "confine": true, "trigger": "axis"}, "xAxis": {"axisLabel": {"formatter": "{yyyy}", "hideOverlap": true}, "minInterval": 31536000000, "splitLine": {"show": false}, "type": "time"}, "yAxis": {"min": 0, "type": "value"}}}</script>
+<details>
+<summary>Descargas por mes</summary>
+<table>
+<thead><tr><th scope="col">Mes</th><th scope="col">Descargas</th><th scope="col">Estado</th></tr></thead>
+<tbody>
+<tr><th scope="row">2024-01</th><td>35.561.750</td><td>Completo</td></tr>
+<tr><th scope="row">2024-02</th><td>Sin datos</td><td>Completo</td></tr>
+<tr><th scope="row">2024-03</th><td>40.000.000</td><td>Completo</td></tr>
+<tr><th scope="row">2024-04</th><td>1.000</td><td>En curso</td></tr>
+</tbody>
+</table>
+</details>
+</section>
+<footer><p>Datos: ClickPy, a partir de los registros de descargas de PyPI.</p></footer>
+</main>
+</body>
+</html>
