@@ -1,7 +1,7 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-09 · branch: `etapa-1-tracer-bullet` (4 commits: cierre de la Etapa 0,
-> diseño, slice 1 y pre-commit; slice 2 sin commit) · `main` = `origin/main` (`a54967c`, PR #2) ·
+> Last updated: 2026-11-09 · branch: `etapa-1-tracer-bullet` (5 commits: cierre de la Etapa 0,
+> diseño, slices 1–2 y pre-commit; slice 3 sin commit) · `main` = `origin/main` (`a54967c`, PR #2) ·
 > remoto `origin` = https://github.com/AndresPampa/ecopy.git
 
 ## Current State
@@ -19,16 +19,18 @@
   `src/ecopy/cli.py` (`ecopy --version`), `tests/test_cli.py` en verde, ruff limpio.
   **Slice 2 (`sources.clickpy`) hecho:** 13 tests de contrato con respuestas reales grabadas
   (truncado, cuadre, reintentos, lotes de 50), validado además contra ClickPy real.
-- **Sin commit:** `src/ecopy/models.py`, `src/ecopy/sources/`, `tests/fixtures/`,
-  `tests/test_sources_clickpy.py`, `pyproject.toml`, `uv.lock`, `docs/ROADMAP.md`, `docs/HANDOFF.md`.
+  **Slice 3 (`store`) hecho:** Parquet append-only por año, procedencia sellada desde `Run`,
+  inmutabilidad (`ImmutabilityError`, escritura con `os.link`), correcciones al leer.
+- **Sin commit:** `src/ecopy/store.py`, `src/ecopy/models.py`, `tests/test_store.py`,
+  `pyproject.toml`, `uv.lock`, `docs/ROADMAP.md`, `docs/HANDOFF.md`.
 - **Código del producto:** solo el esqueleto (slice 1). Tooling del agente local y fuera de git (`.claude/`,
   `.codex/`, `.agents/`, `skills/`, `openspec/`, `scripts/hooks|bash/`, `docs/workflows|guides|
   prompt_templates/`, `AGENTS*/CLAUDE*`, `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-- [ ] **Usuario:** commit del slice 2 (mensaje propuesto en la sesión del 2026-11-09).
-- [ ] **Etapa 1 — slice 3 (`store`)** con `tdd`: append-only, lectura con corrección, inmutabilidad
-      sobre `tmp_path`; agrega `pyarrow` y `duckdb`. Luego slices 4–6 según `docs/ROADMAP.md`.
+- [ ] **Usuario:** commit del slice 3 (mensaje propuesto en la sesión del 2026-11-09).
+- [ ] **Etapa 1 — slice 4 (`metrics.library_view`)** con `tdd`: unitarios + propiedades con
+      Hypothesis; agrega `pydantic`. Luego slices 5–6 según `docs/ROADMAP.md`.
 - [ ] **Usuario (Etapa 5, con el primer MVP):** S6 — crear el proyecto en Cloudflare Pages y
       confirmar `ecopy.pages.dev`; recién ahí entra GitHub Actions.
 - [ ] **Usuario (opcional):** borrar ramas mergeadas `etapa-0-spikes` y `docs/project-setup`
@@ -271,3 +273,10 @@ etiqueta (`/* ecopy:daily */`, `/* ecopy:checksums */`) para que el replay no de
 Mutaciones: quitar el control de lectura parcial o el cuadre rompe tests; `sum`→`max` no (replay),
 pero contra ClickPy real da `ChecksumMismatch`. Fixture real: `fastapi` enero 2024 (31 días,
 35.561.750 descargas, confirmado con consulta independiente). Agregado `httpx` como dependencia.
+
+### 2026-11-09 — Slice 3 (`store`) en verde
+TDD: `Store(root).append(batch, run)` y `.daily_downloads(projects)`. Se revisan todos los destinos
+antes de escribir (sin archivos sueltos) y `os.link` impide pisar aun en carrera. El test "una
+captura posterior corrige" pasó antes de implementar (el orden de archivos lo favorecía); lo
+protege "el orden de escritura no decide", confirmado por mutación. `Run` valida id seguro como
+nombre de archivo y `captured_at` con zona. Agregados `pyarrow` y `duckdb`.

@@ -40,7 +40,7 @@ aprobado 2026-11-09).
 **Slices** (TDD, en orden):
 - [x] **1 — Esqueleto:** `pyproject.toml` (uv), `src/ecopy/`, `ruff` + `pytest` + `hypothesis`.
 - [x] **2 — `sources.clickpy`:** fixtures grabadas de `fastapi` + tests de contrato (truncado, cuadre).
-- [ ] **3 — `store`:** append-only, lectura con corrección, inmutabilidad sobre `tmp_path`.
+- [x] **3 — `store`:** append-only, lectura con corrección, inmutabilidad sobre `tmp_path`.
 - [ ] **4 — `metrics.library_view`:** unitarios + propiedades con Hypothesis.
 - [ ] **5 — `site.render_site`:** Jinja2, ECharts `common` vendorizado con hash, `_headers`, snapshots.
 - [ ] **6 — `cli`:** `ingest`, `build`, `serve` + humo end-to-end; corrida real y CSP en Chrome headless.
