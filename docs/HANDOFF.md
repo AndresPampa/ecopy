@@ -1,7 +1,7 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-09 · branch: `etapa-1-tracer-bullet` (3 commits: cierre de la Etapa 0,
-> diseño y slice 1; pre-commit sin commit) · `main` = `origin/main` (`a54967c`, PR #2) ·
+> Last updated: 2026-11-09 · branch: `etapa-1-tracer-bullet` (4 commits: cierre de la Etapa 0,
+> diseño, slice 1 y pre-commit; slice 2 sin commit) · `main` = `origin/main` (`a54967c`, PR #2) ·
 > remoto `origin` = https://github.com/AndresPampa/ecopy.git
 
 ## Current State
@@ -17,18 +17,18 @@
   (interfaces de `sources`/`store`/`metrics`/`site`/`cli`, seams y tests); 6 slices en ROADMAP.
   **Slice 1 (esqueleto) hecho:** `pyproject.toml` (uv_build, deps dev pytest/hypothesis/ruff),
   `src/ecopy/cli.py` (`ecopy --version`), `tests/test_cli.py` en verde, ruff limpio.
-- **Sin commit:** `.pre-commit-config.yaml` (nuevo), `.gitignore`, `pyproject.toml`, `uv.lock`,
-  `README.md`, `docs/HANDOFF.md`.
+  **Slice 2 (`sources.clickpy`) hecho:** 13 tests de contrato con respuestas reales grabadas
+  (truncado, cuadre, reintentos, lotes de 50), validado además contra ClickPy real.
+- **Sin commit:** `src/ecopy/models.py`, `src/ecopy/sources/`, `tests/fixtures/`,
+  `tests/test_sources_clickpy.py`, `pyproject.toml`, `uv.lock`, `docs/ROADMAP.md`, `docs/HANDOFF.md`.
 - **Código del producto:** solo el esqueleto (slice 1). Tooling del agente local y fuera de git (`.claude/`,
   `.codex/`, `.agents/`, `skills/`, `openspec/`, `scripts/hooks|bash/`, `docs/workflows|guides|
   prompt_templates/`, `AGENTS*/CLAUDE*`, `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-- [ ] **Usuario:** commit de pre-commit (mensaje propuesto en la sesión del 2026-11-09) y, una vez,
-      `uv run pre-commit install`.
-- [ ] **Etapa 1 — slice 2 (`sources.clickpy`)** con `tdd`: script que graba fixtures reales de
-      `fastapi` + tests de contrato con `httpx.MockTransport` (truncado, cuadre, errores). Luego
-      slices 3–6 según `docs/ROADMAP.md` y el diseño.
+- [ ] **Usuario:** commit del slice 2 (mensaje propuesto en la sesión del 2026-11-09).
+- [ ] **Etapa 1 — slice 3 (`store`)** con `tdd`: append-only, lectura con corrección, inmutabilidad
+      sobre `tmp_path`; agrega `pyarrow` y `duckdb`. Luego slices 4–6 según `docs/ROADMAP.md`.
 - [ ] **Usuario (Etapa 5, con el primer MVP):** S6 — crear el proyecto en Cloudflare Pages y
       confirmar `ecopy.pages.dev`; recién ahí entra GitHub Actions.
 - [ ] **Usuario (opcional):** borrar ramas mergeadas `etapa-0-spikes` y `docs/project-setup`
@@ -126,6 +126,11 @@
 - **pre-commit pasa los archivos por nombre y ruff ignora `extend-exclude`**: la primera corrida
   reformateó los scripts de `docs/spikes/` (restaurados con `git restore`). Por eso
   `force-exclude = true` en ruff y `files: ^(src|tests)/` en `.pre-commit-config.yaml`.
+
+- **El replay de fixtures no ejecuta SQL:** cambiar `sum(count)` por `max(count)` no rompe los
+  tests de contrato. Lo atrapa en producción el cuadre (`ChecksumMismatch`, verificado contra
+  ClickPy real con 21 filas duplicadas). Al cambiar consultas: regrabar con
+  `uv run python tests/fixtures/clickpy/record.py` y probar contra ClickPy real.
 
 ## Files & Pointers
 - `docs/ROADMAP.md` — etapas y slices de la etapa en curso.
@@ -259,3 +264,10 @@ Usuario aceptó versionar pre-commit: `.pre-commit-config.yaml` con hooks locale
 (ruff check --fix, ruff format, pytest), `pre-commit` en el grupo dev, fuera de `.gitignore`.
 Primera corrida reformateó los spikes (pre-commit saltea `extend-exclude`): restaurados, y se
 agregó `force-exclude` + `files: ^(src|tests)/`. `pre-commit run --all-files` en verde.
+
+### 2026-11-09 — Slice 2 (`sources.clickpy`) en verde
+TDD en 8 ciclos: `ClickPy(client, sleep=...).daily_downloads(projects, start, end)`. Consultas con
+etiqueta (`/* ecopy:daily */`, `/* ecopy:checksums */`) para que el replay no dependa del SQL.
+Mutaciones: quitar el control de lectura parcial o el cuadre rompe tests; `sum`→`max` no (replay),
+pero contra ClickPy real da `ChecksumMismatch`. Fixture real: `fastapi` enero 2024 (31 días,
+35.561.750 descargas, confirmado con consulta independiente). Agregado `httpx` como dependencia.

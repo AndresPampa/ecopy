@@ -5,7 +5,9 @@ description = "The Python ecosystem, year by year: static site with PyPI metrics
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "httpx>=0.27",
+]
 
 [project.scripts]
 ecopy = "ecopy.cli:main"
