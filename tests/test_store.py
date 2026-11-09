@@ -5,7 +5,15 @@ from datetime import UTC, date, datetime, timedelta
 import pyarrow.parquet as pq
 import pytest
 
-from ecopy.models import DailyDownload, DownloadBatch, Run
+from ecopy.models import (
+    DailyDownload,
+    DailyTotal,
+    DownloadBatch,
+    PypiTotalsBatch,
+    PythonMinorBatch,
+    PythonMinorMonth,
+    Run,
+)
 from ecopy.store import ImmutabilityError, Store
 
 RUN = Run(
@@ -32,9 +40,13 @@ def test_appended_downloads_are_read_back_ordered_by_date(tmp_path):
 
 
 def test_a_run_writes_one_file_per_year_it_touches(tmp_path):
-    paths = Store(tmp_path).append(
-        batch(("fastapi", date(2023, 12, 31), 1), ("fastapi", date(2024, 1, 1), 2)),
-        RUN,
+    paths = (
+        Store(tmp_path)
+        .append(
+            batch(("fastapi", date(2023, 12, 31), 1), ("fastapi", date(2024, 1, 1), 2)),
+            RUN,
+        )
+        .paths
     )
 
     assert sorted(p.relative_to(tmp_path).as_posix() for p in paths) == [
@@ -44,7 +56,7 @@ def test_a_run_writes_one_file_per_year_it_touches(tmp_path):
 
 
 def test_every_written_row_carries_its_provenance(tmp_path):
-    [path] = Store(tmp_path).append(batch(("fastapi", date(2024, 1, 1), 10)), RUN)
+    [path] = Store(tmp_path).append(batch(("fastapi", date(2024, 1, 1), 10)), RUN).paths
 
     row = pq.read_table(path).to_pylist()[0]
 
@@ -129,12 +141,12 @@ def test_an_empty_store_has_no_series(tmp_path):
 
 
 def test_an_empty_batch_writes_nothing(tmp_path):
-    assert Store(tmp_path).append(batch(), RUN) == []
+    assert Store(tmp_path).append(batch(), RUN).paths == []
     assert snapshot(tmp_path) == {}
 
 
 def test_append_leaves_only_the_final_files(tmp_path):
-    paths = Store(tmp_path).append(batch(("fastapi", date(2024, 1, 1), 10)), RUN)
+    paths = Store(tmp_path).append(batch(("fastapi", date(2024, 1, 1), 10)), RUN).paths
 
     assert set(snapshot(tmp_path)) == set(paths)
 
@@ -148,3 +160,109 @@ def test_a_run_id_must_be_safe_as_a_file_name(bad_id):
 def test_a_run_needs_a_timezone_aware_capture_time():
     with pytest.raises(ValueError):
         Run("naive", datetime(2024, 2, 1), "backfill")
+
+
+def run_at(name: str, day: int) -> Run:
+    return Run(id=name, captured_at=datetime(2024, 3, day, tzinfo=UTC), acquisition="observed")
+
+
+def test_reobserving_identical_rows_writes_nothing(tmp_path):
+    store = Store(tmp_path)
+    store.append(batch(("fastapi", date(2024, 1, 1), 10)), RUN)
+    before = snapshot(tmp_path)
+
+    result = store.append(batch(("fastapi", date(2024, 1, 1), 10)), run_at("same", 1))
+
+    assert (result.paths, result.new_rows, result.revised_rows) == ([], 0, 0)
+    assert snapshot(tmp_path) == before
+
+
+def test_only_new_or_changed_rows_are_written_and_counted(tmp_path):
+    store = Store(tmp_path)
+    store.append(
+        batch(("fastapi", date(2024, 1, 1), 10), ("fastapi", date(2024, 1, 2), 20)),
+        RUN,
+    )
+
+    result = store.append(
+        batch(
+            ("fastapi", date(2024, 1, 1), 10),
+            ("fastapi", date(2024, 1, 2), 25),
+            ("fastapi", date(2024, 1, 3), 30),
+        ),
+        run_at("reobserved", 1),
+    )
+
+    assert (result.new_rows, result.revised_rows) == (1, 1)
+    [path] = result.paths
+    assert [row["date"] for row in pq.read_table(path).to_pylist()] == [
+        date(2024, 1, 2),
+        date(2024, 1, 3),
+    ]
+    assert store.daily_downloads(["fastapi"])["fastapi"] == {
+        date(2024, 1, 1): 10,
+        date(2024, 1, 2): 25,
+        date(2024, 1, 3): 30,
+    }
+
+
+def test_a_repeated_run_id_fails_even_with_nothing_to_write(tmp_path):
+    store = Store(tmp_path)
+    store.append(batch(("fastapi", date(2024, 1, 1), 10)), RUN)
+
+    with pytest.raises(ImmutabilityError):
+        store.append(batch(("fastapi", date(2024, 1, 1), 10)), RUN)
+
+
+def totals(*rows: tuple[date, int]) -> PypiTotalsBatch:
+    return PypiTotalsBatch("clickpy", tuple(DailyTotal(*row) for row in rows))
+
+
+def versions(*rows: tuple[date, str, int]) -> PythonMinorBatch:
+    return PythonMinorBatch("clickpy", tuple(PythonMinorMonth(*row) for row in rows))
+
+
+def test_pypi_totals_are_their_own_dataset(tmp_path):
+    store = Store(tmp_path)
+    store.append(batch(("fastapi", date(2024, 1, 1), 10)), RUN)
+
+    store.append(totals((date(2024, 1, 2), 200), (date(2024, 1, 1), 100)), RUN)
+
+    assert list(store.pypi_daily_totals().items()) == [
+        (date(2024, 1, 1), 100),
+        (date(2024, 1, 2), 200),
+    ]
+    assert store.daily_downloads(["fastapi"])["fastapi"] == {date(2024, 1, 1): 10}
+
+
+def test_python_versions_keep_raw_values_and_resolve_corrections(tmp_path):
+    store = Store(tmp_path)
+    month = date(2024, 1, 1)
+    store.append(versions((month, "3.12", 5), (month, "", 1), (month, "\x1b[32m3.13", 2)), RUN)
+
+    result = store.append(versions((month, "3.12", 7), (month, "", 1)), run_at("later", 1))
+
+    assert (result.new_rows, result.revised_rows) == (0, 1)
+    assert store.python_minor_monthly() == {month: {"3.12": 7, "": 1, "\x1b[32m3.13": 2}}
+
+
+def test_empty_datasets_read_as_empty(tmp_path):
+    store = Store(tmp_path)
+
+    assert store.pypi_daily_totals() == {}
+    assert store.python_minor_monthly() == {}
+    assert store.last_days() == {}
+
+
+def test_last_days_gives_the_newest_day_of_each_package(tmp_path):
+    store = Store(tmp_path)
+    store.append(
+        batch(
+            ("fastapi", date(2023, 12, 31), 1),
+            ("fastapi", date(2024, 1, 5), 2),
+            ("django", date(2024, 1, 3), 3),
+        ),
+        RUN,
+    )
+
+    assert store.last_days() == {"fastapi": date(2024, 1, 5), "django": date(2024, 1, 3)}

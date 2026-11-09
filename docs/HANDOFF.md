@@ -1,17 +1,20 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-09 · branch: `etapa-1-tracer-bullet` (slices 5–6 sin commit; falta el PR
-> de la etapa) · `main` = `origin/main` (`a54967c`, PR #2) · remoto `origin` =
+> Last updated: 2026-11-09 · branch: `etapa-2-datos-completos` (desde `main` = `909a376`), con toda
+> la Etapa 2 sin commit: el usuario hace commit, push y PR · remoto `origin` =
 > https://github.com/AndresPampa/ecopy.git
 
 ## Current State
 - **Etapa 0 (spikes) mergeada** (PR #2): S1–S5 confirmados, informes en `docs/spikes/`.
-- **Etapa 1 (tracer bullet, LOCAL) terminada en la rama:** los 6 slices del ROADMAP están hechos.
+- **Etapa 1 (tracer bullet, LOCAL) mergeada** (PR #3): los 6 slices están hechos, 73 tests en verde.
   `ecopy ingest → build → serve` funciona de punta a punta con datos reales de `fastapi` (2.891
   días, `data/` = 120 KB): página EN/ES con tabla anual, tabla mensual y gráfico ECharts,
   servida con la CSP real. Sin violaciones en Chrome headless (con control positivo), tooltip y
   móvil verificados. Diseño: `docs/design/etapa-1-tracer-bullet.md`.
-- **Falta cerrar la etapa:** commit de los slices 5–6 y PR a `main` (los hace el usuario).
+- **Etapa 2 (datos completos, LOCAL) implementada, sin commit:** 180 tests + 24 mutaciones. Corrida
+  real: 500 paquetes desde 2016-01-22 (1.708.804 filas), totales de PyPI (3.866 días), versiones de
+  Python (2.322 filas), `data/` = 7,4 MB, 42 s; reobservación sin archivos nuevos; 1.000 páginas en
+  9 s. Diseño: `docs/design/etapa-2-datos-completos.md`. Quedan abiertos los slices 7 y 8.
 - **PRD vigente** en `docs/prd.md` con las decisiones de S1–S5 y del diseño de la Etapa 1.
 - **GitHub Actions y Cloudflare Pages (S6) quedan para la Etapa 5** (decisión del usuario).
 - Tooling del agente local y fuera de git (`.claude/`, `.codex/`, `.agents/`, `skills/`,
@@ -19,22 +22,18 @@
   `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-- [ ] **Usuario:** commit de los slices 5–6 y PR de la Etapa 1 (mensajes propuestos en la sesión
-      del 2026-11-09). Al mergear, colapsar la Etapa 1 en *Shipped* del ROADMAP.
-- [ ] **Etapa 2 — Datos completos:** detallar slices en `docs/ROADMAP.md` (arrancar con
-      `codebase-design` y `tdd`): `catalog` (YAML + top 100 anual: la unión da solo 213 paquetes,
-      faltan ~290 curados; renombres; taxonomía), backfill de ~500, adopción de versiones de
-      Python, denominador total de PyPI, `validate` y "Actualización fallida".
-- [ ] **Etapa 2 — calidad del dato:** flags de huecos y ventana degradada. Hoy la tabla anual dice
-      "Completo" para el primer año de un paquete (2018 en `fastapi`) y para años con huecos, y
-      enero de 2016 o el primer mes de un paquete no salen como parciales.
-- [ ] **Medir si ClickPy revisa días ya cerrados** (S1 no lo midió): la ingesta incremental solo
-      pide desde el último día guardado + 1, así que no captaría esas correcciones.
+- [ ] **Usuario:** revisar `git diff`, hacer commit, push y PR de la Etapa 2.
+- [ ] **Usuario (slice 7):** revisar por excepción `catalog/libraries.yaml` (500 librerías,
+      borrador del agente: categoría, tags y 5 renombres; `repo` se completa en la Etapa 4).
+- [ ] **Slice 8:** correr `uv run ecopy ingest` en un día posterior y mirar `revised_rows` en
+      `data/runs/`: hoy la reobservación solo se probó el mismo día.
+- [ ] **Investigar la caída desde 2026-08-25** (−36 % de un día para el otro, recuperación lenta,
+      algunos paquetes ×0,12): decidir en la Etapa 3 cómo tratarla en el volumen absoluto.
 - [ ] **Usuario (Etapa 5, con el primer MVP):** S6 — crear el proyecto en Cloudflare Pages y
       confirmar `ecopy.pages.dev`; recién ahí entra GitHub Actions.
 - [ ] **Etapa 5 — diseño:** el tramo punteado del mes en curso todavía se lee como una caída fuerte
       (aviso debajo del gráfico); revisar con `impeccable` + `dataviz`.
-- [ ] **Usuario (opcional):** borrar ramas mergeadas `etapa-0-spikes` y `docs/project-setup`
+- [ ] **Usuario (opcional):** borrar las ramas mergeadas `etapa-0-spikes` y `etapa-1-tracer-bullet`
       (local y remota).
 - [ ] Opcional: activar hooks de Claude Code copiando `.claude/settings.template.json` →
       `.claude/settings.json` (hoy los guards solo corren en Codex).
@@ -107,6 +106,12 @@
 - **Tooling fuera de git** por decisión del usuario. `check_skill_symlinks.sh` acepta lo ignorado
   en `.gitignore` como local a propósito, pero sigue fallando si algo no está trackeado NI ignorado.
 
+- **Diseño de la Etapa 2 (aprobado 2026-11-09, las 10 recomendaciones):** reobservar 7 días y
+  escribir solo cambios; validar antes de escribir y, si falla, reconstruir con aviso (una corrida
+  mala ganaría al leer); calidad como calendario en código (un hueco no tiene filas donde marcar);
+  top 100 como archivo revisado; versiones solo con meses cerrados; módulo `pipeline`, sin comando
+  `backfill`. Razones y evidencia en `docs/design/etapa-2-datos-completos.md`.
+
 ## Failed Approaches
 - **Consultas grandes a ClickPy devuelven resultados parciales sin error** (usuario `play`:
   `read_overflow_mode=break` a 10.000 M filas leídas, `result_overflow_mode=break` a 1.000 filas de
@@ -126,6 +131,8 @@
 - Nombres descartados: PyScope (PyPI), State of Python (JetBrains/PSF), pytonic (PyPI, GitHub,
   app iOS homónima; se lee como typo de "pythonic"), ecopython (permiso PSF).
 
+- El commit `0c00df2` (ya en `main` por PR #3) tiene como asunto una ruta de archivo: se usó `-m`
+  con la ruta en lugar de `-F`. No se reescribe. Mismo cuidado que el caso siguiente.
 - El commit `46bc2dd` quedó sin línea de asunto (el cuerpo del mensaje se aplanó en una sola
   línea). No se reescribe: ya está mergeado en `main`. Para mensajes multilínea usar
   `git commit -F archivo` o el editor, no `-m` con el texto pegado.
@@ -142,13 +149,25 @@
 - **Un test de humo no prueba seguridad por sí solo:** un nombre con `/` no ejercitaba el caso de
   un proyecto llamado exactamente `..`; lo reveló una mutación. Probar mutaciones en defensas.
 
+- **Dos conclusiones de spikes que no se sostienen (S7):** "no hay huecos propios de un paquete"
+  (S1, con 5 paquetes): 369 de 500 tienen días sin filas, y no son huecos de la fuente. "La
+  diferencia entre versiones y total es carga en vivo" (S2): aparece en meses cerrados.
+
+- **En `library.html`, una macro no puede llamarse `status`:** tapa la variable `status` del
+  contexto. Por eso es `period_status`.
+
 ## Files & Pointers
 - `docs/ROADMAP.md` — etapas y slices de la etapa en curso.
 - `docs/design/etapa-1-tracer-bullet.md` — interfaces, seams y tests de la Etapa 1.
-- `src/ecopy/` — `sources/clickpy.py`, `store.py`, `metrics.py`, `site/`, `cli.py`, `models.py`.
+- `docs/design/etapa-2-datos-completos.md` — diseño y evidencia de la Etapa 2.
+- `catalog/` — `taxonomy.yaml` (39 categorías), `libraries.yaml`, `top100.yaml` (generado).
+- `data/runs/*.json` — registro por corrida; `revised_rows` mide correcciones de ClickPy.
+- `src/ecopy/` — `sources/clickpy.py`, `store.py`, `catalog.py`, `quality.py`, `validate.py`,
+  `pipeline.py`, `metrics.py`, `site/`, `cli.py`, `models.py`.
 - `tests/snapshots/` — HTML esperado; regenerar con `UPDATE_SNAPSHOTS=1 uv run pytest tests/test_site.py`.
 - `docs/spikes/` — informe (`sN-*.md`) + script reproducible (`sN_*.py`) por spike: S1 cobertura,
-  S2 versiones de Python, S3 estrellas, S4 ECharts vs Plotly, S5 Parquet + backfill.
+  S2 versiones de Python, S3 estrellas, S4 ECharts vs Plotly, S5 Parquet + backfill, S7 correcciones
+  y umbrales.
 - `categorias.md` (raíz, ignorado por git) — abordaje de categorías del usuario; ya volcado al PRD.
 - `build/spikes/s4/`, `build/spikes/s5/` (ignorados) — salidas de prototipos; se regeneran con su script.
 - `docs/prd.md` — PRD vigente (fuente funcional para issues e implementación).
@@ -161,13 +180,14 @@
 
 ## Resume Setup
 - Producto: `uv sync` · `uv run pytest` · `uv run ruff check . && uv run ruff format --check src tests`
-  · `uv run ecopy ingest|build|serve --help`. Paquete en `src/ecopy/` (build backend `uv_build`), tests en `tests/`.
+  · `uv run ecopy ingest|validate|build|serve|catalog --help`. Paquete en `src/ecopy/` (build backend `uv_build`), tests en `tests/`.
 - Checks del toolkit: `scripts/bash/check_skill_symlinks.sh`, `check_hook_parity.sh`,
   `check_agent_parity.sh`; tests: `python3 scripts/hooks/test_<nombre>.py` (sin pytest).
 - Spikes: scripts con dependencias inline (PEP 723), `uv run docs/spikes/<script>.py`. ClickPy:
   `https://sql-clickhouse.clickhouse.com/?user=play` (ver límites en Failed Approaches). S4 usa
   Google Chrome headless (`/usr/bin/google-chrome`).
 - Git: el agente NUNCA hace add/commit/push/PR; entrega comandos, mensaje (`git commit -F`) y texto de PR.
+  Commits agrupados: no uno por slice; seguir de corrido y entregar un commit al terminar lo pedido.
 - Suggested skills: para la Etapa 1+ `tdd`, `codebase-design`;
   para diseño `impeccable` + `dataviz`; `handoff-doc` al cerrar.
 
@@ -302,3 +322,15 @@ año (2016 parcial, año en curso YTD), último mes cerrado con datos. Decisión
 sin violaciones de CSP (control positivo inyectando un script inline), tooltip con mes en curso,
 sin desborde a 390 px, modo oscuro. Mutaciones: 2 sobrevivieron (proyecto `..`, salida con paquete
 desconocido) → tests agregados. Paleta validada con el script de `dataviz`. Agregado `jinja2`.
+
+### 2026-11-09 — Etapa 1 mergeada
+Usuario mergeó el PR #3 (`909a376`, merge sin squash: `0c00df2` queda con su asunto incorrecto).
+ROADMAP: Etapa 1 en *Shipped*, Etapa 2 como próxima. Sin código en curso.
+
+### 2026-11-09 — Etapa 2 implementada en local
+Diseño con `codebase-design`; usuario aprobó las 10 recomendaciones (PRD actualizado). Medido S7: 0
+de 1,66 M de filas corregidas en ~40 h, umbrales de `validate`, lectura sin compactar. TDD de corrido:
+`quality`, estados de período, store multi-dataset con escritura de cambios, fuentes nuevas, `catalog`,
+`validate`, `pipeline`, aviso "Actualización fallida". Agregado `pyyaml`. Catálogo de 500 con borrador
+del agente. Corrida real, Chrome headless sin violaciones de CSP y 24 mutaciones detectadas. Caída de
+PyPI desde 2026-08-25 detectada al ampliar la medición: abierta. Sin commit: lo hace el usuario.

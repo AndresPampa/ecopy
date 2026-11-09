@@ -1,0 +1,21 @@
+{
+ "id": "20261109T160801Z",
+ "captured_at": "2026-11-09 16:08:01.647516+00:00",
+ "status": "ok",
+ "problems": [],
+ "datasets": {
+  "downloads_daily": {
+   "new_rows": 1708804,
+   "revised_rows": 0
+  },
+  "pypi_total_daily": {
+   "new_rows": 3866,
+   "revised_rows": 0
+  },
+  "python_minor_monthly": {
+   "new_rows": 2322,
+   "revised_rows": 0
+  }
+ },
+ "last_day": "2026-11-08"
+}

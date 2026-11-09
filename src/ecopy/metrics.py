@@ -3,13 +3,20 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from datetime import date, timedelta
 
-from ecopy.models import DailySeries, LibraryView, MonthPoint, YearTotal
-
-# La fuente arranca el 2016-01-22 y le faltan 77 días de ese año (spike S1).
-PARTIAL_YEARS = frozenset({2016})
+from ecopy.models import (
+    Coverage,
+    DailySeries,
+    LibraryView,
+    MonthPoint,
+    PeriodStatus,
+    RunReport,
+    SiteStatus,
+    YearTotal,
+)
+from ecopy.quality import SOURCE_START, period_coverage
 
 
 def _next_month(month: date) -> date:
@@ -23,25 +30,44 @@ def _months(first: date, last: date) -> Iterator[date]:
         month = _next_month(month)
 
 
-def _in_progress(month: date, as_of: date) -> bool:
-    """El mes de `as_of` está en curso salvo que `as_of` sea su último día."""
-    return month == as_of.replace(day=1) and _next_month(month) != as_of + timedelta(days=1)
+def _period(
+    start: date, end: date, *, first_date: date, as_of: date
+) -> tuple[PeriodStatus, Coverage]:
+    """Estado y cobertura del período [start, end] para un paquete con esa primera fecha."""
+    # Antes del inicio de la fuente no se sabe si el paquete existía: se cuenta como hueco.
+    counted_from = max(start, first_date) if first_date > SOURCE_START else start
+    coverage = period_coverage(counted_from, min(end, as_of))
+    if as_of < end:
+        return "in_progress", coverage
+    if start < first_date <= end and first_date > SOURCE_START:
+        return "package_start", coverage
+    if coverage.gap:
+        return "source_gap", coverage
+    return ("degraded" if coverage.degraded else "complete"), coverage
 
 
-def _yearly(observed: DailySeries, as_of: date) -> tuple[YearTotal, ...]:
+def _monthly(totals: dict[date, int], first_date: date, as_of: date) -> tuple[MonthPoint, ...]:
+    points = []
+    for month in _months(first_date.replace(day=1), as_of.replace(day=1)):
+        end = _next_month(month) - timedelta(days=1)
+        status, coverage = _period(month, end, first_date=first_date, as_of=as_of)
+        points.append(
+            MonthPoint(month=month, downloads=totals.get(month), status=status, coverage=coverage)
+        )
+    return tuple(points)
+
+
+def _yearly(observed: DailySeries, first_date: date, as_of: date) -> tuple[YearTotal, ...]:
     totals: dict[int, int] = defaultdict(int)
     for day, downloads in observed.items():
         totals[day.year] += downloads
-    year_closed = (as_of.month, as_of.day) == (12, 31)
-    return tuple(
-        YearTotal(
-            year=year,
-            downloads=downloads,
-            partial=year in PARTIAL_YEARS,
-            ytd=year == as_of.year and not year_closed,
+    years = []
+    for year, downloads in sorted(totals.items()):
+        status, coverage = _period(
+            date(year, 1, 1), date(year, 12, 31), first_date=first_date, as_of=as_of
         )
-        for year, downloads in sorted(totals.items())
-    )
+        years.append(YearTotal(year=year, downloads=downloads, status=status, coverage=coverage))
+    return tuple(years)
 
 
 def library_view(project: str, series: DailySeries, *, as_of: date) -> LibraryView:
@@ -51,15 +77,22 @@ def library_view(project: str, series: DailySeries, *, as_of: date) -> LibraryVi
         raise ValueError(f"{project}: sin datos hasta {as_of}")
     for day, downloads in observed.items():
         totals[day.replace(day=1)] += downloads
-    monthly = tuple(
-        MonthPoint(month=m, downloads=totals.get(m), partial=_in_progress(m, as_of))
-        for m in _months(min(totals), as_of.replace(day=1))
-    )
-    closed = [m for m in monthly if not m.partial and m.downloads is not None]
+    first_date = min(observed)
+    monthly = _monthly(totals, first_date, as_of)
+    closed = [m for m in monthly if m.status != "in_progress" and m.downloads is not None]
     return LibraryView(
         project=project,
-        first_date=min(observed),
+        first_date=first_date,
         last_closed_month=closed[-1] if closed else None,
         monthly=monthly,
-        yearly=_yearly(observed, as_of),
+        yearly=_yearly(observed, first_date, as_of),
+    )
+
+
+def site_status(runs: Sequence[RunReport]) -> SiteStatus:
+    """Última corrida aceptada y si la última de todas fue rechazada. `runs` va en orden."""
+    good = [run for run in runs if run.status == "ok"]
+    return SiteStatus(
+        last_updated=good[-1].captured_at.date() if good else None,
+        failed=bool(runs) and runs[-1].status == "failed",
     )

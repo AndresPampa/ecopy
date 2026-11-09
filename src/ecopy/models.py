@@ -6,6 +6,7 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
+from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
@@ -30,6 +31,74 @@ class DownloadBatch:
 
 
 @dataclass(frozen=True)
+class DailyTotal:
+    """Descargas de todo PyPI en un día: el denominador de las cuotas."""
+
+    date: date
+    downloads: int
+
+
+@dataclass(frozen=True)
+class PypiTotalsBatch:
+    source: Literal["clickpy"]
+    rows: tuple[DailyTotal, ...]
+
+
+@dataclass(frozen=True)
+class PythonMinorMonth:
+    """Descargas de todo PyPI en un mes por versión de Python, con el valor crudo de la fuente."""
+
+    month: date
+    python_minor: str
+    downloads: int
+
+
+@dataclass(frozen=True)
+class PythonMinorBatch:
+    source: Literal["clickpy"]
+    rows: tuple[PythonMinorMonth, ...]
+
+
+Batch = DownloadBatch | PypiTotalsBatch | PythonMinorBatch
+
+
+@dataclass(frozen=True)
+class AppendResult:
+    """Qué escribió una corrida: las filas iguales a la versión vigente no se escriben."""
+
+    paths: list[Path]
+    new_rows: int
+    revised_rows: int
+
+
+@dataclass(frozen=True)
+class Problem:
+    """Por qué se rechaza una corrida."""
+
+    code: str
+    dataset: str
+    detail: str
+
+
+@dataclass(frozen=True)
+class DatasetCounts:
+    new_rows: int
+    revised_rows: int
+
+
+@dataclass(frozen=True)
+class RunReport:
+    """Registro de una ejecución de la ingesta: mide correcciones y alimenta el aviso del sitio."""
+
+    id: str
+    captured_at: datetime
+    status: Literal["ok", "failed"]
+    problems: tuple[Problem, ...]
+    datasets: Mapping[str, DatasetCounts]
+    last_day: date | None
+
+
+@dataclass(frozen=True)
 class Run:
     """Una corrida de ingesta: la procedencia que el store sella en lo que escribe."""
 
@@ -44,6 +113,25 @@ class Run:
             raise ValueError("captured_at debe tener zona horaria")
 
 
+PeriodStatus = Literal["complete", "in_progress", "package_start", "source_gap", "degraded"]
+"""Estado de un mes o un año, de más a menos urgente: en curso, desde el primer release del
+paquete, con huecos de la fuente, con días degradados, completo."""
+
+
+class Coverage(BaseModel):
+    """Días de un período según el calendario de calidad de la fuente."""
+
+    model_config = ConfigDict(frozen=True)
+
+    expected: int
+    gap: int
+    degraded: int
+
+    @property
+    def with_data(self) -> int:
+        return self.expected - self.gap
+
+
 class MonthPoint(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -51,8 +139,8 @@ class MonthPoint(BaseModel):
     """Primer día del mes."""
     downloads: int | None
     """None = sin datos ese mes (los huecos no se interpolan ni se muestran como cero)."""
-    partial: bool
-    """El mes está en curso a la fecha `as_of`."""
+    status: PeriodStatus
+    coverage: Coverage
 
 
 class YearTotal(BaseModel):
@@ -60,10 +148,22 @@ class YearTotal(BaseModel):
 
     year: int
     downloads: int
-    partial: bool
-    """Año con cobertura incompleta en la fuente (2016 empieza el 22-ene y tiene huecos)."""
-    ytd: bool
-    """Año en curso a la fecha `as_of`: acumulado parcial, no comparable con un año cerrado."""
+    status: PeriodStatus
+    coverage: Coverage
+
+
+class SiteStatus(BaseModel):
+    """Estado de la última actualización que muestra el sitio."""
+
+    model_config = ConfigDict(frozen=True)
+
+    last_updated: date | None = None
+    """Fecha UTC de la última corrida aceptada."""
+    failed: bool = False
+    """La última corrida fue rechazada: las cifras son las de la anterior."""
+
+    def __init__(self, last_updated: date | None = None, failed: bool = False) -> None:
+        super().__init__(last_updated=last_updated, failed=failed)
 
 
 class LibraryView(BaseModel):

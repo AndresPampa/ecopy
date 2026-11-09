@@ -1,0 +1,73 @@
+# Taxonomía de ecopy: dominios → categorías, y tags de vocabulario controlado.
+# Los slugs son identificadores estables: cambiar una etiqueta no rompe URLs ni históricos.
+# Cada librería tiene exactamente una categoría (las cuotas suman 100 %); los tags solo navegan.
+domains:
+  - slug: data-ai
+    en: Data & AI
+    es: Datos e IA
+    categories:
+      - {slug: machine-learning, en: Machine learning & AI, es: Machine learning e IA}
+      - {slug: llm, en: LLMs & generative AI, es: LLMs e IA generativa}
+      - {slug: data-science, en: Data science, es: Ciencia de datos}
+      - {slug: data-engineering, en: Data engineering, es: Ingeniería de datos}
+      - {slug: big-data, en: Big data, es: Big Data}
+      - {slug: nlp, en: NLP, es: NLP}
+      - {slug: statistics, en: Statistics & econometrics, es: Estadística y econometría}
+      - {slug: time-series, en: Time series & forecasting, es: Series temporales y forecasting}
+      - {slug: visualization, en: Visualization, es: Visualización}
+      - {slug: mlops, en: MLOps, es: MLOps}
+  - slug: development
+    en: Development
+    es: Desarrollo
+    categories:
+      - {slug: web, en: Web development, es: Desarrollo web}
+      - {slug: dashboards, en: Interactive apps & dashboards, es: Aplicaciones interactivas y dashboards}
+      - {slug: http-clients, en: HTTP clients & APIs, es: Clientes HTTP y APIs}
+      - {slug: desktop, en: Desktop applications, es: Aplicaciones de escritorio}
+      - {slug: cli, en: CLI & terminal, es: CLI y terminal}
+      - {slug: dev-tools, en: Developer tools, es: Herramientas de desarrollo}
+      - {slug: testing, en: Testing, es: Testing}
+      - {slug: documentation, en: Documentation, es: Documentación}
+      - {slug: serialization, en: Serialization & validation, es: Serialización y validación}
+  - slug: infrastructure
+    en: Infrastructure & Operations
+    es: Infraestructura y operaciones
+    categories:
+      - {slug: cloud-devops, en: Cloud & DevOps, es: Cloud y DevOps}
+      - {slug: databases, en: Databases & ORMs, es: Bases de datos y ORMs}
+      - {slug: messaging, en: Messaging & streaming, es: Mensajería y streaming}
+      - {slug: distributed, en: Distributed systems, es: Sistemas distribuidos}
+      - {slug: security, en: Security & cryptography, es: Seguridad y criptografía}
+      - {slug: observability, en: Monitoring & observability, es: Monitoreo y observabilidad}
+      - {slug: foundations, en: Foundations, es: Infraestructura base}
+  - slug: multimedia-specialized
+    en: Multimedia & Specialized
+    es: Multimedia y especializados
+    categories:
+      - {slug: imaging, en: Imaging & multimedia, es: Imagen y multimedia}
+      - {slug: audio-video, en: Audio & video, es: Audio y video}
+      - {slug: geospatial, en: Geospatial & GIS, es: Geoespacial y GIS}
+      - {slug: scientific, en: Scientific computing, es: Computación científica}
+      - {slug: robotics-iot, en: Robotics & IoT, es: Robótica e IoT}
+      - {slug: games, en: Games & simulation, es: Juegos y simulación}
+      - {slug: quant-finance, en: Quantitative finance, es: Finanzas cuantitativas}
+      - {slug: optimization, en: Optimization & math, es: Optimización y matemática}
+  - slug: utilities
+    en: Utilities
+    es: Utilidades
+    categories:
+      - {slug: scraping, en: Scraping & automation, es: Scraping y automatización}
+      - {slug: files-documents, en: Files & documents, es: Gestión de archivos y documentos}
+      - {slug: configuration, en: Configuration, es: Configuración}
+      - {slug: i18n, en: Internationalization, es: Internacionalización}
+      - {slug: synthetic-data, en: Synthetic data, es: Generación de datos sintéticos}
+tags:
+  - {slug: async, en: Async, es: Asíncrono}
+  - {slug: dataframe, en: Dataframes, es: Dataframes}
+  - {slug: deep-learning, en: Deep learning, es: Deep learning}
+  - {slug: orm, en: ORM, es: ORM}
+  - {slug: linter, en: Linters, es: Linters}
+  - {slug: packaging, en: Packaging, es: Empaquetado}
+  - {slug: aws, en: AWS, es: AWS}
+  - {slug: google-cloud, en: Google Cloud, es: Google Cloud}
+  - {slug: azure, en: Azure, es: Azure}

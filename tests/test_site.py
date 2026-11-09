@@ -10,19 +10,22 @@ from pathlib import Path
 
 import pytest
 
-from ecopy.models import LibraryView, MonthPoint, YearTotal
+from ecopy.models import Coverage, LibraryView, MonthPoint, SiteStatus, YearTotal
 from ecopy.site import render as site_render
 from ecopy.site import render_site
 
 SNAPSHOTS = Path(__file__).parent / "snapshots"
 
 
+FULL = Coverage(expected=31, gap=0, degraded=0)
+
+
 def view(project: str = "fastapi") -> LibraryView:
     months = (
-        MonthPoint(month=date(2024, 1, 1), downloads=35_561_750, partial=False),
-        MonthPoint(month=date(2024, 2, 1), downloads=None, partial=False),
-        MonthPoint(month=date(2024, 3, 1), downloads=40_000_000, partial=False),
-        MonthPoint(month=date(2024, 4, 1), downloads=1_000, partial=True),
+        MonthPoint(month=date(2024, 1, 1), downloads=35_561_750, status="complete", coverage=FULL),
+        MonthPoint(month=date(2024, 2, 1), downloads=None, status="complete", coverage=FULL),
+        MonthPoint(month=date(2024, 3, 1), downloads=40_000_000, status="complete", coverage=FULL),
+        MonthPoint(month=date(2024, 4, 1), downloads=1_000, status="in_progress", coverage=FULL),
     )
     return LibraryView(
         project=project,
@@ -30,8 +33,26 @@ def view(project: str = "fastapi") -> LibraryView:
         last_closed_month=months[2],
         monthly=months,
         yearly=(
-            YearTotal(year=2016, downloads=1_234, partial=True, ytd=False),
-            YearTotal(year=2024, downloads=75_562_750, partial=False, ytd=True),
+            YearTotal(
+                year=2016,
+                downloads=1_234,
+                status="source_gap",
+                coverage=Coverage(expected=366, gap=98, degraded=1),
+            ),
+            YearTotal(
+                year=2018,
+                downloads=2_000,
+                status="package_start",
+                coverage=Coverage(expected=24, gap=0, degraded=0),
+            ),
+            YearTotal(
+                year=2019,
+                downloads=3_000,
+                status="degraded",
+                coverage=Coverage(expected=365, gap=0, degraded=3),
+            ),
+            YearTotal(year=2023, downloads=4_000, status="complete", coverage=FULL),
+            YearTotal(year=2024, downloads=75_562_750, status="in_progress", coverage=FULL),
         ),
     )
 
@@ -55,7 +76,10 @@ def test_year_status_and_data_gaps_are_labelled_in_each_language(tmp_path):
 
     english, spanish = page(tmp_path, "en"), page(tmp_path, "es")
 
-    assert "Partial data" in english and "Datos parciales" in spanish
+    assert "Source gaps (268 of 366 days)" in english
+    assert "Huecos de la fuente (268 de 366 días)" in spanish
+    assert "Since first release" in english and "Desde el primer release" in spanish
+    assert "Degraded days (3)" in english and "Días degradados (3)" in spanish
     assert "Year to date" in english and "Año en curso" in spanish
     assert "No data" in english and "Sin datos" in spanish
 
@@ -164,7 +188,7 @@ def test_chart_keeps_gaps_and_draws_the_month_in_progress_apart(tmp_path):
 
 
 def test_a_series_without_a_month_in_progress_has_a_single_line(tmp_path):
-    months = (MonthPoint(month=date(2024, 1, 1), downloads=5, partial=False),)
+    months = (MonthPoint(month=date(2024, 1, 1), downloads=5, status="complete", coverage=FULL),)
     closed_only = view().model_copy(update={"monthly": months, "last_closed_month": months[0]})
 
     render_site([closed_only], tmp_path)
@@ -202,3 +226,27 @@ def test_a_dot_project_name_stays_inside_the_library_directory(tmp_path, name):
     assert not (tmp_path / "en" / "index.html").exists()
     assert not (tmp_path / "en" / "library" / "index.html").exists()
     assert len(list((tmp_path / "en" / "library").glob("*/index.html"))) == 1
+
+
+def test_a_failed_update_is_announced_in_each_language_with_the_last_good_date(tmp_path):
+    render_site([view()], tmp_path, status=SiteStatus(date(2024, 2, 1), failed=True))
+
+    english, spanish = page(tmp_path, "en"), page(tmp_path, "es")
+
+    assert "Update failed" in english and "2024-02-01" in english
+    assert "Actualización fallida" in spanish and "2024-02-01" in spanish
+
+
+def test_a_healthy_site_shows_its_last_update_and_no_notice(tmp_path):
+    render_site([view()], tmp_path, status=SiteStatus(date(2024, 2, 1), failed=False))
+
+    english = page(tmp_path)
+
+    assert "Update failed" not in english
+    assert "Last updated" in english and "2024-02-01" in english
+
+
+def test_a_failure_without_a_good_date_still_warns(tmp_path):
+    render_site([view()], tmp_path, status=SiteStatus(None, failed=True))
+
+    assert "Update failed" in page(tmp_path)

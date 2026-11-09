@@ -1,3 +1,10 @@
+{%- macro period_status(period, in_progress) -%}
+{%- if period.status == "in_progress" %}{{ in_progress }}
+{%- elif period.status == "package_start" %}{{ t.package_start }}
+{%- elif period.status == "source_gap" %}{{ t.source_gap.format(with_data=period.coverage.with_data, expected=period.coverage.expected) }}
+{%- elif period.status == "degraded" %}{{ t.degraded.format(degraded=period.coverage.degraded) }}
+{%- else %}{{ t.complete }}{% endif -%}
+{%- endmacro -%}
 <!doctype html>
 <html lang="{{ lang }}">
 <head>
@@ -10,6 +17,9 @@
 </head>
 <body>
 <main>
+{%- if status.failed %}
+<p class="update-failed" role="status">{{ t.update_failed }}{% if status.last_updated %} {{ t.update_failed_since.format(date=status.last_updated) }}{% endif %}</p>
+{%- endif %}
 <nav><a href="/{{ other }}/library/{{ slug }}/" hreflang="{{ other }}">{{ t.switch_label }}</a></nav>
 <h1>{{ view.project }}</h1>
 <dl>
@@ -24,7 +34,7 @@
 <thead><tr><th scope="col">{{ t.year }}</th><th scope="col">{{ t.downloads }}</th><th scope="col">{{ t.status }}</th></tr></thead>
 <tbody>
 {%- for total in view.yearly %}
-<tr><th scope="row">{{ total.year }}</th><td>{{ total.downloads|number(lang) }}</td><td>{% if total.partial %}{{ t.partial }}{% elif total.ytd %}{{ t.ytd }}{% else %}{{ t.complete }}{% endif %}</td></tr>
+<tr><th scope="row">{{ total.year }}</th><td>{{ total.downloads|number(lang) }}</td><td>{{ period_status(total, t.ytd) }}</td></tr>
 {%- endfor %}
 </tbody>
 </table>
@@ -42,13 +52,13 @@
 <thead><tr><th scope="col">{{ t.month }}</th><th scope="col">{{ t.downloads }}</th><th scope="col">{{ t.status }}</th></tr></thead>
 <tbody>
 {%- for point in view.monthly %}
-<tr><th scope="row">{{ point.month.strftime("%Y-%m") }}</th><td>{% if point.downloads is none %}{{ t.no_data }}{% else %}{{ point.downloads|number(lang) }}{% endif %}</td><td>{% if point.partial %}{{ t.in_progress }}{% else %}{{ t.complete }}{% endif %}</td></tr>
+<tr><th scope="row">{{ point.month.strftime("%Y-%m") }}</th><td>{% if point.downloads is none %}{{ t.no_data }}{% else %}{{ point.downloads|number(lang) }}{% endif %}</td><td>{{ period_status(point, t.in_progress) }}</td></tr>
 {%- endfor %}
 </tbody>
 </table>
 </details>
 </section>
-<footer><p>{{ t.source }}</p></footer>
+<footer><p>{{ t.source }}{% if status.last_updated %} {{ t.last_updated }}: <time datetime="{{ status.last_updated }}">{{ status.last_updated }}</time>.{% endif %}</p></footer>
 </main>
 </body>
 </html>
