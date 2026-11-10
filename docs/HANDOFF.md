@@ -1,8 +1,8 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-09 · branch: `etapa-4-librerias-y-comparador` (desde `main` = `ea14545`), con
-> toda la Etapa 4 sin commit, a la espera de que el usuario la revise y la commitee · remoto `origin` =
-> https://github.com/AndresPampa/ecopy.git
+> Last updated: 2026-11-10 · branch: `etapa-4-librerias-y-comparador` (desde `main` = `ea14545`), con
+> la Etapa 4 commiteada (`5608473`, `94507a7`); los datos de estrellas siguen sin commit · remoto
+> `origin` = https://github.com/AndresPampa/ecopy.git
 
 ## Current State
 - **Etapa 0 (spikes) mergeada** (PR #2): S1–S5 confirmados, informes en `docs/spikes/`.
@@ -14,11 +14,13 @@
 - **Etapa 3 (vista anual, LOCAL) mergeada** (PR #5): 252 tests y 54 mutaciones con arnés
   corregido, sin violaciones de CSP en Chrome. `ecopy freeze` ya corrió en `data/` (2017–2025,
   metodología 1, sin commit) y `ecopy build` completo funciona: 500 fichas y 10 años en 9 s.
-- **Etapa 4 implementada en local, sin commit:** base visual (dirección Estratos), fichas ampliadas,
+- **Etapa 4 implementada en local:** base visual (dirección Estratos), fichas ampliadas,
   catálogo con sparklines y filtro por tags, dominios y categorías, comparador, releases y `ecopy
   stars`. 340 tests, 41 mutaciones detectadas, Chrome sin violaciones de CSP (con control positivo).
-  Build real: 500 fichas y 10 años en 18 s. **Falta la corrida real de estrellas:** sin token solo
-  se probó `astral-sh/uv`.
+  Build real: 500 fichas y 10 años, con estrellas. **Corrida real de estrellas completa** (2026-11-10):
+  458 de 458 repos, 0 fallidos, 264.876 semanas; suma semanal contra total de GitHub con diferencia
+  máxima de 3 estrellas. Las filas repetidas por clave son revisiones: gana la última. Los 9 nombres
+  movidos ya están corregidos en `repos.yaml`; sus filas viejas quedan en `data/raw/github` sin usarse.
 - **Etapa 2 (datos completos, LOCAL) mergeada** (PR #4). Corrida
   real: 500 paquetes desde 2016-01-22 (1.708.804 filas), totales de PyPI (3.866 días), versiones de
   Python (2.322 filas), `data/` = 7,4 MB, 42 s; reobservación sin archivos nuevos; 1.000 páginas en
@@ -33,11 +35,8 @@
 - [ ] **Usuario:** revisar por excepción `catalog/libraries.yaml` (7 en `other`, tags nuevos) y
       `catalog/repos.yaml` (lo que marca `docs/spikes/s8-repos-y-tags.md`). Si cambia una categoría:
       borrar `data/frozen/`, volver a correr `uv run ecopy freeze`. `repo` y tags no lo invalidan.
-- [ ] **Usuario:** commit de la Etapa 4, luego `data/frozen/` tras la revisión, y PR.
-- [ ] **Usuario (corrida real de estrellas):** token *fine-grained*, solo lectura de repos públicos,
-      en `GITHUB_TOKEN`: `read -rs GITHUB_TOKEN && export GITHUB_TOKEN`, y 3 veces
-      `uv run ecopy stars --budget 4000` (~9.500 consultas, ~2,6 h, se reanuda sola). Después
-      `uv run ecopy build`, y corregir en `repos.yaml` los repos que informe como movidos o fallidos.
+- [ ] **Usuario:** commit de `catalog/repos.yaml`, `data/raw/github/`, `data/runs/stars/` y este
+      handoff (mensaje en `build/etapa-4-commit-3.txt`), push y PR de la Etapa 4 (`build/etapa-4-pr.md`).
 - [ ] **Usuario:** borrar las ramas remotas ya mergeadas; las locales ya están borradas:
       `git push origin --delete etapa-0-spikes etapa-1-tracer-bullet etapa-2-datos-completos etapa-3-vista-anual`.
 - [ ] **Pendiente de la Etapa 2:** correr `uv run ecopy ingest` desde el 2026-11-10 y mirar `revised_rows`
@@ -314,3 +313,13 @@ visual; `repos.yaml` (486 con repo, 459 únicos); 176 librerías con tags; 7 pas
 `data/frozen/` se regeneró; catálogo, dominios, categorías, comparador, releases, adaptador de GitHub y
 `ecopy stars`. Mutaciones: 4 de 41 sobrevivían y ahora tienen test. Prueba real sin token sobre
 `astral-sh/uv`: 163 semanas, suma = conteo. Sin commit: lo hace el usuario.
+
+### 2026-11-10 — Corrida real de estrellas completa
+Tres corridas con token: 4.000, 4.000 y 2.342 consultas, 1 h 30 cada una de las dos primeras (unos
+1,35 s por consulta, no 1 s). Otra corrida previa sin token se cortó en 50 consultas y se solapó 14 s
+con la primera, sin daño: el store no reescribe lo que ya tiene. 459 repos completos y 0 fallidos.
+`--budget` cuenta también los `observed` de los repos ya completos (unas 2 consultas por repo). 9 repos
+movidos: corregidos en `repos.yaml` y 8 bajados de nuevo con `--repo` (165 consultas); `pypdf2` pasa a
+compartir repo con `pypdf`. Quedan 458 repos únicos. Build con estrellas: 486 fichas con repo, 14 sin él.
+Los tests se corren con `uv run pytest`: con `.venv/bin/python -m pytest` falla el del comando `ecopy`
+porque el ejecutable no está en el PATH.
