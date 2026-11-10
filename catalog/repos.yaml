@@ -27,7 +27,7 @@ repos:
   asn1crypto: wbond/asn1crypto
   astroid: pylint-dev/astroid
   astropy: astropy/astropy
-  async-timeout: aio-libs/async-timeout
+  async-timeout: aio-libs-abandoned/async-timeout
   asyncpg: MagicStack/asyncpg
   atomicwrites: untitaker/python-atomicwrites
   attrs: python-attrs/attrs
@@ -88,7 +88,7 @@ repos:
   databricks-sdk: databricks/databricks-sdk-py
   databricks-sql-connector: databricks/databricks-sql-python
   datadog: DataDog/datadogpy
-  dbt-core: dbt-labs/dbt-core
+  dbt-core: dbt-labs/dbt
   debugpy: microsoft/debugpy
   decorator: micheles/decorator
   defusedxml: tiran/defusedxml
@@ -140,7 +140,7 @@ repos:
   future: PythonCharmers/python-future
   futures: agronholm/pythonfutures
   gcsfs: fsspec/gcsfs
-  gensim: RaRe-Technologies/gensim
+  gensim: piskvorky/gensim
   geopandas: geopandas/geopandas
   geopy: geopy/geopy
   gevent: gevent/gevent
@@ -259,7 +259,7 @@ repos:
   nox: wntrblm/nox
   numba: numba/numba
   numpy: numpy/numpy
-  oauth2client: google/oauth2client
+  oauth2client: googleapis/oauth2client
   oauthlib: oauthlib/oauthlib
   omegaconf: hydra-ecosystem/omegaconf
   onnx: onnx/onnx
@@ -288,7 +288,7 @@ repos:
   pdfplumber: jsvine/pdfplumber
   pdoc: mitmproxy/pdoc
   peewee: coleifer/peewee
-  pendulum: sdispater/pendulum
+  pendulum: python-pendulum/pendulum
   pep8: PyCQA/pycodestyle
   petl: petl-developers/petl
   pexpect: pexpect/pexpect
@@ -310,7 +310,7 @@ repos:
   prometheus-client: prometheus/client_python
   prompt-toolkit: prompt-toolkit/python-prompt-toolkit
   propcache: aio-libs/propcache
-  prophet: facebook/prophet
+  prophet: meta/prophet
   protobuf: protocolbuffers/protobuf
   psutil: giampaolo/psutil
   psycopg: psycopg/psycopg
@@ -352,7 +352,7 @@ repos:
   pyopenssl: pyca/pyopenssl
   pyparsing: pyparsing/pyparsing
   pypdf: py-pdf/pypdf
-  pypdf2: py-pdf/PyPDF2
+  pypdf2: py-pdf/pypdf
   pyproj: pyproj4/pyproj
   pyqt5: null
   pyqt6: null
@@ -370,7 +370,7 @@ repos:
   python-dateutil: dateutil/dateutil
   python-docx: python-openxml/python-docx
   python-dotenv: theskumar/python-dotenv
-  python-i18n: tuvistavie/python-i18n
+  python-i18n: danhper/python-i18n
   python-jose: mpdavis/python-jose
   python-json-logger: nhairs/python-json-logger
   python-multipart: Kludex/python-multipart
@@ -404,7 +404,7 @@ repos:
   ruff: astral-sh/ruff
   s3fs: fsspec/s3fs
   s3transfer: boto/s3transfer
-  safetensors: huggingface/safetensors
+  safetensors: safetensors/safetensors
   sagemaker: aws/sagemaker-python-sdk
   sanic: sanic-org/sanic
   scalene: plasma-umass/scalene

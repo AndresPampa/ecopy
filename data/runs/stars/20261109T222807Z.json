@@ -1,0 +1,14 @@
+{
+ "id": "20261109T222807Z",
+ "captured_at": "2026-11-09 22:28:07.835868+00:00",
+ "status": "partial",
+ "requests": 50,
+ "backfilled": [
+  "ActiveState/appdirs"
+ ],
+ "updated": [],
+ "pending": 458,
+ "failed": [],
+ "moved": [],
+ "stopped": "budget"
+}

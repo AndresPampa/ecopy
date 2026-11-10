@@ -1,0 +1,21 @@
+{
+ "id": "20261110T051352Z",
+ "captured_at": "2026-11-10 05:13:52.703447+00:00",
+ "status": "complete",
+ "requests": 165,
+ "backfilled": [
+  "aio-libs-abandoned/async-timeout",
+  "dbt-labs/dbt",
+  "piskvorky/gensim",
+  "googleapis/oauth2client",
+  "meta/prophet",
+  "safetensors/safetensors",
+  "python-pendulum/pendulum",
+  "danhper/python-i18n"
+ ],
+ "updated": [],
+ "pending": 0,
+ "failed": [],
+ "moved": [],
+ "stopped": null
+}
