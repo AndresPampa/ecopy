@@ -5,7 +5,8 @@ from __future__ import annotations
 import json
 import time
 from collections import defaultdict
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from datetime import date
 
 import httpx
@@ -52,6 +53,19 @@ class SourceUnavailable(SourceError):
     """La fuente no respondió tras los reintentos."""
 
 
+class MalformedResponse(SourceError):
+    """La respuesta no tiene la forma esperada (encabezados, campos o valores)."""
+
+
+@contextmanager
+def _parsing(tag: str) -> Iterator[None]:
+    """Un cuerpo con otra forma (campos de menos, fecha o número inválidos) es un SourceError."""
+    try:
+        yield
+    except (KeyError, IndexError, TypeError, ValueError) as error:
+        raise MalformedResponse(f"{tag}: respuesta con forma inesperada: {error!r}") from error
+
+
 def _in_list(projects: Sequence[str]) -> str:
     return ", ".join("'" + p.replace("\\", "\\\\").replace("'", "\\'") + "'" for p in projects)
 
@@ -72,8 +86,9 @@ class ClickPy:
         if start > end:
             raise ValueError(f"rango invertido: {start} > {end}")
         rows: list[DailyDownload] = []
-        for i in range(0, len(projects), BATCH_SIZE):
-            rows += self._fetch_batch(projects[i : i + BATCH_SIZE], start, end)
+        with _parsing("daily"):
+            for i in range(0, len(projects), BATCH_SIZE):
+                rows += self._fetch_batch(projects[i : i + BATCH_SIZE], start, end)
         rows.sort(key=lambda r: (r.project, r.date))
         return DownloadBatch(source="clickpy", rows=tuple(rows))
 
@@ -81,25 +96,28 @@ class ClickPy:
         """Descargas de todo PyPI por día, verificadas contra la suma de control del servidor."""
         if start > end:
             raise ValueError(f"rango invertido: {start} > {end}")
-        where = f"date BETWEEN '{start}' AND '{end}'"
-        rows = self._query(
-            "totals",
-            f"""SELECT arrayStringConcat(
-                       arrayMap(x -> concat(toString(x.1), ':', toString(x.2)),
-                                arraySort(groupArray((date, n)))), ',')
-                FROM (SELECT date, sum(count) AS n FROM {PER_DAY} WHERE {where} GROUP BY date)""",
-        )
-        packed = rows[0][0] if rows else ""
-        totals = [
-            DailyTotal(date.fromisoformat(day), int(count))
-            for day, count in (item.split(":") for item in packed.split(",") if item)
-        ]
-        [[days, total]] = self._query(
-            "totals_checksums", f"SELECT uniqExact(date), sum(count) FROM {PER_DAY} WHERE {where}"
-        )
-        got = (len(totals), sum(row.downloads for row in totals))
-        if got != (int(days), int(total)):
-            raise ChecksumMismatch(f"totales: descarga {got} != servidor {(days, total)}")
+        with _parsing("totals"):
+            where = f"date BETWEEN '{start}' AND '{end}'"
+            rows = self._query(
+                "totals",
+                f"""SELECT arrayStringConcat(
+                           arrayMap(x -> concat(toString(x.1), ':', toString(x.2)),
+                                    arraySort(groupArray((date, n)))), ',')
+                    FROM (SELECT date, sum(count) AS n FROM {PER_DAY}
+                          WHERE {where} GROUP BY date)""",
+            )
+            packed = rows[0][0] if rows else ""
+            totals = [
+                DailyTotal(date.fromisoformat(day), int(count))
+                for day, count in (item.split(":") for item in packed.split(",") if item)
+            ]
+            [[days, total]] = self._query(
+                "totals_checksums",
+                f"SELECT uniqExact(date), sum(count) FROM {PER_DAY} WHERE {where}",
+            )
+            got = (len(totals), sum(row.downloads for row in totals))
+            if got != (int(days), int(total)):
+                raise ChecksumMismatch(f"totales: descarga {got} != servidor {(days, total)}")
         return PypiTotalsBatch(source="clickpy", rows=tuple(totals))
 
     def python_minor_monthly(self, before: date) -> PythonMinorBatch:
@@ -110,44 +128,46 @@ class ClickPy:
         if before.day != 1:
             raise ValueError(f"`before` debe ser el primer día de un mes: {before}")
         totals: dict[tuple[date, str], int] = defaultdict(int)
-        for low, high in PROJECT_RANGES:
-            bounds = f"project >= '{low}'" + (f" AND project < '{high}'" if high else "")
-            where = f"{bounds} AND date < '{before}'"
-            # `python_minor` trae comas y barras: separadores de control y split("\n").
-            rows = self._query(
-                "python",
-                f"""SELECT arrayStringConcat(
-                           arrayMap(x -> concat(toString(x.1), char(31), x.2, char(31),
-                                                toString(x.3)),
-                                    groupArray((m, python_minor, n))), char(30))
-                    FROM (SELECT toStartOfMonth(date) AS m, python_minor, sum(count) AS n
-                          FROM {BY_PYTHON} WHERE {where} GROUP BY m, python_minor)""",
-            )
-            packed = rows[0][0] if rows else ""
-            items = [item.split("\x1f") for item in packed.split("\x1e") if item]
-            for month, minor, downloads in items:
-                totals[date.fromisoformat(month), minor] += int(downloads)
-            [[expected]] = self._query(
-                "python_checksums", f"SELECT sum(count) FROM {BY_PYTHON} WHERE {where}"
-            )
-            got = sum(int(downloads) for _, _, downloads in items)
-            if got != int(expected):
-                raise ChecksumMismatch(f"versiones {bounds}: {got} != servidor {expected}")
+        with _parsing("python"):
+            for low, high in PROJECT_RANGES:
+                bounds = f"project >= '{low}'" + (f" AND project < '{high}'" if high else "")
+                where = f"{bounds} AND date < '{before}'"
+                # `python_minor` trae comas y barras: separadores de control y split("\n").
+                rows = self._query(
+                    "python",
+                    f"""SELECT arrayStringConcat(
+                               arrayMap(x -> concat(toString(x.1), char(31), x.2, char(31),
+                                                    toString(x.3)),
+                                        groupArray((m, python_minor, n))), char(30))
+                        FROM (SELECT toStartOfMonth(date) AS m, python_minor, sum(count) AS n
+                              FROM {BY_PYTHON} WHERE {where} GROUP BY m, python_minor)""",
+                )
+                packed = rows[0][0] if rows else ""
+                items = [item.split("\x1f") for item in packed.split("\x1e") if item]
+                for month, minor, downloads in items:
+                    totals[date.fromisoformat(month), minor] += int(downloads)
+                [[expected]] = self._query(
+                    "python_checksums", f"SELECT sum(count) FROM {BY_PYTHON} WHERE {where}"
+                )
+                got = sum(int(downloads) for _, _, downloads in items)
+                if got != int(expected):
+                    raise ChecksumMismatch(f"versiones {bounds}: {got} != servidor {expected}")
         rows = tuple(PythonMinorMonth(m, minor, n) for (m, minor), n in sorted(totals.items()))
         return PythonMinorBatch(source="clickpy", rows=rows)
 
     def top_projects(self, years: Sequence[int], n: int = 100) -> Mapping[int, tuple[str, ...]]:
         """Los `n` paquetes más descargados de cada año, en orden de ranking."""
         ranking: dict[int, list[str]] = defaultdict(list)
-        for i in range(0, len(years), TOP_YEARS_PER_QUERY):
-            chunk = ", ".join(str(year) for year in years[i : i + TOP_YEARS_PER_QUERY])
-            for year, project, _ in self._query(
-                "top",
-                f"""SELECT toYear(date) AS y, project, sum(count) AS s FROM {PER_DAY}
-                    WHERE toYear(date) IN ({chunk})
-                    GROUP BY y, project ORDER BY y, s DESC LIMIT {n} BY y""",
-            ):
-                ranking[int(year)].append(project)
+        with _parsing("top"):
+            for i in range(0, len(years), TOP_YEARS_PER_QUERY):
+                chunk = ", ".join(str(year) for year in years[i : i + TOP_YEARS_PER_QUERY])
+                for year, project, _ in self._query(
+                    "top",
+                    f"""SELECT toYear(date) AS y, project, sum(count) AS s FROM {PER_DAY}
+                        WHERE toYear(date) IN ({chunk})
+                        GROUP BY y, project ORDER BY y, s DESC LIMIT {n} BY y""",
+                ):
+                    ranking[int(year)].append(project)
         short = {year: len(ranking[year]) for year in years if len(ranking[year]) != n}
         if short:
             raise ChecksumMismatch(f"top {n} incompleto: {short}")
@@ -231,12 +251,16 @@ class ClickPy:
 
     def _query(self, tag: str, sql: str) -> list[list[str]]:
         response = self._post(tag, sql)
-        summary = json.loads(response.headers["X-ClickHouse-Summary"])
-        read, total = int(summary["read_rows"]), int(summary["total_rows_to_read"])
+        try:
+            summary = json.loads(response.headers["X-ClickHouse-Summary"])
+            read, total = int(summary["read_rows"]), int(summary["total_rows_to_read"])
+            result_bytes = int(summary["result_bytes"])
+        except (KeyError, TypeError, ValueError) as error:
+            raise MalformedResponse(f"{tag}: resumen inválido: {error!r}") from error
         if read < total:
             raise TruncatedResult(f"{tag}: se leyeron {read:,} de {total:,} filas")
-        if int(summary["result_bytes"]) >= MAX_RESULT_BYTES * 0.9:
-            raise TruncatedResult(f"{tag}: {summary['result_bytes']} bytes, cerca del límite")
+        if result_bytes >= MAX_RESULT_BYTES * 0.9:
+            raise TruncatedResult(f"{tag}: {result_bytes} bytes, cerca del límite")
         # split("\n") y no splitlines(): este último también corta en \x1c-\x1e.
         rows = [line.split("\t") for line in response.text.split("\n") if line]
         if len(rows) >= MAX_RESULT_ROWS:

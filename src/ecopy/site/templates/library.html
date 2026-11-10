@@ -8,6 +8,7 @@
 {%- else %}{{ t.complete }}{% endif -%}
 {%- endmacro -%}
 {%- block title %}{{ view.project }}{% endblock %}
+{%- block description %}{{ t.library_description.format(project=view.project) }}{% endblock %}
 {%- block scripts %}
 <script src="/static/vendor/{{ echarts }}" defer></script>
 <script src="/static/charts.js" defer></script>

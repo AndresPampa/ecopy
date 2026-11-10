@@ -112,6 +112,17 @@ def test_a_source_failure_exits_with_an_error_and_writes_nothing(tmp_path, capsy
     assert not list(data.rglob("*.parquet"))
 
 
+def test_a_response_without_summary_is_recorded_as_a_failed_run(tmp_path, capsys):
+    data = tmp_path / "data"
+    bare = httpx.Client(transport=httpx.MockTransport(lambda _: httpx.Response(200, text="")))
+
+    assert ingest(data, bare) == 1
+
+    assert "ecopy:" in capsys.readouterr().err
+    assert [run.status for run in Store(data).runs()] == ["failed"]
+    assert not list(data.rglob("*.parquet"))
+
+
 def test_building_without_data_exits_with_an_error(tmp_path, capsys):
     assert build(tmp_path / "data", tmp_path / "site") == 1
 
@@ -137,6 +148,29 @@ def test_serve_applies_the_csp_of_the_built_site(tmp_path):
     assert response.status_code == 200
     assert "default-src 'none'" in response.headers["Content-Security-Policy"]
     assert response.headers["X-Content-Type-Options"] == "nosniff"
+
+
+@pytest.mark.parametrize(
+    ("path", "text"), [("/en/nope/", "Page not found"), ("/es/nada/", "Página no encontrada")]
+)
+def test_serve_answers_a_missing_page_with_the_site_404_in_its_language(tmp_path, path, text):
+    data, out = tmp_path / "data", tmp_path / "site"
+    ingest(data, recorded_clickpy())
+    build(data, out)
+
+    server = make_server(out, port=0)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        url = f"http://127.0.0.1:{server.server_address[1]}{path}"
+        response = httpx.get(url, trust_env=False)
+    finally:
+        server.shutdown()
+        server.server_close()
+
+    assert response.status_code == 404
+    assert text in response.text
+    assert "default-src 'none'" in response.headers["Content-Security-Policy"]
 
 
 def test_serve_requires_a_built_site(tmp_path):
@@ -521,3 +555,16 @@ def test_a_shared_repo_lists_only_the_other_packages(tmp_path, monkeypatch):
     shared = html[html.index("also publishes") :]
     assert 'href="/en/library/flask/"' in shared[:200]
     assert 'href="/en/library/fastapi/"' not in shared[:200]
+
+
+def test_stars_stops_and_saves_when_its_time_runs_out(tmp_path, capsys, monkeypatch):
+    monkeypatch.setenv("GITHUB_TOKEN", "t")
+    catalog = write_catalog(tmp_path / "c", "fastapi", repos={"fastapi": "fastapi/fastapi"})
+    client, calls = github()
+
+    assert stars(catalog, tmp_path / "d", client, "--max-minutes", "0") == 0
+
+    assert calls == []
+    out = capsys.readouterr().out
+    assert "1 pendientes" in out
+    assert "se detuvo (rate_limited)" in out

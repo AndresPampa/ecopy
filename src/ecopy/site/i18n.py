@@ -110,12 +110,31 @@ TEXTS = {
         "theme_to_dark": "Switch to the dark theme (Pythonista)",
         "theme_to_light": "Switch to the light theme (Pythoneer)",
         "made_by": "Made by",
+        "skip": "Skip to content",
+        "site_description": (
+            "How the Python ecosystem changed since 2017, year by year: downloads, share by domain "
+            "and Python versions, from public data."
+        ),
+        "library_description": (
+            "Downloads per month and share of PyPI downloads for {project}, with its full history."
+        ),
+        "year_description": (
+            "The Python ecosystem in {year}: share by category, biggest movers, newcomers and "
+            "Python version adoption."
+        ),
+        "not_found_title": "Page not found",
+        "not_found_text": "This address does not exist on ecopy. It may have moved or have a typo.",
+        "not_found_home": "Go to the home page",
         "source_code": "Source code",
         "update_failed": "Update failed: the latest ingest did not pass validation.",
         "update_failed_since": "Figures are from the last good update, on {date}.",
         "years_title": "The Python ecosystem, year by year",
         "compared_with": "Compared with the same number of days from {start} to {end}.",
-        "methodology": "Methodology version {version}.",
+        "methodology": "Methodology version {version}",
+        "methodology_title": "Methodology",
+        "methodology_description": (
+            "Sources, formulas, known biases and data problems behind every figure on ecopy."
+        ),
         "volume_title": "Total downloads on PyPI",
         "volume_warning": (
             "This volume is inflated by CI and grows for reasons unrelated to popularity: it is "
@@ -278,12 +297,34 @@ TEXTS = {
         "theme_to_dark": "Cambiar al tema oscuro (Pythonista)",
         "theme_to_light": "Cambiar al tema claro (Pythoneer)",
         "made_by": "Hecho por",
+        "skip": "Saltar al contenido",
+        "site_description": (
+            "Cómo cambió el ecosistema Python desde 2017, año por año: descargas, cuota por "
+            "dominio y versiones de Python, con datos públicos."
+        ),
+        "library_description": (
+            "Descargas por mes y cuota de las descargas de PyPI de {project}, con toda su historia."
+        ),
+        "year_description": (
+            "El ecosistema Python en {year}: cuota por categoría, mayores subas, recién llegados y "
+            "adopción de versiones de Python."
+        ),
+        "not_found_title": "Página no encontrada",
+        "not_found_text": (
+            "Esta dirección no existe en ecopy. Puede haberse movido o tener un error."
+        ),
+        "not_found_home": "Ir a la portada",
         "source_code": "Código fuente",
         "update_failed": "Actualización fallida: la última ingesta no pasó la validación.",
         "update_failed_since": "Las cifras son las de la última actualización válida, del {date}.",
         "years_title": "El ecosistema Python, año por año",
         "compared_with": "Comparado con la misma cantidad de días, del {start} al {end}.",
-        "methodology": "Versión metodológica {version}.",
+        "methodology": "Versión metodológica {version}",
+        "methodology_title": "Metodología",
+        "methodology_description": (
+            "Fuentes, fórmulas, sesgos conocidos y problemas de los datos detrás de cada cifra de "
+            "ecopy."
+        ),
         "volume_title": "Descargas totales en PyPI",
         "volume_warning": (
             "Este volumen está inflado por CI y crece por razones ajenas a la popularidad: no "

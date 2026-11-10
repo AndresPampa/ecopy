@@ -183,3 +183,60 @@ def test_a_renamed_repo_is_followed_through_its_redirect():
     client = httpx.Client(transport=httpx.MockTransport(handler))
 
     assert source(client)._get("/repos/old/b")["full_name"] == "new/b"
+
+
+def limited_then_ok(retry_after: str):
+    """El repo responde 429 con ese `retry-after` y después 200."""
+    responses = iter(
+        [httpx.Response(429, headers={"retry-after": retry_after}), httpx.Response(200, json=REPO)]
+    )
+
+    def handler(request):
+        if request.url.path.endswith("/history"):
+            return httpx.Response(200, json=[week(WEEK_2, 5), week(WEEK_1, 10)])
+        return next(responses)
+
+    return httpx.Client(transport=httpx.MockTransport(handler))
+
+
+def test_a_retry_after_longer_than_two_minutes_stops_instead_of_waiting():
+    waits = []
+
+    with pytest.raises(RateLimited):
+        GitHub(limited_then_ok("3600"), sleep=waits.append).full_history("a/b")
+
+    assert waits == []
+
+
+@pytest.mark.parametrize("retry_after", ["-5", "inf", "nan", "-inf", "pronto"])
+def test_an_invalid_retry_after_stops_instead_of_waiting(retry_after):
+    waits = []
+
+    with pytest.raises(RateLimited):
+        GitHub(limited_then_ok(retry_after), sleep=waits.append).full_history("a/b")
+
+    assert waits == []
+
+
+def test_a_wait_that_would_pass_the_deadline_stops_the_run():
+    waits = []
+    github = GitHub(limited_then_ok("30"), sleep=waits.append, deadline=10, clock=lambda: 0.0)
+
+    with pytest.raises(RateLimited):
+        github.full_history("a/b")
+
+    assert waits == []
+
+
+def test_no_request_is_made_once_the_deadline_has_passed():
+    now = [0.0]
+    client, calls = answer(ROUTES)
+    github = GitHub(client, sleep=lambda _: None, deadline=10, clock=lambda: now[0])
+    github.full_history("a/b")
+    made = len(calls)
+    now[0] = 10.0
+
+    with pytest.raises(RateLimited):
+        github.full_history("a/b")
+
+    assert len(calls) == made

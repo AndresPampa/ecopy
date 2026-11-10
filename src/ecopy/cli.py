@@ -10,6 +10,7 @@ import sys
 import time
 from collections.abc import Callable, Iterator, Sequence
 from datetime import UTC, date, datetime
+from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from importlib.metadata import version
 from pathlib import Path
@@ -40,11 +41,30 @@ def make_server(out: Path, port: int) -> ThreadingHTTPServer:
     """Servidor local del sitio que aplica `_headers`, para probar la CSP real."""
     headers = _parse_headers((Path(out) / "_headers").read_text(encoding="utf-8"))
 
+    root = Path(out)
+    # Como Pages: la 404 del directorio de idioma pedido, o la de la raíz. Solo nombres que
+    # existen en el sitio: un segmento como ".." nunca arma una ruta.
+    localized = {page.parent.name: page for page in root.glob("*/404.html")}
+
     class Handler(SimpleHTTPRequestHandler):
         def end_headers(self) -> None:
             for name, value in headers:
                 self.send_header(name, value)
             super().end_headers()
+
+        def send_error(self, code: int, message: str | None = None, explain: str | None = None):
+            segment = self.path.split("?", 1)[0].strip("/").split("/", 1)[0]
+            page = localized.get(segment, root / "404.html")
+            if code != HTTPStatus.NOT_FOUND or not page.is_file():
+                super().send_error(code, message, explain)
+                return
+            body = page.read_bytes()
+            self.send_response(code)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            if self.command != "HEAD":
+                self.wfile.write(body)
 
     handler = functools.partial(Handler, directory=str(out))
     return ThreadingHTTPServer(("127.0.0.1", port), handler)
@@ -255,7 +275,9 @@ def _stars(
             file=sys.stderr,
         )
     with _client(http) as client:
-        source = GitHub(client, token=token, budget=budget, sleep=sleep)
+        source = GitHub(
+            client, token=token, budget=budget, sleep=sleep, deadline=args.max_minutes * 60
+        )
         report = ingest_stars(args.repo or known, source, Store(args.data), now=now)
     print(
         f"{len(report.backfilled)} con historia completa, {len(report.updated)} actualizados, "
@@ -307,6 +329,12 @@ def _parser() -> argparse.ArgumentParser:
     stars.add_argument("--data", type=Path, default=Path("data"))
     stars.add_argument("--budget", type=int, default=4000, help="consultas máximas de la corrida")
     stars.add_argument("--repo", action="append", help="por defecto, todos los del catálogo")
+    stars.add_argument(
+        "--max-minutes",
+        type=float,
+        default=25,
+        help="al pasarlos se detiene y guarda; menor que el timeout del paso en Actions",
+    )
 
     catalog = commands.add_parser("catalog", help="mantiene el catálogo")
     catalog.add_argument("action", choices=["refresh", "check"])

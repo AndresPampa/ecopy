@@ -5,15 +5,16 @@
 {%- endmacro %}
 {%- macro mover_rows(movers) %}
 <table>
-<thead><tr><th scope="col">{{ t.package }}</th><th scope="col">{{ t.category }}</th><th scope="col">{{ t.share_points }}</th><th scope="col">{{ t.position }}</th></tr></thead>
+<thead><tr><th scope="col">{{ t.package }}</th><th scope="col" class="category">{{ t.category }}</th><th scope="col">{{ t.share_points }}</th><th scope="col">{{ t.position }}</th></tr></thead>
 <tbody>
 {%- for mover in movers %}
-<tr><th scope="row"><a href="/{{ lang }}/library/{{ mover.project|slug }}/">{{ mover.project }}</a></th><td>{{ mover.category|label(lang) }}</td><td>{{ mover.share_change|points(lang) }}</td><td>{% if mover.rank %}#{{ mover.rank }}{% else %}—{% endif %}{% if mover.rank_change %} ({{ "%+d"|format(mover.rank_change) }}){% endif %}</td></tr>
+<tr><th scope="row"><a href="/{{ lang }}/library/{{ mover.project|slug }}/">{{ mover.project }}</a></th><td class="category">{{ mover.category|label(lang) }}</td><td>{{ mover.share_change|points(lang) }}</td><td>{% if mover.rank %}#{{ mover.rank }}{% else %}—{% endif %}{% if mover.rank_change %} ({{ "%+d"|format(mover.rank_change) }}){% endif %}</td></tr>
 {%- endfor %}
 </tbody>
 </table>
 {%- endmacro %}
 {%- block title %}{{ view.year }}{% endblock %}
+{%- block description %}{{ t.year_description.format(year=view.year) }}{% endblock %}
 {%- block scripts %}
 <script src="/static/vendor/{{ echarts }}" defer></script>
 <script src="/static/charts.js" defer></script>
@@ -22,7 +23,7 @@
 <nav class="years" aria-label="{{ t.nav_years }}">
 {%- for item in years|reverse %}{% if item.year == view.year %}<span aria-current="page">{{ item.year }}</span>{% else %}<a href="/{{ lang }}/year/{{ item.year }}/">{{ item.year }}</a>{% endif %}{% endfor %}</nav>
 <h1>{{ view.year }}</h1>
-<p>{% if view.status == "ytd" %}{{ t.ytd }}: {{ view.period_start }} → {{ view.period_end }}. {{ t.compared_with.format(start=view.previous_start, end=view.previous_end) }}{% else %}{{ view.period_start }} → {{ view.period_end }}.{% endif %} {{ t.methodology.format(version=view.methodology_version) }}</p>
+<p>{% if view.status == "ytd" %}{{ t.ytd }}: {{ view.period_start }} → {{ view.period_end }}. {{ t.compared_with.format(start=view.previous_start, end=view.previous_end) }}{% else %}{{ view.period_start }} → {{ view.period_end }}.{% endif %} <a href="/{{ lang }}/methodology/">{{ t.methodology.format(version=view.methodology_version) }}</a>.</p>
 
 <section>
 <h2>{{ t.volume_title }}</h2>
@@ -84,10 +85,10 @@
 <p>{{ t.no_previous }}</p>
 {%- elif view.newcomers %}
 <table>
-<thead><tr><th scope="col">{{ t.package }}</th><th scope="col">{{ t.category }}</th><th scope="col">{{ t.top_position }}</th></tr></thead>
+<thead><tr><th scope="col">{{ t.package }}</th><th scope="col" class="category">{{ t.category }}</th><th scope="col">{{ t.top_position }}</th></tr></thead>
 <tbody>
 {%- for newcomer in view.newcomers %}
-<tr><th scope="row"><a href="/{{ lang }}/library/{{ newcomer.project|slug }}/">{{ newcomer.project }}</a></th><td>{{ newcomer.category|label(lang) }}</td><td>#{{ newcomer.rank }}</td></tr>
+<tr><th scope="row"><a href="/{{ lang }}/library/{{ newcomer.project|slug }}/">{{ newcomer.project }}</a></th><td class="category">{{ newcomer.category|label(lang) }}</td><td>#{{ newcomer.rank }}</td></tr>
 {%- endfor %}
 </tbody>
 </table>

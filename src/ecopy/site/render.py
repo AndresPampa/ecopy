@@ -9,11 +9,15 @@ import re
 import shutil
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 from jinja2 import Environment, PackageLoader, StrictUndefined
+from markupsafe import Markup
 
+from ecopy.metrics import METHODOLOGY_VERSION
 from ecopy.models import BrowseView, LibraryView, SiteStatus, YearView
-from ecopy.site import svg
+from ecopy.quality import DEGRADED_DAYS, DISCONTINUITIES, GAPS, SOURCE_START
+from ecopy.site import methodology, svg
 from ecopy.site.charts import _chart, _year_charts, share_chart, stars_chart, year_share_chart
 from ecopy.site.i18n import TEXTS, label
 
@@ -23,6 +27,9 @@ ECHARTS_FILE = "echarts-6.1.0.common.min.js"
 ECHARTS_SHA256 = "61f13280aba3161f77fc801bf5f9c786f55f10432153a0683fc5cc0700b013d5"
 
 STATIC = Path(__file__).parent / "static"
+
+# Dirección pública del sitio (S6): canonical, hreflang y sitemap la necesitan absoluta.
+SITE_URL = "https://ecopy.pages.dev"
 
 CSP = "; ".join(
     [
@@ -72,6 +79,24 @@ def _number(value: int, lang: str) -> str:
 def _slug(project: str) -> str:
     """Nombre de directorio seguro: un nombre externo nunca sale del directorio de salida."""
     return re.sub(r"[^A-Za-z0-9._-]", "-", project).lstrip(".") or "-"
+
+
+def _breakable(name: str) -> Markup:
+    """Deja cortar un nombre de paquete solo después de `-`, `_` o `.`; join escapa cada parte."""
+    return Markup("<wbr>").join(re.split(r"(?<=[-_.])", name))
+
+
+def _write_sitemap(out: Path, urls: Sequence[str]) -> None:
+    entries = "".join(f"<url><loc>{escape(url)}</loc></url>\n" for url in urls)
+    (out / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"{entries}</urlset>\n",
+        encoding="utf-8",
+    )
+    (out / "robots.txt").write_text(
+        f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n", encoding="utf-8"
+    )
 
 
 def _copy_static(out: Path) -> None:
@@ -204,6 +229,7 @@ def render_site(
     labels = labels or {}
     _copy_static(out)
     (out / "_headers").write_text(HEADERS, encoding="utf-8")
+    (out / "_redirects").write_text("/ /en/ 302\n", encoding="utf-8")
     env = Environment(
         loader=PackageLoader("ecopy.site", "templates"),
         autoescape=True,
@@ -215,6 +241,7 @@ def render_site(
         points=_points,
         growth=_growth,
         slug=_slug,
+        breakable=_breakable,
         label=lambda slug, lang: label(slug, labels, lang),
         spark=svg.sparkline,
     )
@@ -222,12 +249,21 @@ def render_site(
         _write_compare_data(pages, out)
     trends = {row.project: row.trend for row in browse.rows} if browse else {}
 
-    def write(relative: str, template: str, section: str, **context) -> None:
+    listed: list[str] = []
+
+    def write(relative: str, template: str, section: str, file: Path | None = None, **context):
         lang = context["lang"]
-        path = out / lang / relative / "index.html"
+        if file is None:
+            listed.append(f"{SITE_URL}/{lang}/{relative}")
+        path = file or out / lang / relative / "index.html"
         path.parent.mkdir(parents=True, exist_ok=True)
         html = env.get_template(template).render(
-            echarts=ECHARTS_FILE, status=status, path=relative, section=section, **context
+            echarts=ECHARTS_FILE,
+            site=SITE_URL,
+            status=status,
+            path=relative,
+            section=section,
+            **context,
         )
         path.write_text(html, encoding="utf-8")
 
@@ -283,3 +319,20 @@ def render_site(
             )
         if browse is not None:
             _write_browse(write, browse, common)
+        write(
+            "methodology/",
+            "methodology.html",
+            "",
+            m=methodology.TEXTS[lang],
+            notes=methodology.DISCONTINUITY_NOTES[lang],
+            version=METHODOLOGY_VERSION,
+            start=SOURCE_START,
+            gaps=GAPS,
+            degraded=DEGRADED_DAYS,
+            discontinuities=DISCONTINUITIES,
+            **common,
+        )
+        # Pages busca el 404.html más cercano a la ruta pedida: /es/... cae en /es/404.html.
+        not_found = out / "404.html" if lang == "en" else out / lang / "404.html"
+        write("", "404.html", "", file=not_found, **common)
+    _write_sitemap(out, listed)

@@ -328,3 +328,75 @@ def test_known_projects_are_the_ones_the_source_has():
     )
 
     assert known == {"fastapi", "django"}
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        pytest.param(lambda s: s.daily_downloads(["fastapi"], *JANUARY), id="daily"),
+        pytest.param(lambda s: s.known_projects(["fastapi"]), id="known"),
+    ],
+)
+def test_a_response_without_its_summary_is_a_source_error(call):
+    def no_summary(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text="fastapi\t2024-01-01:1\n")
+
+    client = httpx.Client(transport=httpx.MockTransport(no_summary))
+
+    with pytest.raises(SourceError):
+        call(ClickPy(client))
+
+
+DAILY_OK = {"daily": "fastapi\t2024-01-01:1\n", "checksums": "fastapi\t1\t1\n"}
+
+
+@pytest.mark.parametrize(
+    ("bodies", "call"),
+    [
+        pytest.param(
+            {**DAILY_OK, "daily": "fastapi\t2024-13-01:1\n"},
+            lambda s: s.daily_downloads(["fastapi"], *JANUARY),
+            id="daily-non-iso-date",
+        ),
+        pytest.param(
+            {**DAILY_OK, "daily": "fastapi\n"},
+            lambda s: s.daily_downloads(["fastapi"], *JANUARY),
+            id="daily-missing-field",
+        ),
+        pytest.param(
+            {**DAILY_OK, "checksums": "fastapi\tuno\t1\n"},
+            lambda s: s.daily_downloads(["fastapi"], *JANUARY),
+            id="daily-checksum-not-a-number",
+        ),
+        pytest.param(
+            {**TOTALS, "totals": "2024-01-01:cien\n"},
+            lambda s: s.pypi_daily_totals(*JANUARY),
+            id="totals-count-not-a-number",
+        ),
+        pytest.param(
+            {**TOTALS, "totals_checksums": "2\n"},
+            lambda s: s.pypi_daily_totals(*JANUARY),
+            id="totals-checksum-missing-field",
+        ),
+        pytest.param(
+            {"top": "dos mil\trequests\t9\n"},
+            lambda s: s.top_projects([2017], n=1),
+            id="top-year-not-a-number",
+        ),
+    ],
+)
+def test_a_malformed_body_is_a_source_error(bodies, call):
+    with pytest.raises(SourceError):
+        call(ClickPy(answering(bodies)))
+
+
+@pytest.mark.parametrize(
+    "item",
+    [f"2024-01-01{US}3.12", f"2024-01-01{US}3{US}12{US}5"],
+    ids=["two-fields", "separator-inside-the-version"],
+)
+def test_a_python_row_without_exactly_three_fields_is_a_source_error(item):
+    bodies = python_bodies(python=by_range({m: f"{item}\n" for m in ("", "d", "m", "s")}))
+
+    with pytest.raises(SourceError):
+        ClickPy(answering(bodies)).python_minor_monthly(before=date(2024, 3, 1))
