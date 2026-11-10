@@ -15,6 +15,11 @@ El dato es la interfaz: la portada es la cuota por dominio, año por año, y cad
 - Datos e IA lleva el color cálido y va sobre la base, porque es el dominio que cuenta la historia.
 - El color sigue a la entidad: en el comparador, una librería conserva su color al quitar otra.
 
+## Tema
+
+Pythoneer es el tema claro y Pythonista el oscuro. Sin elección guardada manda el sistema operativo.
+El botón nombra el tema al que cambia y su punto usa la tinta del tema actual.
+
 ## Tipografía
 
 Fuentes del sistema. Monoespaciada solo para nombres de paquete, que son código.

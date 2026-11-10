@@ -18,31 +18,30 @@
   renombres), procedencia por fila, ingesta diaria y validación con "Actualización fallida".
 - ✅ **Etapa 3 — Vista anual:** cuota por categoría, movers, recién llegados, adopción de versiones,
   línea de tiempo, volumen total con advertencia, YTD y rankings congelados.
-- 📋 **Etapa 4 — Base visual, librerías y comparador:** cabecera, navegación, portada y sistema de
+- ✅ **Etapa 4 — Base visual, librerías y comparador:** cabecera, navegación, portada y sistema de
   estilos (`impeccable` + `dataviz`); fichas con series y sparklines, comparador, releases de
   Python, estrellas, páginas de dominio/categoría y filtro por tags.
+- 🚧 **Ajustes visuales de la Etapa 4:** lo que encontró el usuario en el chequeo visual.
 - 📋 **Etapa 5 — Publicación del MVP:** EN/ES completo, metodología, CSP/`_headers`, auditoría de
   accesibilidad y pulido final; GitHub Actions (cron diario) y despliegue en Cloudflare
   Pages, incluido S6 (crear el proyecto y confirmar `ecopy.pages.dev`, lo hace el usuario).
 - 📋 **Después del MVP:** Trending y Seguridad (Fase 3); cuentas y encuestas (Fase 4).
 
-## Etapa en curso — Etapa 4: Base visual, librerías y comparador
+## Etapa en curso — Ajustes visuales de la Etapa 4
 
-**Rama:** `etapa-4-librerias-y-comparador` · **Diseño:** `docs/design/etapa-4-librerias-y-comparador.md`
-(aprobado). Implementada en local; falta revisar, commitear y hacer el PR.
+**Rama:** `etapa-4-ajustes-visuales`, desde `main`. Base: `DESIGN.md` y
+`docs/design/etapa-4-librerias-y-comparador.md`.
 
-- [x] Base visual: cabecera, navegación, portada Estratos, sistema de estilos y mes en curso.
-- [x] Catálogo: `repos.yaml`, 13 tags y categoría `other`.
-- [x] Listados con sparklines, filtro por tags, dominios y categorías.
-- [x] Fichas ampliadas: cuota, ubicación en el catálogo, repo y renombres.
-- [x] Comparador y página de releases de Python.
-- [x] Estrellas: adaptador, store, `ecopy stars` y ficha.
-- [ ] Revisar `catalog/libraries.yaml` y `catalog/repos.yaml` (usuario), antes de commitear `data/frozen/`.
-- [ ] Corrida real de estrellas con token (usuario).
-- [ ] Correr `ecopy ingest` desde el 2026-11-10 y mirar `revised_rows` en `data/runs/`.
+- [x] Selector de tema (Pythonista / Pythoneer), créditos en el pie, cabecera alineada y comparador
+      vacío sin eje suelto.
+- [ ] Correr `ecopy ingest` y mirar `revised_rows` en `data/runs/`.
 
 ## Shipped
 
+- ✅ **Etapa 4 — Base visual, librerías y comparador local** (PR #6 y #7, 2026-11-10): dirección
+  Estratos, fichas ampliadas, listados con sparklines y filtro por tags, dominios y categorías,
+  comparador, releases de Python y estrellas de 458 repos con `ecopy stars`. Diseño en
+  `docs/design/etapa-4-librerias-y-comparador.md`.
 - ✅ **Etapa 3 — Vista anual local** (PR #5, 2026-11-09): páginas por año EN/ES con cuotas, movers,
   recién llegados, adopción de Python, línea de tiempo y volumen; años cerrados congelados con
   `ecopy freeze`. Diseño en `docs/design/etapa-3-vista-anual.md`.

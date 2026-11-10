@@ -485,6 +485,83 @@ def test_every_page_has_the_header_with_home_navigation_and_language(tmp_path):
         assert 'hreflang="es"' in html
 
 
+def test_every_page_credits_its_author_with_links_to_their_profiles_and_the_source(tmp_path):
+    render_site([view()], tmp_path, years=(year(),), labels=LABELS)
+    texts = (("en", "Made by", "Source code"), ("es", "Hecho por", "Código fuente"))
+    profiles = (
+        ("https://github.com/AndresPampa", "GitHub"),
+        ("https://www.instagram.com/andrespampa/", "Instagram"),
+    )
+
+    for lang, made_by, code in texts:
+        pages = (
+            page(tmp_path, lang),
+            year_page(tmp_path, lang=lang),
+            (tmp_path / lang / "index.html").read_text(),
+        )
+        for html in pages:
+            footer = html[html.index('<footer class="site">') :]
+            assert f"{made_by} AndresPampa" in footer
+            for url, name in profiles:
+                assert f'<a href="{url}" rel="me noopener">{name}</a>' in footer
+            assert (
+                f'<a href="https://github.com/AndresPampa/ecopy" rel="noopener">{code}</a>'
+                in footer
+            )
+
+
+def test_every_page_offers_the_theme_switch_named_in_each_language(tmp_path):
+    render_site([view()], tmp_path, years=(year(),), labels=LABELS)
+    texts = (
+        ("en", "Switch to the dark theme", "Switch to the light theme"),
+        ("es", "Cambiar al tema oscuro", "Cambiar al tema claro"),
+    )
+
+    for lang, to_dark, to_light in texts:
+        pages = (
+            page(tmp_path, lang),
+            year_page(tmp_path, lang=lang),
+            (tmp_path / lang / "index.html").read_text(),
+        )
+        for html in pages:
+            header = html[html.index('<header class="site">') : html.index("</header>")]
+            assert 'class="chip theme-toggle"' in header
+            assert 'data-name-dark="Pythonista"' in header
+            assert 'data-name-light="Pythoneer"' in header
+            assert f'data-label-dark="{to_dark} (Pythonista)"' in header
+            assert f'data-label-light="{to_light} (Pythoneer)"' in header
+
+
+def test_the_theme_switch_stays_hidden_until_its_script_runs(tmp_path):
+    render_site([view()], tmp_path)
+
+    button = re.search(r"<button[^>]*theme-toggle[^>]*>", page(tmp_path)).group(0)
+
+    assert " hidden" in button
+
+
+def test_the_saved_theme_is_applied_by_a_blocking_script_from_the_site(tmp_path):
+    render_site([view()], tmp_path)
+
+    head = page(tmp_path)[: page(tmp_path).index("</head>")]
+
+    assert '<script src="/static/theme.js"></script>' in head
+    assert (tmp_path / "static" / "theme.js").exists()
+
+
+def test_the_dark_palette_is_the_same_for_the_system_and_for_the_switch():
+    css = (site_render.STATIC / "site.css").read_text()
+
+    def tokens(selector: str) -> list[str]:
+        block = css[css.index(selector + " {") :]
+        return re.findall(r"--[\w-]+: [^;]+;", block[: block.index("}")])
+
+    from_system = tokens(':root:not([data-theme="light"])')
+
+    assert len(from_system) > 10
+    assert from_system == tokens(':root[data-theme="dark"]')
+
+
 def test_the_current_section_is_marked_in_the_navigation(tmp_path):
     render_site([view()], tmp_path, years=(year(),), labels=LABELS)
 

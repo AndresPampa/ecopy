@@ -73,5 +73,6 @@
     draw();
     window.addEventListener('resize', () => chart.resize());
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+    document.addEventListener('ecopy:theme', draw);
   });
 })();
