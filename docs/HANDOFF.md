@@ -1,15 +1,16 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-10 · branch de trabajo: `etapa-5-publicacion` (desde `main` = `b4bc017`;
-> todo sin commit: slices 1-4, arreglos de la auditoría, ingest del día, ROADMAP y este handoff) · remoto `origin` =
+> Last updated: 2026-11-10 · branch: `main` = `b48ceb3` (PR #9 de la Etapa 5 mergeado; sin rama de
+> trabajo abierta) · remoto `origin` =
 > https://github.com/AndresPampa/ecopy.git
 
 ## Current State
-- **Etapa 5 lista para commit (sin commit):** slices 1-4 (entrada y SEO, metodología, accesibilidad
-  a 320/390 px, workflows fijados por SHA) y **arreglos de la auditoría** (ROADMAP 5b). 405 tests, 20
+- **Código de la Etapa 5 mergeado** (PR #9, `b48ceb3`): entrada y SEO, metodología, accesibilidad a
+  320/390 px, workflows fijados por SHA y **arreglos de la auditoría** (ROADMAP 5b). 405 tests, 20
   mutaciones nuevas detectadas, Chrome sin violaciones de CSP (12 páginas × claro/oscuro × 1280/390
-  px, con control positivo). Mensaje de commit en `build/etapa-5-commit.txt` y texto del PR en
-  `build/etapa-5-pr.md` (ignorados). Informe de la auditoría: `~/security-audit-skill/ecopy/run-1/REPORT.md`.
+  px, con control positivo). **Falta S6 y el primer deploy** (usuario): hasta entonces `update.yml`
+  falla en el job `deploy` por falta de secretos. Informe de la auditoría:
+  `~/security-audit-skill/ecopy/run-1/REPORT.md`.
 - **Ajustes visuales de la Etapa 4 mergeados** (PR #8): selector de tema (Pythonista =
   oscuro, Pythoneer = claro), créditos en el pie, cabecera alineada con el contenido y comparador
   vacío sin eje suelto. 345 tests, 5 mutaciones detectadas, Chrome sin violaciones de CSP (con control
@@ -41,8 +42,9 @@
   `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-- [ ] **Usuario: commit único y PR de la Etapa 5** con `git commit -F build/etapa-5-commit.txt` y el
-      texto de `build/etapa-5-pr.md`. Incluye `data/` del ingest del día, `.github/` y los docs.
+- [ ] **Lo próximo (usuario): S6 + configuración de GitHub** (los dos ítems siguientes), después
+      disparar `update` a mano desde `main` (`workflow_dispatch`) y revisar el primer deploy en
+      `ecopy.pages.dev`. Con eso se cierra la Etapa 5 (ROADMAP ítem 6) y pasa a Shipped.
 - [ ] **Usuario (GitHub, con S6):** entorno `production` limitado a `main` con los secretos de Cloudflare
       como secretos del entorno; token de Cloudflare con permiso solo de Pages sobre `ecopy`. **Ojo:**
       la nota anterior decía "protección de `main` sin bypass para GitHub Actions", pero el bot empuja
@@ -55,8 +57,8 @@
 - [ ] Más adelante: `python_minor` codificado (hex) solo si ClickPy empieza a traer 0x1e/0x1f. Al hacerlo,
       reproducir el escape TSV de ClickHouse (`'` → `\'`, `\\`) o migrar claves: hoy hay 2 valores
       guardados con `\'` que cambiarían de clave y duplicarían la fracción "otros" en `metrics`.
-- [ ] **Usuario:** borrar la rama ya mergeada: `git branch -d etapa-4-ajustes-visuales` y
-      `git push origin --delete etapa-4-ajustes-visuales`.
+- [ ] **Usuario:** borrar las ramas ya mergeadas: `git branch -d etapa-5-publicacion`,
+      `git push origin --delete etapa-5-publicacion` (y `etapa-4-ajustes-visuales` si sigue).
 - [ ] Si cambia una categoría de `catalog/libraries.yaml`: borrar `data/frozen/` y volver a correr
       `uv run ecopy freeze`. `repo` y tags no lo invalidan.
 - [ ] **Investigar la caída desde 2026-08-25** (−36 % de un día para el otro, recuperación lenta,
@@ -400,3 +402,7 @@ ilegible → `RateLimited` (la doc de GitHub advierte bloqueo si se reintenta es
 ClickPy: 0 filas con 0x1e/0x1f (ni tab/salto) en `python_minor`; la validación de 3 campos ya la da el
 punto 1 y la codificación queda para después (ver Next Steps). 20 mutaciones, todas detectadas tras sumar
 2 casos (resumen en `known_projects`, token a nivel job). Chrome: 48 combinaciones sin fallas.
+
+### 2026-11-10 — Etapa 5 mergeada (PR #9)
+El usuario hizo el commit único (`1622537`) y mergeó el PR #9; `main` = `b48ceb3`. Queda S6 y el primer
+deploy. Este handoff y el ROADMAP se actualizaron sobre `main` sin commit.

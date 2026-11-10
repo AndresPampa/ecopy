@@ -29,7 +29,7 @@
 
 ## Etapa en curso — Publicación del MVP
 
-**Rama:** `etapa-5-publicacion`, desde `main`. Decisiones aprobadas (2026-11-10): `/` → `/en/`,
+**Rama:** `etapa-5-publicacion`, mergeada en PR #9 (2026-11-10); solo falta el ítem 6. Decisiones aprobadas (2026-11-10): `/` → `/en/`,
 estrellas semanales, commits del bot directo a `main`, sin el launcher de `impeccable`.
 
 - [x] 1. Entrada y SEO: `_redirects`, 404 EN/ES, favicon, descripción, canonical, hreflang, sitemap y
