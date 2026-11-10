@@ -6,10 +6,10 @@ ecopy muestra cómo evoluciona el ecosistema Python desde 2017: qué librerías 
 terreno, qué versiones del lenguaje se adoptan y qué categorías ganan peso. Es un sitio estático,
 bilingüe (EN/ES), que se regenera una vez al día y se publicará en `ecopy.pages.dev`.
 
-> **Estado:** en desarrollo local. Ya funciona de punta a punta con un catálogo de 500 paquetes:
-> descargas desde 2016, totales de PyPI, versiones de Python, validación, años cerrados congelados
-> y fichas y páginas por año EN/ES generadas y servidas en localhost. La interfaz visual es lo
-> próximo: hoy las páginas tienen un diseño mínimo y no hay navegación.
+> **Estado:** en desarrollo local, todavía sin publicar. Ya funciona de punta a punta con un catálogo
+> de 500 paquetes: descargas desde 2016, totales de PyPI, versiones de Python, estrellas de GitHub,
+> años cerrados congelados y un sitio EN/ES con portada, fichas, listados por dominio y categoría,
+> filtro por tags, comparador y releases de Python. Lo próximo es la publicación.
 
 ## Qué va a ofrecer (MVP)
 
@@ -54,8 +54,8 @@ Detalle y estado en [`docs/ROADMAP.md`](docs/ROADMAP.md). Cada etapa se trabaja 
 - **Etapa 1 — Tracer bullet** ✅: un paquete, de ClickPy a una página generada en local.
 - **Etapa 2 — Datos completos** ✅: backfill, catálogo y categorías, ingesta y validación.
 - **Etapa 3 — Vista anual** ✅: cuotas, movers, versiones de Python y años congelados.
-- **Etapa 4 — Base visual, librerías y comparador** 🚧: interfaz y navegación, fichas, comparador,
-  releases y estrellas.
+- **Etapa 4 — Base visual, librerías y comparador** ✅: interfaz y navegación, fichas, comparador,
+  releases y estrellas. Incluye selector de tema claro y oscuro.
 - **Etapa 5 — Publicación del MVP:** EN/ES, metodología, seguridad, accesibilidad y despliegue
   (GitHub Actions + Cloudflare Pages).
 - **Después del MVP:** Trending y Seguridad; cuentas y encuestas.
@@ -90,10 +90,13 @@ Para generar el sitio completo, con el catálogo entero y las páginas por año:
 ```bash
 uv run ecopy ingest   # primera vez: histórico; después: hasta ayer (UTC)
 uv run ecopy freeze   # congela los años cerrados que falten; lo ya congelado no se reescribe
-uv run ecopy build    # genera build/site/; falla si falta congelar algún año cerrado
 uv run ecopy stars    # historia de estrellas; pide GITHUB_TOKEN y se reanuda sola
+uv run ecopy build    # genera build/site/; falla si falta congelar algún año cerrado
 uv run ecopy serve    # http://127.0.0.1:8000/en/ con la CSP real
 ```
+
+La historia completa de estrellas ya está en `data/`. Partirla desde cero lleva unas 10.000 consultas
+a GitHub, en tandas de `--budget 4000` de 1 h 30 cada una.
 
 ## Documentación
 

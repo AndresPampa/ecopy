@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>2024 · ecopy</title>
+<script src="/static/theme.js"></script>
 <link rel="stylesheet" href="/static/site.css">
 <script src="/static/vendor/echarts-6.1.0.common.min.js" defer></script>
 <script src="/static/charts.js" defer></script>
@@ -14,7 +15,10 @@
 <nav aria-label="Principal">
 <a href="/es/" aria-current="page">Años</a>
 </nav>
+<div class="tools">
 <a class="lang" href="/en/year/2024/" hreflang="en">English</a>
+<button class="chip theme-toggle" type="button" hidden data-name-dark="Pythonista" data-name-light="Pythoneer" data-label-dark="Cambiar al tema oscuro (Pythonista)" data-label-light="Cambiar al tema claro (Pythoneer)"></button>
+</div>
 </header>
 <main>
 <nav class="years" aria-label="Años"><span aria-current="page">2024</span><a href="/es/year/2023/">2023</a></nav>
@@ -116,6 +120,9 @@
 </ul>
 </section>
 </main>
-<footer class="site"><p>Datos: ClickPy, a partir de los registros de descargas de PyPI.</p></footer>
+<footer class="site">
+<p>Datos: ClickPy, a partir de los registros de descargas de PyPI.</p>
+<p class="credits"><span>Hecho por AndresPampa</span> <a href="https://github.com/AndresPampa" rel="me noopener">GitHub</a> <a href="https://www.instagram.com/andrespampa/" rel="me noopener">Instagram</a> <a href="https://github.com/AndresPampa/ecopy" rel="noopener">Código fuente</a></p>
+</footer>
 </body>
 </html>

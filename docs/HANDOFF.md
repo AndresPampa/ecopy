@@ -1,10 +1,14 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-10 · branch: `etapa-4-librerias-y-comparador` (desde `main` = `ea14545`), con
-> la Etapa 4 commiteada (`5608473`, `94507a7`); los datos de estrellas siguen sin commit · remoto
-> `origin` = https://github.com/AndresPampa/ecopy.git
+> Last updated: 2026-11-10 · branch de trabajo: `etapa-4-ajustes-visuales` (desde `main` =
+> `bd4affe`; todo sin commit, lo hace el usuario) · remoto `origin` =
+> https://github.com/AndresPampa/ecopy.git
 
 ## Current State
+- **Ajustes visuales de la Etapa 4 hechos en local, sin commit:** selector de tema (Pythonista =
+  oscuro, Pythoneer = claro), créditos en el pie, cabecera alineada con el contenido y comparador
+  vacío sin eje suelto. 345 tests, 5 mutaciones detectadas, Chrome sin violaciones de CSP (con control
+  positivo) en los dos temas, a 1280 y 390 px.
 - **Etapa 0 (spikes) mergeada** (PR #2): S1–S5 confirmados, informes en `docs/spikes/`.
 - **Etapa 1 (tracer bullet, LOCAL) mergeada** (PR #3): los 6 slices están hechos, 73 tests en verde.
   `ecopy ingest → build → serve` funciona de punta a punta con datos reales de `fastapi` (2.891
@@ -14,7 +18,7 @@
 - **Etapa 3 (vista anual, LOCAL) mergeada** (PR #5): 252 tests y 54 mutaciones con arnés
   corregido, sin violaciones de CSP en Chrome. `ecopy freeze` ya corrió en `data/` (2017–2025,
   metodología 1, sin commit) y `ecopy build` completo funciona: 500 fichas y 10 años en 9 s.
-- **Etapa 4 implementada en local:** base visual (dirección Estratos), fichas ampliadas,
+- **Etapa 4 mergeada** (PR #6 y #7): base visual (dirección Estratos), fichas ampliadas,
   catálogo con sparklines y filtro por tags, dominios y categorías, comparador, releases y `ecopy
   stars`. 340 tests, 41 mutaciones detectadas, Chrome sin violaciones de CSP (con control positivo).
   Build real: 500 fichas y 10 años, con estrellas. **Corrida real de estrellas completa** (2026-11-10):
@@ -32,13 +36,13 @@
   `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-- [ ] **Usuario:** revisar por excepción `catalog/libraries.yaml` (7 en `other`, tags nuevos) y
-      `catalog/repos.yaml` (lo que marca `docs/spikes/s8-repos-y-tags.md`). Si cambia una categoría:
-      borrar `data/frozen/`, volver a correr `uv run ecopy freeze`. `repo` y tags no lo invalidan.
-- [ ] **Usuario:** commit de `catalog/repos.yaml`, `data/raw/github/`, `data/runs/stars/` y este
-      handoff (mensaje en `build/etapa-4-commit-3.txt`), push y PR de la Etapa 4 (`build/etapa-4-pr.md`).
-- [ ] **Usuario:** borrar las ramas remotas ya mergeadas; las locales ya están borradas:
-      `git push origin --delete etapa-0-spikes etapa-1-tracer-bullet etapa-2-datos-completos etapa-3-vista-anual`.
+- [ ] **Usuario (lo próximo):** revisar y commitear `etapa-4-ajustes-visuales` y abrir el PR.
+- [ ] **Etapa 5:** la tabla de movers de `/es/year/2026/` desborda 7 px a 390 px (ya estaba; `year.html`
+      no se tocó). Entra en la auditoría y el pulido.
+- [ ] **Usuario:** borrar la rama ya mergeada: `git branch -d etapa-4-librerias-y-comparador` y
+      `git push origin --delete etapa-4-librerias-y-comparador`.
+- [ ] Si cambia una categoría de `catalog/libraries.yaml`: borrar `data/frozen/` y volver a correr
+      `uv run ecopy freeze`. `repo` y tags no lo invalidan.
 - [ ] **Pendiente de la Etapa 2:** correr `uv run ecopy ingest` desde el 2026-11-10 y mirar `revised_rows`
       en `data/runs/`: el mismo día da 0 nuevas y 0 corregidas, porque llega hasta ayer (UTC).
 - [ ] **Investigar la caída desde 2026-08-25** (−36 % de un día para el otro, recuperación lenta,
@@ -131,7 +135,15 @@
   correlación entre paquetes baja de 0,96 a 0,05), `repos.yaml` aparte, estrellas fuera de `ingest`.
   Categoría `other` para lo dudoso, pedida por el usuario. Razones: `docs/design/etapa-4-*.md`.
 
+- **Selector de tema (decisión del usuario, 2026-11-10):** el botón nombra el tema al que cambia. Sin
+  elección guardada manda el sistema. `theme.js` va sin `defer` para no parpadear y la CSP no cambia.
+  La paleta oscura está duplicada porque `getComputedStyle` devolvería `light-dark(...)` crudo a los
+  gráficos; un test exige que los dos bloques coincidan.
+
 ## Failed Approaches
+- **Medir desborde con `scrollWidth > innerWidth` no sirve con barra de desplazamiento clásica:**
+  `innerWidth` la incluye y tapa desbordes de hasta 15 px. Usar `clientWidth` y
+  `Emulation.setScrollbarsHidden`; sin eso, las capturas por CDP a 390 px salen recortadas a 375.
 - **Consultas grandes a ClickPy devuelven resultados parciales sin error** (usuario `play`:
   `read_overflow_mode=break` a 10.000 M filas leídas, `result_overflow_mode=break` a 1.000 filas de
   resultado, `readonly=1`). Siempre verificar `X-ClickHouse-Summary` (`read_rows` vs
@@ -323,3 +335,14 @@ movidos: corregidos en `repos.yaml` y 8 bajados de nuevo con `--repo` (165 consu
 compartir repo con `pypdf`. Quedan 458 repos únicos. Build con estrellas: 486 fichas con repo, 14 sin él.
 Los tests se corren con `uv run pytest`: con `.venv/bin/python -m pytest` falla el del comando `ecopy`
 porque el ejecutable no está en el PATH.
+
+### 2026-11-10 — Etapa 4 mergeada; próximos ajustes visuales
+PR #6 (código y años congelados) y #7 (estrellas y nombres de repos corregidos) mergeados; `main` =
+`bd4affe`. El usuario hizo el chequeo visual y encontró cosas para arreglar: las detalla en la próxima
+sesión, en la rama `etapa-4-ajustes-visuales`. README y ROADMAP actualizados.
+
+### 2026-11-10 — Ajustes visuales de la Etapa 4
+A pedido del usuario: selector de tema Pythonista/Pythoneer con elección persistente, créditos en el pie
+(GitHub, Instagram y código fuente), marca de la cabecera alineada con el contenido y comparador vacío
+sin eje suelto. TDD para lo que sale en el HTML y Chrome por CDP para el comportamiento del JavaScript,
+porque el proyecto no tiene runner de JS. El launcher de `impeccable` no se ejecutó. Sin commit.

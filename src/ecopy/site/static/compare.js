@@ -85,6 +85,13 @@
   };
 
   const draw = () => {
+    // Sin series, ECharts dibujaría un eje suelto: el gráfico no ocupa lugar hasta tener datos.
+    box.hidden = state.series.size === 0;
+    if (box.hidden) {
+      chart.clear();
+      return;
+    }
+    chart.resize();
     const text = token('--ink-2');
     const grid = token('--grid');
     const series = [...state.series.values()].map((entry) => {
@@ -200,6 +207,7 @@
       const response = await fetch('/data/library/index.json');
       index = new Map((await response.json()).map((item) => [item.project, item.slug]));
     } catch {
+      box.hidden = true;
       say(texts.failed);
       return;
     }
@@ -218,6 +226,7 @@
     });
     window.addEventListener('resize', () => chart.resize());
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+    document.addEventListener('ecopy:theme', draw);
     const requested = new URLSearchParams(location.search).getAll('p').slice(0, MAX);
     for (const project of requested) await add(project, { quiet: true });
     refresh();
