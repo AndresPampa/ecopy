@@ -110,7 +110,7 @@ def test_external_project_name_is_escaped_and_cannot_leave_the_output(tmp_path):
 
     render_site([view("../<script>alert(1)</script>")], out)
 
-    written = [p for p in tmp_path.rglob("index.html")]
+    written = [p for p in tmp_path.rglob("index.html") if p.parent.name != "methodology"]
     assert len(written) == 2
     assert all(out in p.parents for p in written)
     html = written[0].read_text()
@@ -780,3 +780,180 @@ def test_year_page_matches_its_snapshot(tmp_path, lang):
         snapshot.write_text(year_page(tmp_path, lang=lang))
 
     assert year_page(tmp_path, lang=lang) == snapshot.read_text()
+
+
+# Publicación: entrada, 404 y SEO
+
+
+def render_all(out) -> None:
+    render_site([view()], out, years=(year(),), labels=LABELS)
+
+
+def test_the_root_redirects_to_the_english_home(tmp_path):
+    render_all(tmp_path)
+
+    rules = (tmp_path / "_redirects").read_text().splitlines()
+
+    assert rules == ["/ /en/ 302"]
+
+
+@pytest.mark.parametrize(
+    ("location", "lang", "message"),
+    [("404.html", "en", "Page not found"), ("es/404.html", "es", "Página no encontrada")],
+)
+def test_a_missing_page_answers_in_its_language_and_is_not_indexed(
+    tmp_path, location, lang, message
+):
+    render_all(tmp_path)
+
+    html = (tmp_path / location).read_text()
+
+    assert f'<html lang="{lang}">' in html
+    assert message in html
+    assert '<meta name="robots" content="noindex">' in html
+    assert f'href="/{lang}/"' in html
+    assert 'rel="canonical"' not in html
+
+
+SITE = "https://ecopy.pages.dev"
+
+
+def test_every_page_declares_its_canonical_address_and_both_languages(tmp_path):
+    render_all(tmp_path)
+    pages = {
+        "library/fastapi/": page(tmp_path, "es"),
+        "year/2024/": year_page(tmp_path, lang="es"),
+        "": (tmp_path / "es" / "index.html").read_text(),
+    }
+
+    for path, html in pages.items():
+        head = html[: html.index("</head>")]
+        assert f'<link rel="canonical" href="{SITE}/es/{path}">' in head
+        assert f'<link rel="alternate" hreflang="en" href="{SITE}/en/{path}">' in head
+        assert f'<link rel="alternate" hreflang="es" href="{SITE}/es/{path}">' in head
+        assert f'<link rel="alternate" hreflang="x-default" href="{SITE}/en/{path}">' in head
+
+
+def description(html: str) -> str:
+    return re.search(r'<meta name="description" content="([^"]*)">', html).group(1)
+
+
+def test_each_page_describes_itself_for_search_results(tmp_path):
+    render_all(tmp_path)
+
+    home = description((tmp_path / "en" / "index.html").read_text())
+    library = description(page(tmp_path, "es"))
+    year_text = description(year_page(tmp_path))
+
+    assert "Python" in home
+    assert "fastapi" in library and "descargas" in library
+    assert "2024" in year_text
+    assert len({home, library, year_text}) == 3
+
+
+def test_the_description_escapes_external_project_names(tmp_path):
+    render_site([view('x"><script>')], tmp_path)
+
+    html = page(tmp_path, project=site_render._slug('x"><script>'))
+
+    assert '"><script>' not in html[: html.index("</head>")]
+
+
+def test_every_page_links_the_favicon_served_by_the_site(tmp_path):
+    render_all(tmp_path)
+
+    assert '<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">' in page(tmp_path)
+    assert (tmp_path / "static" / "favicon.svg").read_text().startswith("<svg")
+
+
+def sitemap_urls(out) -> list[str]:
+    return re.findall(r"<loc>([^<]+)</loc>", (out / "sitemap.xml").read_text())
+
+
+def test_the_sitemap_lists_every_page_in_both_languages_and_no_error_page(tmp_path):
+    render_all(tmp_path)
+
+    urls = sitemap_urls(tmp_path)
+
+    for lang in ("en", "es"):
+        assert f"{SITE}/{lang}/" in urls
+        assert f"{SITE}/{lang}/library/fastapi/" in urls
+        assert f"{SITE}/{lang}/year/2024/" in urls
+    assert not any("404" in url for url in urls)
+    assert f"{SITE}/{lang}/methodology/" in urls
+    assert len(urls) == len(set(urls)) == 8
+
+
+def test_the_sitemap_escapes_what_it_lists(tmp_path):
+    render_site([view("a&b")], tmp_path)
+
+    xml = (tmp_path / "sitemap.xml").read_text()
+
+    assert "a&b" not in xml
+
+
+def test_robots_allow_crawling_and_point_to_the_sitemap(tmp_path):
+    render_all(tmp_path)
+
+    robots = (tmp_path / "robots.txt").read_text().splitlines()
+
+    assert robots == ["User-agent: *", "Allow: /", f"Sitemap: {SITE}/sitemap.xml"]
+
+
+# Metodología
+
+
+def methodology(out, lang: str = "en") -> str:
+    return (out / lang / "methodology" / "index.html").read_text()
+
+
+def test_the_methodology_page_exists_in_both_languages_and_is_listed(tmp_path):
+    render_all(tmp_path)
+
+    assert "<h1>Methodology</h1>" in methodology(tmp_path, "en")
+    assert "<h1>Metodología</h1>" in methodology(tmp_path, "es")
+    assert f"{SITE}/es/methodology/" in sitemap_urls(tmp_path)
+
+
+def test_the_methodology_states_the_data_calendar_the_code_uses(tmp_path):
+    from ecopy.metrics import METHODOLOGY_VERSION
+    from ecopy.quality import DEGRADED_DAYS, DISCONTINUITIES, GAPS, SOURCE_START
+
+    render_all(tmp_path)
+    html = methodology(tmp_path, "es")
+
+    assert SOURCE_START.isoformat() in html
+    assert f"Versión metodológica vigente: {METHODOLOGY_VERSION}" in html
+    for day in DISCONTINUITIES:
+        assert f'<time datetime="{day}">{day}</time>' in html
+    for first, last in (*GAPS, *DEGRADED_DAYS):
+        assert f'<time datetime="{first}">{first}</time>' in html
+        if last != first:
+            assert f'<time datetime="{last}">{last}</time>' in html
+
+
+def test_every_page_links_the_methodology_from_its_footer(tmp_path):
+    render_all(tmp_path)
+
+    for html in (page(tmp_path, "es"), year_page(tmp_path, lang="es"), methodology(tmp_path, "es")):
+        footer = html[html.index('<footer class="site">') :]
+        assert '<a href="/es/methodology/">Metodología</a>' in footer
+
+
+def test_the_methodology_version_on_a_year_page_links_to_its_explanation(tmp_path):
+    render_all(tmp_path)
+
+    assert '<a href="/en/methodology/">Methodology version 1</a>' in year_page(tmp_path)
+
+
+# Accesibilidad
+
+
+def test_every_page_starts_with_a_link_that_skips_to_the_content(tmp_path):
+    render_all(tmp_path)
+
+    for lang, text in (("en", "Skip to content"), ("es", "Saltar al contenido")):
+        html = page(tmp_path, lang)
+        body = html[html.index("<body>") + len("<body>") :].lstrip()
+        assert body.startswith(f'<a class="skip" href="#main">{text}</a>')
+        assert '<main id="main"' in html

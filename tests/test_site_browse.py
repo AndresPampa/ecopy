@@ -381,3 +381,29 @@ def test_external_names_are_escaped_in_listings(tmp_path):
     html = read(tmp_path, "library")
 
     assert "<script>alert" not in html and "&lt;script&gt;alert" in html
+
+
+def test_long_package_names_break_only_after_their_separators(tmp_path):
+    build(tmp_path, data=browse(row("jsonschema-specifications"), row("zope.interface")))
+
+    html = read(tmp_path, "library")
+
+    assert ">jsonschema-<wbr>specifications</a>" in html
+    assert ">zope.<wbr>interface</a>" in html
+
+
+def test_breaking_a_name_still_escapes_it(tmp_path):
+    build(tmp_path, data=browse(row("x-<img src=y>")))
+
+    html = read(tmp_path, "library")
+
+    assert "x-<wbr>&lt;img src=y&gt;" in html
+    assert "<img src=y>" not in html
+
+
+def test_the_catalog_table_scrolls_by_itself_with_a_name_and_keyboard_focus(tmp_path):
+    build(tmp_path)
+
+    html = read(tmp_path, "library")
+
+    assert '<div class="scroll" role="region" aria-label="Libraries" tabindex="0">' in html

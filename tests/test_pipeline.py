@@ -195,6 +195,21 @@ def test_a_source_error_records_the_failure(tmp_path):
     assert not list(tmp_path.rglob("*.parquet"))
 
 
+def test_an_unexpected_error_records_the_failure_and_is_raised(tmp_path):
+    store = Store(tmp_path)
+    source = FakeSource({})
+    source.error = KeyError("X-ClickHouse-Summary")
+
+    with pytest.raises(KeyError):
+        run(source, store)
+
+    [failed] = store.runs()
+    assert failed.status == "failed"
+    assert failed.problems[0].code == "internal_error"
+    assert "X-ClickHouse-Summary" in failed.problems[0].detail
+    assert not list(tmp_path.rglob("*.parquet"))
+
+
 def test_totals_use_their_own_window(tmp_path):
     store = Store(tmp_path)
     source = FakeSource(recent_days("fastapi"))

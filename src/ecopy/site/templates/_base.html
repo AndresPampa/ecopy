@@ -6,9 +6,18 @@
 <title>{% block title %}{% endblock %} · ecopy</title>
 <script src="/static/theme.js"></script>
 <link rel="stylesheet" href="/static/site.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+{%- block head_meta %}
+<meta name="description" content="{% block description %}{{ t.site_description }}{% endblock %}">
+<link rel="canonical" href="{{ site }}/{{ lang }}/{{ path }}">
+<link rel="alternate" hreflang="en" href="{{ site }}/en/{{ path }}">
+<link rel="alternate" hreflang="es" href="{{ site }}/es/{{ path }}">
+<link rel="alternate" hreflang="x-default" href="{{ site }}/en/{{ path }}">
+{%- endblock %}
 {%- block scripts %}{% endblock %}
 </head>
 <body>
+<a class="skip" href="#main">{{ t.skip }}</a>
 <header class="site">
 {%- if nav %}
 <a class="mark" href="/{{ lang }}/">ecopy</a>
@@ -25,14 +34,14 @@
 <button class="chip theme-toggle" type="button" hidden data-name-dark="{{ t.theme_dark }}" data-name-light="{{ t.theme_light }}" data-label-dark="{{ t.theme_to_dark }}" data-label-light="{{ t.theme_to_light }}"></button>
 </div>
 </header>
-<main{% block main_attrs %}{% endblock %}>
+<main id="main"{% block main_attrs %}{% endblock %}>
 {%- if status.failed %}
 <p class="update-failed" role="status">{{ t.update_failed }}{% if status.last_updated %} {{ t.update_failed_since.format(date=status.last_updated) }}{% endif %}</p>
 {%- endif %}
 {%- block content %}{% endblock %}
 </main>
 <footer class="site">
-<p>{{ t.source }}{% if status.last_updated %} {{ t.last_updated }}: <time datetime="{{ status.last_updated }}">{{ status.last_updated }}</time>.{% endif %}</p>
+<p>{{ t.source }}{% if status.last_updated %} {{ t.last_updated }}: <time datetime="{{ status.last_updated }}">{{ status.last_updated }}</time>.{% endif %} <a href="/{{ lang }}/methodology/">{{ t.methodology_title }}</a></p>
 <p class="credits"><span>{{ t.made_by }} AndresPampa</span> <a href="https://github.com/AndresPampa" rel="me noopener">GitHub</a> <a href="https://www.instagram.com/andrespampa/" rel="me noopener">Instagram</a> <a href="https://github.com/AndresPampa/ecopy" rel="noopener">{{ t.source_code }}</a></p>
 </footer>
 </body>

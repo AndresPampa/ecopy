@@ -1,11 +1,16 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-10 · branch de trabajo: `etapa-4-ajustes-visuales` (desde `main` =
-> `bd4affe`; todo sin commit, lo hace el usuario) · remoto `origin` =
+> Last updated: 2026-11-10 · branch de trabajo: `etapa-5-publicacion` (desde `main` = `b4bc017`;
+> todo sin commit: slices 1-4, arreglos de la auditoría, ingest del día, ROADMAP y este handoff) · remoto `origin` =
 > https://github.com/AndresPampa/ecopy.git
 
 ## Current State
-- **Ajustes visuales de la Etapa 4 hechos en local, sin commit:** selector de tema (Pythonista =
+- **Etapa 5 lista para commit (sin commit):** slices 1-4 (entrada y SEO, metodología, accesibilidad
+  a 320/390 px, workflows fijados por SHA) y **arreglos de la auditoría** (ROADMAP 5b). 405 tests, 20
+  mutaciones nuevas detectadas, Chrome sin violaciones de CSP (12 páginas × claro/oscuro × 1280/390
+  px, con control positivo). Mensaje de commit en `build/etapa-5-commit.txt` y texto del PR en
+  `build/etapa-5-pr.md` (ignorados). Informe de la auditoría: `~/security-audit-skill/ecopy/run-1/REPORT.md`.
+- **Ajustes visuales de la Etapa 4 mergeados** (PR #8): selector de tema (Pythonista =
   oscuro, Pythoneer = claro), créditos en el pie, cabecera alineada con el contenido y comparador
   vacío sin eje suelto. 345 tests, 5 mutaciones detectadas, Chrome sin violaciones de CSP (con control
   positivo) en los dos temas, a 1280 y 390 px.
@@ -36,20 +41,30 @@
   `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-- [ ] **Usuario (lo próximo):** revisar y commitear `etapa-4-ajustes-visuales` y abrir el PR.
-- [ ] **Etapa 5:** la tabla de movers de `/es/year/2026/` desborda 7 px a 390 px (ya estaba; `year.html`
-      no se tocó). Entra en la auditoría y el pulido.
-- [ ] **Usuario:** borrar la rama ya mergeada: `git branch -d etapa-4-librerias-y-comparador` y
-      `git push origin --delete etapa-4-librerias-y-comparador`.
+- [ ] **Usuario: commit único y PR de la Etapa 5** con `git commit -F build/etapa-5-commit.txt` y el
+      texto de `build/etapa-5-pr.md`. Incluye `data/` del ingest del día, `.github/` y los docs.
+- [ ] **Usuario (GitHub, con S6):** entorno `production` limitado a `main` con los secretos de Cloudflare
+      como secretos del entorno; token de Cloudflare con permiso solo de Pages sobre `ecopy`. **Ojo:**
+      la nota anterior decía "protección de `main` sin bypass para GitHub Actions", pero el bot empuja
+      datos directo a `main`: si la regla exige PR sin excepción para Actions, el push diario falla.
+      Decidir la regla al configurar; el workflow ya empuja solo el commit de datos y solo desde `main`.
+- [ ] Opcional (endurecimiento del informe, sección 6): `wrangler` sin lockfile en el job con secretos;
+      verificar que el artefacto no tenga `_worker.js`/`_routes.json`/`functions/`; `ValueError` y JSON
+      inválido como `SourceError` en `github.py`; `validate._volume` con mediana 0; `.gitignore` para
+      `*.pem`/`*.key`; `?tag=` sin `urlencode`.
+- [ ] Más adelante: `python_minor` codificado (hex) solo si ClickPy empieza a traer 0x1e/0x1f. Al hacerlo,
+      reproducir el escape TSV de ClickHouse (`'` → `\'`, `\\`) o migrar claves: hoy hay 2 valores
+      guardados con `\'` que cambiarían de clave y duplicarían la fracción "otros" en `metrics`.
+- [ ] **Usuario:** borrar la rama ya mergeada: `git branch -d etapa-4-ajustes-visuales` y
+      `git push origin --delete etapa-4-ajustes-visuales`.
 - [ ] Si cambia una categoría de `catalog/libraries.yaml`: borrar `data/frozen/` y volver a correr
       `uv run ecopy freeze`. `repo` y tags no lo invalidan.
-- [ ] **Pendiente de la Etapa 2:** correr `uv run ecopy ingest` desde el 2026-11-10 y mirar `revised_rows`
-      en `data/runs/`: el mismo día da 0 nuevas y 0 corregidas, porque llega hasta ayer (UTC).
 - [ ] **Investigar la caída desde 2026-08-25** (−36 % de un día para el otro, recuperación lenta,
       algunos paquetes ×0,12). Ya está marcada como discontinuidad: si se explica, revisar esa marca.
-- [ ] **Usuario (Etapa 5, con el primer MVP):** S6 — crear el proyecto en Cloudflare Pages y
-      confirmar `ecopy.pages.dev`; recién ahí entra GitHub Actions.
-- [ ] **Etapa 5:** las sparklines se encogen en 390 px (`/library/`); revisar en la auditoría y el pulido.
+- [ ] **Usuario (Etapa 5, con el primer MVP):** S6 — crear el proyecto `ecopy` en Cloudflare Pages
+      (Direct Upload), confirmar `ecopy.pages.dev` y cargar `CLOUDFLARE_API_TOKEN` y
+      `CLOUDFLARE_ACCOUNT_ID` como secretos del entorno `production`. Si el nombre cambia, ajustar
+      `SITE_URL` en `src/ecopy/site/render.py` y `--project-name` en `update.yml`.
 - [ ] Opcional: activar hooks de Claude Code copiando `.claude/settings.template.json` →
       `.claude/settings.json` (hoy los guards solo corren en Codex).
 
@@ -135,12 +150,23 @@
   correlación entre paquetes baja de 0,96 a 0,05), `repos.yaml` aparte, estrellas fuera de `ingest`.
   Categoría `other` para lo dudoso, pedida por el usuario. Razones: `docs/design/etapa-4-*.md`.
 
+- **Etapa 5 (aprobado 2026-11-10):** `/` → `/en/` con `_redirects`; estrellas semanales (serie semanal,
+  ~916 consultas contra 1.000/h del `GITHUB_TOKEN`); el bot commitea datos directo a `main`; sin el
+  launcher de `impeccable`; auditoría de seguridad después de los workflows (perfil `standard`).
+- **Skill `security-audit` instalado a mano** (no `npx skills add`) en `skills/security-audit`, commit
+  `c1c8a8c`, MIT; notice en `skills/THIRD-PARTY-NOTICES.md`. Local e ignorado por git como el resto del tooling.
 - **Selector de tema (decisión del usuario, 2026-11-10):** el botón nombra el tema al que cambia. Sin
   elección guardada manda el sistema. `theme.js` va sin `defer` para no parpadear y la CSP no cambia.
   La paleta oscura está duplicada porque `getComputedStyle` devolvería `light-dark(...)` crudo a los
   gráficos; un test exige que los dos bloques coincidan.
 
 ## Failed Approaches
+- **Un fixture de git que reusa el bare como `origin` no prueba el push con token:** `git push origin`
+  pasaba igual que `git push "$REMOTE"`. En `tests/test_workflows.py` el `origin` del clon apunta a una
+  ruta inexistente, como queda en Actions con `persist-credentials: false`. Lo reveló una mutación.
+- **Sandbox de la auditoría:** un `--tmpfs /tmp` de `bwrap` sin `--size` deja escritura sin tope (no
+  cuenta para `RLIMIT_AS`); lo detectó el reconocimiento y se corrigió antes de cazar. Las herramientas
+  quedaron en `~/security-audit-skill/ecopy/run-1/tools/` (`sandbox.sh`, `promote.py`, generadores).
 - **Medir desborde con `scrollWidth > innerWidth` no sirve con barra de desplazamiento clásica:**
   `innerWidth` la incluye y tapa desbordes de hasta 15 px. Usar `clientWidth` y
   `Emulation.setScrollbarsHidden`; sin eso, las capturas por CDP a 390 px salen recortadas a 375.
@@ -235,6 +261,8 @@
   Google Chrome headless (`/usr/bin/google-chrome`).
 - Git: el agente NUNCA hace add/commit/push/PR; entrega comandos, mensaje (`git commit -F`) y texto de PR.
   Commits agrupados: no uno por slice; seguir de corrido y entregar un commit al terminar lo pedido.
+- Auditoría de seguridad: salida y herramientas en `~/security-audit-skill/ecopy/run-1/` (fuera del repo).
+  Una segunda corrida del skill usaría `run-2` y leería el ledger y `findings.json` de `run-1`.
 - Suggested skills: para la Etapa 1+ `tdd`, `codebase-design`;
   para diseño `impeccable` + `dataviz`; `handoff-doc` al cerrar.
 
@@ -346,3 +374,29 @@ A pedido del usuario: selector de tema Pythonista/Pythoneer con elección persis
 (GitHub, Instagram y código fuente), marca de la cabecera alineada con el contenido y comparador vacío
 sin eje suelto. TDD para lo que sale en el HTML y Chrome por CDP para el comportamiento del JavaScript,
 porque el proyecto no tiene runner de JS. El launcher de `impeccable` no se ejecutó. Sin commit.
+
+### 2026-11-10 — Ajustes mergeados; ingest real y propuesta de la Etapa 5
+PR #8 mergeado (`b4bc017`). `ecopy ingest` real en 7,5 s: 500 + 1 filas nuevas, 0 corregidas, datos hasta
+2026-11-09; cierra el pendiente de la Etapa 2, aunque una sola corrida no mide correcciones a lo largo
+del tiempo. Relevado lo que falta para publicar; la propuesta espera aprobación. Sin código nuevo.
+
+### 2026-11-10 — Etapa 5: slices 1-4 y auditoría de seguridad
+TDD de corrido: `_redirects`, 404 EN/ES (y `ecopy serve` las sirve), favicon, descripción, canonical,
+hreflang, sitemap y robots; metodología EN/ES con fechas tomadas de `quality.py`; accesibilidad medida
+en Chrome (contraste sin fallas; desbordes a 320 px, objetivos táctiles y salto al contenido
+corregidos); workflows con tests de garantías y 8 mutaciones detectadas. Auditoría con el skill de
+Cloudflare: sandbox `bwrap` propio y promotor de artefactos; 2 olas de cazadores, 3 críticos, fases 3 y 5
+independientes. El hallazgo más relevante es de diseño de `update.yml` (dispatch en otra rama llega a
+`main` y a producción), que depende de la configuración de GitHub. Sin commit.
+
+### 2026-11-10 — Arreglos de la auditoría de seguridad
+TDD de corrido sobre los 4 puntos. (1) `ClickPy`: `MalformedResponse` (`SourceError`) para resumen
+inválido en `_query` y cuerpos con otra forma vía `_parsing`; `ingest` registra `internal_error` y relanza.
+(2) `update.yml`: `if` de `main` en update y deploy, checkout `ref: main` con `persist-credentials: false`,
+push por `$REMOTE` (URL con `github.token`, solo en ese paso) y guarda de un solo commit; el script se
+prueba ejecutándolo contra un bare local. (3) `github.py`: `retry-after` > 120 s, negativo, no finito o
+ilegible → `RateLimited` (la doc de GitHub advierte bloqueo si se reintenta estando limitado); `deadline`
++ `clock`, `ecopy stars --max-minutes 25`, `timeout-minutes: 30` del paso. (4) Consulta de solo lectura a
+ClickPy: 0 filas con 0x1e/0x1f (ni tab/salto) en `python_minor`; la validación de 3 campos ya la da el
+punto 1 y la codificación queda para después (ver Next Steps). 20 mutaciones, todas detectadas tras sumar
+2 casos (resumen en `known_projects`, token a nivel job). Chrome: 48 combinaciones sin fallas.

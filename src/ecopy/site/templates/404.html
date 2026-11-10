@@ -1,0 +1,10 @@
+{% extends "_base.html" %}
+{%- block title %}{{ t.not_found_title }}{% endblock %}
+{%- block head_meta %}
+<meta name="robots" content="noindex">
+{%- endblock %}
+{%- block content %}
+<h1>{{ t.not_found_title }}</h1>
+<p class="lead">{{ t.not_found_text }}</p>
+<p><a href="/{{ lang }}/">{{ t.not_found_home }}</a></p>
+{%- endblock %}

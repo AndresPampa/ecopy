@@ -15,11 +15,11 @@ from ecopy.models import Coverage
 SOURCE_START = date(2016, 1, 22)
 """Primer día con datos en ClickPy (spike S1)."""
 
-_GAPS = (
+GAPS = (
     (date(2016, 3, 6), date(2016, 5, 21)),  # 03-06 tiene 5 descargas en total; el resto, nada
     (date(2019, 4, 26), date(2019, 4, 27)),
 )
-_DEGRADED = (
+DEGRADED_DAYS = (
     (date(2016, 12, 8), date(2016, 12, 8)),
     (date(2017, 5, 11), date(2017, 5, 11)),
     (date(2018, 4, 17), date(2018, 4, 17)),
@@ -48,9 +48,9 @@ def _within(day: date, windows: tuple[tuple[date, date], ...]) -> bool:
 
 
 def day_quality(day: date) -> DayQuality:
-    if day < SOURCE_START or _within(day, _GAPS):
+    if day < SOURCE_START or _within(day, GAPS):
         return DayQuality.GAP
-    return DayQuality.DEGRADED if _within(day, _DEGRADED) else DayQuality.OK
+    return DayQuality.DEGRADED if _within(day, DEGRADED_DAYS) else DayQuality.OK
 
 
 def period_coverage(first: date, last: date) -> Coverage:

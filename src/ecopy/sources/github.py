@@ -19,6 +19,8 @@ _RESERVE = 100
 """Consultas que se dejan sin usar de la cuota por hora, solo con token."""
 _ATTEMPTS = 4
 _SECONDARY_WAIT = 60
+_MAX_RETRY_AFTER = 120
+"""Una espera más larga corta la corrida: reintentar antes de tiempo arriesga un bloqueo."""
 
 
 class BudgetExhausted(Exception):
@@ -50,13 +52,18 @@ class GitHub:
         budget: int | None = None,
         sleep: Callable[[float], None] = time.sleep,
         interval: float = 1.0,
+        deadline: float | None = None,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
+        """`deadline`: segundos de la corrida; al pasarlos corta con RateLimited."""
         self._client = client
         self._token = token
         self._budget = budget
         self._sleep = sleep
         self._interval = interval
         self._remaining: int | None = None
+        self._clock = clock
+        self._deadline_at = clock() + deadline if deadline is not None else None
         self.requests = 0
 
     def full_history(self, repo: str) -> RepoStars:
@@ -105,11 +112,19 @@ class GitHub:
             raise BudgetExhausted("presupuesto de la corrida")
         if self._token and self._remaining is not None and self._remaining < _RESERVE:
             raise BudgetExhausted("poca cuota por hora")
+        if self._deadline_at is not None and self._clock() >= self._deadline_at:
+            raise RateLimited(None)
+
+    def _wait(self, seconds: float) -> None:
+        """Duerme, salvo que la espera pase el plazo: así el paso guarda antes de su timeout."""
+        if self._deadline_at is not None and self._clock() + seconds > self._deadline_at:
+            raise RateLimited(None)
+        self._sleep(seconds)
 
     def _get(self, path: str, params: dict | None = None):
         self._check_allowance()
         if self.requests:
-            self._sleep(self._interval)
+            self._wait(self._interval)
         for attempt in range(_ATTEMPTS):
             try:
                 response = self._client.get(
@@ -130,12 +145,18 @@ class GitHub:
     def _wait_or_raise(self, response: httpx.Response, attempt: int) -> None:
         retry_after = response.headers.get("retry-after")
         if retry_after is not None:
-            self._sleep(float(retry_after))
+            try:
+                wait = float(retry_after)
+            except ValueError:
+                raise RateLimited(None) from None
+            if not 0 <= wait <= _MAX_RETRY_AFTER:  # también descarta nan e inf
+                raise RateLimited(None)
+            self._wait(wait)
             return
         if response.headers.get("x-ratelimit-remaining") == "0":
             reset = response.headers.get("x-ratelimit-reset")
             raise RateLimited(datetime.fromtimestamp(int(reset), UTC) if reset else None)
-        self._sleep(_SECONDARY_WAIT * 2**attempt)
+        self._wait(_SECONDARY_WAIT * 2**attempt)
 
 
 def _count(info: dict, repo: str) -> int:

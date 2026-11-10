@@ -1,0 +1,38 @@
+{% extends "_base.html" %}
+{%- macro day(value) %}<time datetime="{{ value }}">{{ value }}</time>{% endmacro %}
+{%- macro window(first, last) %}{{ day(first) }}{% if last != first %} → {{ day(last) }}{% endif %}{% endmacro %}
+{%- block title %}{{ t.methodology_title }}{% endblock %}
+{%- block description %}{{ t.methodology_description }}{% endblock %}
+{%- block main_attrs %} class="prose"{% endblock %}
+{%- block content %}
+<h1>{{ t.methodology_title }}</h1>
+<p class="lead">{{ m.lead }}</p>
+<p>{{ m.version.format(version=version) }}</p>
+{%- for heading, paragraphs in m.sections %}
+<h2>{{ heading }}</h2>
+{%- for paragraph in paragraphs %}
+<p>{{ paragraph.format(start=start) }}</p>
+{%- endfor %}
+{%- endfor %}
+<h2>{{ m.calendar_heading }}</h2>
+<p>{{ m.calendar_text }}</p>
+<h3>{{ m.gaps }}</h3>
+<ul>
+{%- for first, last in gaps %}
+<li>{{ window(first, last) }}</li>
+{%- endfor %}
+</ul>
+<h3>{{ m.degraded }}</h3>
+<ul>
+{%- for first, last in degraded %}
+<li>{{ window(first, last) }}</li>
+{%- endfor %}
+</ul>
+<h3>{{ m.discontinuities }}</h3>
+<p>{{ m.discontinuities_text }}</p>
+<ul>
+{%- for value in discontinuities %}
+<li>{{ day(value) }}{% if value in notes %}: {{ notes[value] }}{% endif %}</li>
+{%- endfor %}
+</ul>
+{%- endblock %}

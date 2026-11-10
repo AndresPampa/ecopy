@@ -108,7 +108,8 @@ a {
 
 a:focus-visible,
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+.scroll:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 2px;
@@ -191,8 +192,26 @@ header.site nav a[aria-current] {
 }
 
 .lang {
+  padding: 4px 0;
   color: var(--ink-2);
   font-size: 0.875rem;
+}
+
+/* Fuera de la vista hasta recibir el foco del teclado. */
+.skip {
+  position: absolute;
+  top: -48px;
+  left: 16px;
+  z-index: 10;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--page);
+  text-decoration: none;
+}
+
+.skip:focus {
+  top: 8px;
 }
 
 .theme-toggle {
@@ -257,6 +276,20 @@ footer.site p {
 }
 
 /* Texto */
+main.prose p,
+main.prose li {
+  max-width: 68ch;
+}
+
+main.prose h2 {
+  margin-top: 40px;
+}
+
+main.prose h3 {
+  margin-top: 24px;
+  font-size: 1rem;
+}
+
 .lead {
   max-width: 44ch;
   margin: 8px 0 24px;
@@ -409,6 +442,11 @@ nav.years {
   margin-bottom: 16px;
   color: var(--ink-2);
   font-size: 0.9375rem;
+}
+
+nav.years a,
+nav.years [aria-current] {
+  padding: 3px 0;
 }
 
 nav.years [aria-current] {
@@ -730,5 +768,27 @@ main.library table td:nth-child(3) {
 @media (max-width: 760px) {
   table.libraries .category {
     display: none;
+  }
+}
+
+/* Tablas en pantallas angostas: entran a 320 px sin desplazamiento horizontal. */
+/* La regla global de svg dejaba que la tabla aplastara la sparkline a 44 × 10 px. */
+table.libraries .spark {
+  max-width: none;
+  width: clamp(56px, 18vw, 120px);
+}
+
+@media (max-width: 480px) {
+  th,
+  td {
+    padding: 7px 6px;
+  }
+
+  table .category {
+    display: none;
+  }
+
+  table.libraries .package {
+    font-size: 0.8125rem;
   }
 }

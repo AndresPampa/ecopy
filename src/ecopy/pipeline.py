@@ -122,7 +122,7 @@ def ingest(
         store.record_run(report)
         return report
 
-    try:
+    def attempt() -> RunReport:
         planned = [
             *_fetch_downloads(projects, source, last_days, end, reobserve_days),
             _fetch_totals(source, totals, end, reobserve_days),
@@ -130,24 +130,31 @@ def ingest(
         python = _fetch_python(source, store.python_minor_monthly(), end)
         if python:
             planned.append(python)
+
+        candidates = _candidates(planned)
+        problems = check(candidates, History(totals, last_days), projects=projects, as_of=end)
+        if problems:
+            return finish("failed", problems)
+
+        counts: dict[str, DatasetCounts] = {}
+        for item in planned:
+            run = Run(f"{report_id}-{item.acquisition}", captured, item.acquisition)
+            result = store.append(item.batch, run)
+            previous = counts.get(item.dataset, DatasetCounts(0, 0))
+            counts[item.dataset] = DatasetCounts(
+                previous.new_rows + result.new_rows, previous.revised_rows + result.revised_rows
+            )
+        newest = max([*totals, *(row.date for row in candidates.totals)], default=None)
+        return finish("ok", datasets=counts, last_day=newest)
+
+    try:
+        return attempt()
     except SourceError as error:
         return finish("failed", [Problem("source_error", "", str(error))])
-
-    candidates = _candidates(planned)
-    problems = check(candidates, History(totals, last_days), projects=projects, as_of=end)
-    if problems:
-        return finish("failed", problems)
-
-    counts: dict[str, DatasetCounts] = {}
-    for item in planned:
-        run = Run(f"{report_id}-{item.acquisition}", captured, item.acquisition)
-        result = store.append(item.batch, run)
-        previous = counts.get(item.dataset, DatasetCounts(0, 0))
-        counts[item.dataset] = DatasetCounts(
-            previous.new_rows + result.new_rows, previous.revised_rows + result.revised_rows
-        )
-    newest = max([*totals, *(row.date for row in candidates.totals)], default=None)
-    return finish("ok", datasets=counts, last_day=newest)
+    except Exception as error:
+        # Sin este registro el sitio no mostraría "Actualización fallida" (auditoría run-1).
+        finish("failed", [Problem("internal_error", "", repr(error))])
+        raise
 
 
 def validate_store(projects: Sequence[str], store: Store, *, now: datetime) -> list[Problem]:
