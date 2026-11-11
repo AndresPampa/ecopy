@@ -1,6 +1,6 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-10 · branch: `main` (PR #9 de la Etapa 5 mergeado; el bot suma commits
+> Last updated: 2026-11-10 · branch: `main` (PR #9 y #10 mergeados; el bot suma commits
 > `data:` a diario, hacer `git pull` antes de trabajar) · sitio: https://ecopy.pages.dev · remoto `origin` =
 > https://github.com/AndresPampa/ecopy.git
 
@@ -41,6 +41,12 @@
   `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
+- [ ] **Antes del 2027-01-01: resolver el cierre anual, o el deploy diario se corta.** `update.yml` no corre
+      `ecopy freeze`, y `ecopy build` falla con `FrozenYearMissing` en cuanto 2026 queda cerrado (`as_of` =
+      2026-12-31, corrida del 1 de enero, `cli.py:_year_views`). Como `build` va antes del commit y del
+      artefacto, no se publica ni se guardan datos hasta congelar. `freeze` además exige el top 100 del año
+      (`ecopy catalog refresh`), que cambia `catalog/top100.yaml` y conviene revisar. Decidir: paso manual
+      a principios de enero (y qué hace `build` mientras tanto) o automatizarlo.
 - [ ] **Lo próximo: confirmar la primera corrida programada** (05:23 UTC) y la primera de estrellas
       (lunes 06:53 UTC) en Actions: revisar duración del paso `stars` contra `--max-minutes 25`.
 - [ ] Opcional (endurecimiento del informe, sección 6): `wrangler` sin lockfile en el job con secretos;
@@ -50,8 +56,6 @@
 - [ ] Más adelante: `python_minor` codificado (hex) solo si ClickPy empieza a traer 0x1e/0x1f. Al hacerlo,
       reproducir el escape TSV de ClickHouse (`'` → `\'`, `\\`) o migrar claves: hoy hay 2 valores
       guardados con `\'` que cambiarían de clave y duplicarían la fracción "otros" en `metrics`.
-- [ ] **Usuario:** borrar las ramas ya mergeadas: `git branch -d etapa-5-publicacion`,
-      `git push origin --delete etapa-5-publicacion` (y `etapa-4-ajustes-visuales` si sigue).
 - [ ] Si cambia una categoría de `catalog/libraries.yaml`: borrar `data/frozen/` y volver a correr
       `uv run ecopy freeze`. `repo` y tags no lo invalidan.
 - [ ] **Investigar la caída desde 2026-08-25** (−36 % de un día para el otro, recuperación lenta,
@@ -218,6 +222,8 @@
   contexto. Por eso es `period_status`.
 
 ## Files & Pointers
+- `README.md` — propósito, tecnologías y 4 diagramas Mermaid (datos, actualización diaria, módulos, del
+  cambio a producción). Si cambia el flujo o una dependencia entre módulos, actualizarlos.
 - `docs/ROADMAP.md` — etapas y slices de la etapa en curso.
 - `docs/design/etapa-1-tracer-bullet.md` — interfaces, seams y tests de la Etapa 1.
 - `docs/design/etapa-2-datos-completos.md` — diseño y evidencia de la Etapa 2.
@@ -403,3 +409,9 @@ deploy. Este handoff y el ROADMAP se actualizaron sobre `main` sin commit.
 S6 hecho por el usuario. El primer deploy falló por el entorno `prd` (ver Failed Approaches); con
 `production` configurado y "Re-run failed jobs" salió bien. Chequeos contra `ecopy.pages.dev` sin fallas.
 Etapa 5 pasa a Shipped en el ROADMAP.
+
+### 2026-11-10 — README con propósito, tecnologías y arquitectura
+PR #10 mergeado; ramas viejas ya borradas. README reescrito: propósito (mirada global y holística del
+ecosistema), estado publicado, 4 diagramas Mermaid y tabla de tecnologías; BigQuery aclarado como respaldo
+no implementado. Diagramas renderizados con Mermaid 11.4.1 en Chrome, claro y oscuro, a 830 px. Al relevar
+el flujo apareció que `update.yml` no congela años: ver Next Steps. Sin código nuevo.
