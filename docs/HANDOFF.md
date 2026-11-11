@@ -1,15 +1,15 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-10 · branch de trabajo: `etapa-5-publicacion` (desde `main` = `b4bc017`;
-> todo sin commit: slices 1-4, arreglos de la auditoría, ingest del día, ROADMAP y este handoff) · remoto `origin` =
+> Last updated: 2026-11-10 · branch: `main` (PR #9 de la Etapa 5 mergeado; el bot suma commits
+> `data:` a diario, hacer `git pull` antes de trabajar) · sitio: https://ecopy.pages.dev · remoto `origin` =
 > https://github.com/AndresPampa/ecopy.git
 
 ## Current State
-- **Etapa 5 lista para commit (sin commit):** slices 1-4 (entrada y SEO, metodología, accesibilidad
-  a 320/390 px, workflows fijados por SHA) y **arreglos de la auditoría** (ROADMAP 5b). 405 tests, 20
-  mutaciones nuevas detectadas, Chrome sin violaciones de CSP (12 páginas × claro/oscuro × 1280/390
-  px, con control positivo). Mensaje de commit en `build/etapa-5-commit.txt` y texto del PR en
-  `build/etapa-5-pr.md` (ignorados). Informe de la auditoría: `~/security-audit-skill/ecopy/run-1/REPORT.md`.
+- **MVP publicado (Etapa 5 cerrada, 2026-11-10):** https://ecopy.pages.dev, desplegado por `update.yml`
+  (PR #9). Verificado contra producción: `/` → `/en/` (302), CSP y cabeceras de `_headers`, 404 reales y
+  Chrome sin violaciones de CSP (12 páginas × claro/oscuro × 1280/390 px, con control positivo). 405
+  tests. Auditoría: `~/security-audit-skill/ecopy/run-1/REPORT.md`. Todavía no corrió ningún cron
+  programado ni el paso `stars` en Actions: la primera ejecución fue manual y sin estrellas.
 - **Ajustes visuales de la Etapa 4 mergeados** (PR #8): selector de tema (Pythonista =
   oscuro, Pythoneer = claro), créditos en el pie, cabecera alineada con el contenido y comparador
   vacío sin eje suelto. 345 tests, 5 mutaciones detectadas, Chrome sin violaciones de CSP (con control
@@ -41,13 +41,8 @@
   `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-- [ ] **Usuario: commit único y PR de la Etapa 5** con `git commit -F build/etapa-5-commit.txt` y el
-      texto de `build/etapa-5-pr.md`. Incluye `data/` del ingest del día, `.github/` y los docs.
-- [ ] **Usuario (GitHub, con S6):** entorno `production` limitado a `main` con los secretos de Cloudflare
-      como secretos del entorno; token de Cloudflare con permiso solo de Pages sobre `ecopy`. **Ojo:**
-      la nota anterior decía "protección de `main` sin bypass para GitHub Actions", pero el bot empuja
-      datos directo a `main`: si la regla exige PR sin excepción para Actions, el push diario falla.
-      Decidir la regla al configurar; el workflow ya empuja solo el commit de datos y solo desde `main`.
+- [ ] **Lo próximo: confirmar la primera corrida programada** (05:23 UTC) y la primera de estrellas
+      (lunes 06:53 UTC) en Actions: revisar duración del paso `stars` contra `--max-minutes 25`.
 - [ ] Opcional (endurecimiento del informe, sección 6): `wrangler` sin lockfile en el job con secretos;
       verificar que el artefacto no tenga `_worker.js`/`_routes.json`/`functions/`; `ValueError` y JSON
       inválido como `SourceError` en `github.py`; `validate._volume` con mediana 0; `.gitignore` para
@@ -55,16 +50,12 @@
 - [ ] Más adelante: `python_minor` codificado (hex) solo si ClickPy empieza a traer 0x1e/0x1f. Al hacerlo,
       reproducir el escape TSV de ClickHouse (`'` → `\'`, `\\`) o migrar claves: hoy hay 2 valores
       guardados con `\'` que cambiarían de clave y duplicarían la fracción "otros" en `metrics`.
-- [ ] **Usuario:** borrar la rama ya mergeada: `git branch -d etapa-4-ajustes-visuales` y
-      `git push origin --delete etapa-4-ajustes-visuales`.
+- [ ] **Usuario:** borrar las ramas ya mergeadas: `git branch -d etapa-5-publicacion`,
+      `git push origin --delete etapa-5-publicacion` (y `etapa-4-ajustes-visuales` si sigue).
 - [ ] Si cambia una categoría de `catalog/libraries.yaml`: borrar `data/frozen/` y volver a correr
       `uv run ecopy freeze`. `repo` y tags no lo invalidan.
 - [ ] **Investigar la caída desde 2026-08-25** (−36 % de un día para el otro, recuperación lenta,
       algunos paquetes ×0,12). Ya está marcada como discontinuidad: si se explica, revisar esa marca.
-- [ ] **Usuario (Etapa 5, con el primer MVP):** S6 — crear el proyecto `ecopy` en Cloudflare Pages
-      (Direct Upload), confirmar `ecopy.pages.dev` y cargar `CLOUDFLARE_API_TOKEN` y
-      `CLOUDFLARE_ACCOUNT_ID` como secretos del entorno `production`. Si el nombre cambia, ajustar
-      `SITE_URL` en `src/ecopy/site/render.py` y `--project-name` en `update.yml`.
 - [ ] Opcional: activar hooks de Claude Code copiando `.claude/settings.template.json` →
       `.claude/settings.json` (hoy los guards solo corren en Codex).
 
@@ -161,6 +152,9 @@
   gráficos; un test exige que los dos bloques coincidan.
 
 ## Failed Approaches
+- **El entorno de GitHub se tiene que llamar exactamente como en el workflow:** con los secretos en `prd`
+  y `environment: production`, GitHub creó `production` vacío al correr y wrangler falló con "necessary
+  to set a CLOUDFLARE_API_TOKEN". Los secretos no se copian entre entornos: hay que volver a cargarlos.
 - **Un fixture de git que reusa el bare como `origin` no prueba el push con token:** `git push origin`
   pasaba igual que `git push "$REMOTE"`. En `tests/test_workflows.py` el `origin` del clon apunta a una
   ruta inexistente, como queda en Actions con `persist-credentials: false`. Lo reveló una mutación.
@@ -400,3 +394,12 @@ ilegible → `RateLimited` (la doc de GitHub advierte bloqueo si se reintenta es
 ClickPy: 0 filas con 0x1e/0x1f (ni tab/salto) en `python_minor`; la validación de 3 campos ya la da el
 punto 1 y la codificación queda para después (ver Next Steps). 20 mutaciones, todas detectadas tras sumar
 2 casos (resumen en `known_projects`, token a nivel job). Chrome: 48 combinaciones sin fallas.
+
+### 2026-11-10 — Etapa 5 mergeada (PR #9)
+El usuario hizo el commit único (`1622537`) y mergeó el PR #9; `main` = `b48ceb3`. Queda S6 y el primer
+deploy. Este handoff y el ROADMAP se actualizaron sobre `main` sin commit.
+
+### 2026-11-10 — MVP publicado
+S6 hecho por el usuario. El primer deploy falló por el entorno `prd` (ver Failed Approaches); con
+`production` configurado y "Re-run failed jobs" salió bien. Chequeos contra `ecopy.pages.dev` sin fallas.
+Etapa 5 pasa a Shipped en el ROADMAP.
