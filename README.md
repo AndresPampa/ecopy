@@ -1,6 +1,7 @@
 # ecopy
 
-**The Python ecosystem, year by year.**
+**The Python ecosystem, year by year.** En el sitio el nombre se escribe **eco-py**: la serpiente del
+logo es el guion. El repositorio, el comando y el dominio siguen siendo `ecopy`.
 
 🌐 **[ecopy.pages.dev](https://ecopy.pages.dev)** · sitio estático, bilingüe (EN/ES), actualizado todos
 los días.
@@ -56,7 +57,7 @@ cerrados, que se leen de lo congelado.
 ```mermaid
 flowchart TD
     accTitle: Flujo de datos de ecopy
-    accDescr: Las descargas de ClickPy y las estrellas de GitHub se validan y se guardan como Parquet en data. Junto con el catálogo alimentan el cálculo de métricas, que genera el sitio estático publicado en Cloudflare Pages.
+    accDescr: Las descargas de ClickPy y las estrellas de GitHub se validan y se guardan como Parquet en data. La API de PyPI da al catálogo la primera versión vigente de cada paquete. Junto con el catálogo alimentan el cálculo de métricas, que genera el sitio estático publicado en Cloudflare Pages.
 
     clickpy["ClickPy<br/>descargas de PyPI"] --> ingest["ecopy ingest<br/>diario"]
     github["API de GitHub<br/>estrellas"] --> stars["ecopy stars<br/>semanal"]
@@ -66,6 +67,7 @@ flowchart TD
     stars --> raw
     raw --> metrics["Métricas<br/>DuckDB"]
     catalog[("catalog/<br/>500 paquetes y taxonomía")] --> metrics
+    pypi["API JSON de PyPI<br/>primera versión vigente"] -.->|"ecopy catalog starts, a mano"| catalog
     metrics -.->|"ecopy freeze, una vez al año"| frozen[("data/frozen/<br/>años cerrados")]
     metrics --> build["ecopy build<br/>Jinja2, ECharts y SVG"]
     frozen --> build
@@ -76,7 +78,7 @@ flowchart TD
     classDef store fill:#fef9c3,stroke:#ca8a04,stroke-width:2px,color:#713f12
     classDef output fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#14532d
 
-    class clickpy,github source
+    class clickpy,github,pypi source
     class catalog,raw,runs,frozen store
     class pages output
 ```
@@ -186,7 +188,7 @@ flowchart LR
 | Capa | Tecnología | Para qué |
 |---|---|---|
 | Lenguaje y entorno | Python 3.12, [uv](https://docs.astral.sh/uv/) | Todo el pipeline y el generador; dependencias fijadas en `uv.lock` |
-| Fuentes | [ClickPy](https://clickpy.clickhouse.com/) (ClickHouse), API de GitHub, [httpx](https://www.python-httpx.org/) | Descargas de PyPI y estrellas, con reintentos y límites |
+| Fuentes | [ClickPy](https://clickpy.clickhouse.com/) (ClickHouse), API de GitHub, API JSON de PyPI, [httpx](https://www.python-httpx.org/) | Descargas de PyPI y estrellas, con reintentos y límites |
 | Almacenamiento | [Parquet](https://parquet.apache.org/) con [PyArrow](https://arrow.apache.org/docs/python/), [DuckDB](https://duckdb.org/) | Archivos append-only versionados en Git y consultas sobre ellos |
 | Catálogo | YAML, [PyYAML](https://pyyaml.org/) | Paquetes, taxonomía, repos y releases de Python, revisables a mano |
 | Sitio | [Jinja2](https://jinja.palletsprojects.com/), CSS y JavaScript propios | HTML pre-generado en EN/ES, tema claro y oscuro, CSP estricta sin inline |

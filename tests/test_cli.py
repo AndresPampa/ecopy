@@ -568,3 +568,21 @@ def test_stars_stops_and_saves_when_its_time_runs_out(tmp_path, capsys, monkeypa
     out = capsys.readouterr().out
     assert "1 pendientes" in out
     assert "se detuvo (rate_limited)" in out
+
+
+def test_catalog_starts_writes_the_series_starts_from_pypi(tmp_path, capsys):
+    data, catalog = tmp_path / "data", write_catalog(tmp_path / "c", "fastapi")
+    seed(Store(data))
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/pypi/fastapi/json"
+        upload = {"upload_time_iso_8601": "2024-01-10T00:00:00.000000Z"}
+        return httpx.Response(200, json={"releases": {"1": [upload]}})
+
+    http = httpx.Client(transport=httpx.MockTransport(handler))
+    code = main(["catalog", "starts", "--catalog", str(catalog), "--data", str(data)], http=http)
+
+    assert code == 0
+    saved = yaml.safe_load((catalog / "series_start.yaml").read_text())
+    assert saved == {"starts": {"fastapi": date(2024, 1, 10)}}
+    assert "fastapi" in capsys.readouterr().out

@@ -256,6 +256,25 @@ def test_compare_data_has_only_closed_months_and_an_index(tmp_path):
     assert index == [{"project": "fastapi", "slug": "fastapi"}]
 
 
+def test_the_compare_index_goes_from_most_to_least_downloaded_in_the_last_closed_month(tmp_path):
+    def month(downloads):
+        return MonthPoint(
+            month=date(2024, 2, 1), downloads=downloads, status="complete", coverage=FULL
+        )
+
+    pages = [
+        view("aaa", last_closed_month=month(5)),
+        view("zzz", last_closed_month=month(90)),
+        view("bbb", last_closed_month=None),
+        view("mmm", last_closed_month=month(90)),
+    ]
+    build(tmp_path, pages=pages, data=browse(*(row(p.project) for p in pages)))
+
+    index = json.loads((tmp_path / "data" / "library" / "index.json").read_text())
+
+    assert [item["project"] for item in index] == ["mmm", "zzz", "aaa", "bbb"]
+
+
 def test_a_hostile_project_name_stays_inside_the_data_directory(tmp_path):
     build(tmp_path, pages=[view("../../evil")], data=browse(row("../../evil")))
 
@@ -407,3 +426,18 @@ def test_the_catalog_table_scrolls_by_itself_with_a_name_and_keyboard_focus(tmp_
     html = read(tmp_path, "library")
 
     assert '<div class="scroll" role="region" aria-label="Libraries" tabindex="0">' in html
+
+
+def test_a_trimmed_series_says_what_was_left_out(tmp_path):
+    build(tmp_path, pages=[view(earlier_downloads=5786)])
+
+    english, spanish = read(tmp_path, "library/fastapi"), read(tmp_path, "library/fastapi", "es")
+
+    assert "5,786 downloads" in english and "no longer on PyPI" in english
+    assert "5.786 descargas" in spanish and "ya no están en PyPI" in spanish
+
+
+def test_a_whole_series_has_no_trimming_note(tmp_path):
+    build(tmp_path)
+
+    assert "no longer on PyPI" not in read(tmp_path, "library/fastapi")

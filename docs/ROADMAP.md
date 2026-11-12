@@ -24,6 +24,9 @@
 - ✅ **Ajustes visuales de la Etapa 4:** selector de tema, créditos, alineación y comparador vacío.
 - ✅ **Etapa 5 — Publicación del MVP:** EN/ES completo, metodología, CSP/`_headers`, accesibilidad,
   GitHub Actions (cron diario) y despliegue en https://ecopy.pages.dev.
+- 🚧 **Etapa 6 — Logo, rankings y datos de las fichas:** marca eco-py con la serpiente como guion,
+  listas de mayor a menor, series desde la primera versión vigente en PyPI y porcentajes con 3 decimales.
+  En la rama `etapa-6-logo-y-rankings`, sin mergear.
 - 📋 **Después del MVP:** Trending y Seguridad (Fase 3); cuentas y encuestas (Fase 4).
 
 ## Shipped

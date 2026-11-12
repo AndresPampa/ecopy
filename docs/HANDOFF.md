@@ -1,10 +1,19 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-10 · branch: `main` (PR #9 y #10 mergeados; el bot suma commits
+> Last updated: 2026-11-11 · branch: `etapa-6-logo-y-rankings` (desde `main` = `fbcb3b6`), **sin commit ni PR todavía**: los hace el
+> usuario con `build/etapa-6-commit.txt` y `build/etapa-6-pr.md` (PR #9, #10 y #11 mergeados; el bot suma commits
 > `data:` a diario, hacer `git pull` antes de trabajar) · sitio: https://ecopy.pages.dev · remoto `origin` =
 > https://github.com/AndresPampa/ecopy.git
 
 ## Current State
+- **Etapa 6 lista en la rama `etapa-6-logo-y-rankings`, sin commit (2026-11-11):** marca **eco-py** con la
+  serpiente como guion (inline en `_base.html`, favicon nuevo) y nombre visible cambiado en todo el sitio;
+  repo, comando, paquete y dominio siguen siendo `ecopy`. Dominios, categorías dentro de cada dominio e
+  índice del comparador van de mayor a menor; movers no cambia. Las fichas, el comparador y los listados
+  empiezan en la primera versión vigente en PyPI para 35 librerías (`catalog/series_start.yaml`).
+  Porcentajes, crecimiento y puntos de cuota con 3 decimales. 434 tests, ruff limpio, 25 mutaciones
+  detectadas (2 sobrevivían y ahora tienen test), Chrome sin violaciones de CSP en 56 combinaciones
+  (14 páginas × claro/oscuro × 1280/390 px, con control positivo). `data/frozen/` sin cambios.
 - **MVP publicado (Etapa 5 cerrada, 2026-11-10):** https://ecopy.pages.dev, desplegado por `update.yml`
   (PR #9). Verificado contra producción: `/` → `/en/` (302), CSP y cabeceras de `_headers`, 404 reales y
   Chrome sin violaciones de CSP (12 páginas × claro/oscuro × 1280/390 px, con control positivo). 405
@@ -41,13 +50,28 @@
   `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-- [ ] **Antes del 2027-01-01: resolver el cierre anual, o el deploy diario se corta.** `update.yml` no corre
+**Lo siguiente es el cierre anual (antes del 2027-01-01); logo, rankings y datos de fichas ya están en la rama.**
+- [ ] **Usuario: commit, push y PR de la Etapa 6** con `build/etapa-6-commit.txt` y `build/etapa-6-pr.md`. Después del
+      deploy, mirar en producción `/en/library/openai/` (debe empezar el 2020-02-18) y la marca en los dos temas.
+- [ ] **Revisar las 15 librerías con descargas previas que NO se recortan** (promedio ≥ 100 por día antes de la primera
+      versión vigente): `atomicwrites` (285 M: mismo proyecto, versiones borradas y vueltas a subir), `opencv-python`,
+      `ortools`, `torch`, `lightning`, `tensorflow`, `flet`, `arcade`, `dvc`, `snowflake-connector-python`, `locust`,
+      `darts`, `openai-whisper`, `backtrader`, `pymupdf`. Si alguna es un nombre reusado, hace falta una lista manual
+      aparte: el umbral no distingue. `locust` y `backtrader` son los dudosos.
+- [ ] **Al agregar librerías al catálogo, correr `uv run ecopy catalog starts`** (unas 500 consultas a la API JSON de
+      PyPI, 1 a 2 minutos) y revisar el diff de `catalog/series_start.yaml`. `update.yml` no lo corre.
+- [ ] **Decidir si las vistas anuales también descuentan lo anterior al inicio de serie.** Hoy `YearView` y
+      `data/frozen/` siguen contando esas descargas (son ínfimas: openai sumó 2.173 en 2018). Cambiarlo obliga a
+      regenerar `data/frozen/`.
+- [ ] El usuario dijo "en todas lo vi mal" sobre los rankings, pero los listados de librerías ya salían de mayor a
+      menor; se ordenaron las tres listas que no lo estaban. Si se refería a otra, falta saber cuál.
+- [ ] **4. Antes del 2027-01-01: resolver el cierre anual, o el deploy diario se corta.** `update.yml` no corre
       `ecopy freeze`, y `ecopy build` falla con `FrozenYearMissing` en cuanto 2026 queda cerrado (`as_of` =
       2026-12-31, corrida del 1 de enero, `cli.py:_year_views`). Como `build` va antes del commit y del
       artefacto, no se publica ni se guardan datos hasta congelar. `freeze` además exige el top 100 del año
       (`ecopy catalog refresh`), que cambia `catalog/top100.yaml` y conviene revisar. Decidir: paso manual
       a principios de enero (y qué hace `build` mientras tanto) o automatizarlo.
-- [ ] **Lo próximo: confirmar la primera corrida programada** (05:23 UTC) y la primera de estrellas
+- [ ] **Confirmar la primera corrida programada** (05:23 UTC) y la primera de estrellas
       (lunes 06:53 UTC) en Actions: revisar duración del paso `stars` contra `--max-minutes 25`.
 - [ ] Opcional (endurecimiento del informe, sección 6): `wrangler` sin lockfile en el job con secretos;
       verificar que el artefacto no tenga `_worker.js`/`_routes.json`/`functions/`; `ValueError` y JSON
@@ -56,12 +80,21 @@
 - [ ] Más adelante: `python_minor` codificado (hex) solo si ClickPy empieza a traer 0x1e/0x1f. Al hacerlo,
       reproducir el escape TSV de ClickHouse (`'` → `\'`, `\\`) o migrar claves: hoy hay 2 valores
       guardados con `\'` que cambiarían de clave y duplicarían la fracción "otros" en `metrics`.
+- [ ] **Usuario:** borrar la rama ya mergeada: `git branch -d docs-readme-arquitectura` y
+      `git push origin --delete docs-readme-arquitectura`. No agregar `.wrangler/` (caché local) a ningún commit.
 - [ ] Si cambia una categoría de `catalog/libraries.yaml`: borrar `data/frozen/` y volver a correr
       `uv run ecopy freeze`. `repo` y tags no lo invalidan.
 - [ ] **Investigar la caída desde 2026-08-25** (−36 % de un día para el otro, recuperación lenta,
       algunos paquetes ×0,12). Ya está marcada como discontinuidad: si se explica, revisar esa marca.
 - [ ] Opcional: activar hooks de Claude Code copiando `.claude/settings.template.json` →
       `.claude/settings.json` (hoy los guards solo corren en Codex).
+
+### Ideas a futuro (pedidas por el usuario, sin fecha ni diseño)
+- [ ] **Más fuentes de datos, incluso con scraping.** A definir cuáles; revisar términos de uso y licencia de cada
+      sitio y sostener lo actual: procedencia por fila, atribución y nunca identidades de usuarios.
+- [ ] **Detalle de las mejoras de cada release de Python:** qué agrega cada versión (novedades y mejoras), junto a la
+      línea de tiempo actual (`catalog/python_releases.yaml` y `/python/`). El texto externo se sigue
+      tratando como no confiable: autoescape, sin `|safe`, sin Markdown externo.
 
 ## Key Decisions & Why
 - **Flujo simple, proyecto de una persona:** etapas en `docs/ROADMAP.md`; cada etapa = una rama
@@ -150,12 +183,25 @@
   launcher de `impeccable`; auditoría de seguridad después de los workflows (perfil `standard`).
 - **Skill `security-audit` instalado a mano** (no `npx skills add`) en `skills/security-audit`, commit
   `c1c8a8c`, MIT; notice en `skills/THIRD-PARTY-NOTICES.md`. Local e ignorado por git como el resto del tooling.
+- **Marca eco-py (decisión del usuario, 2026-11-11):** las tres variantes de ChatGPT se descartaron (dos eran el logo
+  de Python recoloreado, y la PSF exige permiso incluso para cambios de color; el PNG se borró). Eligió la opción
+  "Guion" y pidió el nombre eco-py en todo el sitio. El favicon lleva colores fijos y nada de `<style>`.
+- **Series desde la primera versión vigente (decisión del usuario, 2026-11-11):** "no mostremos cosas que no son".
+  Se corta la serie y una nota dice cuántas descargas quedan fuera; los datos crudos no se tocan.
+- **Movers queda por cambio de cuota** (aceptado por el usuario): por descargas, la mayor suba de 2025 quedaba cuarta.
+- **3 decimales en porcentajes** (pedido del usuario): con 1 decimal las cuotas chicas salían 0,0 %.
 - **Selector de tema (decisión del usuario, 2026-11-10):** el botón nombra el tema al que cambia. Sin
   elección guardada manda el sistema. `theme.js` va sin `defer` para no parpadear y la CSP no cambia.
   La paleta oscura está duplicada porque `getComputedStyle` devolvería `light-dark(...)` crudo a los
   gráficos; un test exige que los dos bloques coincidan.
 
 ## Failed Approaches
+- **"Primera subida que figura en PyPI" no es "primera versión de la librería":** PyPI no lista versiones borradas.
+  De 500 paquetes, 50 tienen descargas anteriores; en unos es un nombre reusado (`uv`, `mcp`, `openai` con una `0.1`
+  de 2018) y en otros el mismo proyecto con versiones viejas borradas (`atomicwrites`, 285 M de descargas previas).
+  Recortar las 50 borraría historia real: por eso el umbral de 100 descargas por día (`catalog.TRACE_DAILY`).
+- **Las capturas por CDP a menos de ~1 s salen a mitad de la animación de ECharts:** la línea de `openai` parecía
+  cortarse en 2024 y las barras no coincidían con la tabla. Esperar o usar `--virtual-time-budget`.
 - **El entorno de GitHub se tiene que llamar exactamente como en el workflow:** con los secretos en `prd`
   y `environment: production`, GitHub creó `production` vacío al correr y wrangler falló con "necessary
   to set a CLOUDFLARE_API_TOKEN". Los secretos no se copian entre entornos: hay que volver a cargarlos.
@@ -234,6 +280,9 @@
 - `data/frozen/year=YYYY/methodology=N.json` — años cerrados congelados (`ecopy freeze`).
 - `catalog/` — `taxonomy.yaml` (40 categorías), `libraries.yaml`, `repos.yaml`, `python_releases.yaml`, `top100.yaml`
   (generado).
+- `catalog/series_start.yaml` — inicio de serie de 35 librerías (generado por `ecopy catalog starts`).
+- `src/ecopy/sources/pypi.py` — primera subida vigente de un paquete (API JSON de PyPI).
+- `build/preview-logo/` (ignorado) — las dos rondas de opciones de logo.
 - `data/runs/*.json` — registro por corrida; `revised_rows` mide correcciones de ClickPy.
 - `src/ecopy/` — `sources/clickpy.py`, `sources/github.py`, `store.py`, `catalog.py`, `quality.py`, `validate.py`,
   `pipeline.py`, `metrics.py`, `site/`, `cli.py`, `models.py`.
@@ -415,3 +464,15 @@ PR #10 mergeado; ramas viejas ya borradas. README reescrito: propósito (mirada 
 ecosistema), estado publicado, 4 diagramas Mermaid y tabla de tecnologías; BigQuery aclarado como respaldo
 no implementado. Diagramas renderizados con Mermaid 11.4.1 en Chrome, claro y oscuro, a 830 px. Al relevar
 el flujo apareció que `update.yml` no congela años: ver Next Steps. Sin código nuevo.
+
+### 2026-11-10 — Cierre de sesión: pedidos para la próxima
+PR #11 mergeado (`fbcb3b6`). El usuario fijó el orden: logo con `impeccable`, rankings de mayor a menor y, como
+slice aparte, los errores de gráficos; después el plan. Anotadas dos ideas a futuro: más fuentes con scraping
+y las mejoras de cada release de Python. Relevado sin cambiar código: catálogo y categorías ya están
+ordenados por descargas, así que falta saber dónde lo vio mal el usuario. Sin código nuevo.
+
+### 2026-11-11 — Etapa 6: logo eco-py, rankings, inicio de series y decimales
+Rama `etapa-6-logo-y-rankings`. Logo en dos rondas con `impeccable` (sin launcher); el usuario eligió el guion-serpiente
+y el nombre eco-py. Rankings: se ordenaron dominios, categorías por dominio e índice del comparador. El "error" de
+`openai` desde 2018 eran descargas reales de una versión `0.1` borrada: adaptador de PyPI, `ecopy catalog starts` y
+corte de la serie con nota. Porcentajes con 3 decimales. TDD de corrido, mutaciones y Chrome por CDP. Sin commit.

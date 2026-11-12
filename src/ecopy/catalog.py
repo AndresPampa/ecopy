@@ -50,6 +50,21 @@ class PythonRelease:
     end_of_life: date | None
 
 
+_STARTS_HEADER = """\
+# Generado por `ecopy catalog starts`: no editar a mano; revisar por diff.
+# Primera versión que sigue en PyPI, solo para los nombres que antes de esa fecha tuvieron
+# menos de {trace} descargas por día con datos: son versiones borradas o un nombre reusado.
+# Con más volumen que eso, lo anterior se toma como historia real y la serie no se recorta.
+"""
+
+TRACE_DAILY = 100
+"""Promedio diario por debajo del cual lo anterior a la primera versión vigente es un rastro."""
+
+
+class _UploadSource(Protocol):
+    def first_upload(self, project: str) -> date | None: ...
+
+
 class _TopSource(Protocol):
     def top_projects(self, years: Sequence[int], n: int = 100) -> Any: ...
 
@@ -118,6 +133,22 @@ def _read_repos(data: dict, projects: set[str], problems: list[str]) -> dict[str
     return repos
 
 
+def _read_starts(path: Path, projects: set[str], problems: list[str]) -> dict[str, date]:
+    """Inicio de serie por paquete; el archivo es opcional y solo lista los que se recortan."""
+    if not path.exists():
+        return {}
+    starts: dict = (_read(path, problems) or {}).get("starts") or {}
+    problems.extend(
+        f"{p}: está en series_start.yaml sin catalogar" for p in sorted(set(starts) - projects)
+    )
+    problems.extend(
+        f"{p}: inicio de serie inválido {d!r}"
+        for p, d in sorted(starts.items())
+        if type(d) is not date
+    )
+    return starts
+
+
 def _library(entry: dict, domain_of: dict, vocabulary: set, problems: list[str]) -> Library:
     project = entry["project"]
     if "repo" in entry:
@@ -157,6 +188,7 @@ class Catalog:
         labels: Mapping[str, Mapping[str, str]] | None = None,
         domains: Sequence[Domain] = (),
         tags: Sequence[str] = (),
+        starts: Mapping[str, date] | None = None,
     ) -> None:
         self._libraries = libraries
         self._domain_of = domain_of
@@ -165,6 +197,7 @@ class Catalog:
         self._labels = labels or {}
         self._domains = tuple(domains)
         self._tags = tuple(tags)
+        self._starts = dict(starts or {})
         self._renamed_to = {
             lib.renamed_from: lib.project for lib in libraries.values() if lib.renamed_from
         }
@@ -196,6 +229,7 @@ class Catalog:
             f"{p}: está en el top 100 sin categorizar" for p in sorted(ranked - set(libraries))
         )
         repos = _read_repos(_read(root / "repos.yaml", problems) or {}, set(libraries), problems)
+        starts = _read_starts(root / "series_start.yaml", set(libraries), problems)
         if problems:
             raise CatalogError(problems)
         libraries = {p: replace(lib, repo=repos[p]) for p, lib in libraries.items()}
@@ -208,6 +242,7 @@ class Catalog:
             labels=labels,
             domains=domains,
             tags=vocabulary,
+            starts=starts,
         )
 
     def library(self, project: str) -> Library:
@@ -222,6 +257,10 @@ class Catalog:
 
     def tags(self) -> tuple[str, ...]:
         return self._tags
+
+    def series_start(self, project: str) -> date | None:
+        """Primera versión que sigue en PyPI, si el nombre tuvo antes descargas de otra cosa."""
+        return self._starts.get(project)
 
     def renamed_to(self, project: str) -> str | None:
         """El nombre nuevo de un paquete renombrado, si está en el catálogo."""
@@ -267,3 +306,21 @@ def refresh_top100(root: Path, source: _TopSource, *, now: datetime) -> list[str
     text = yaml.safe_dump({"years": dict(sorted(years.items()))}, allow_unicode=True)
     path.write_text(_HEADER + text, encoding="utf-8")
     return sorted({p for names in years.values() for p in names} - known)
+
+
+def refresh_series_start(
+    root: Path, source: _UploadSource, series: Mapping[str, Mapping[date, int]]
+) -> dict[str, date]:
+    """Escribe `series_start.yaml` y devuelve los inicios de serie que quedaron."""
+    starts: dict[str, date] = {}
+    for project in sorted(series):
+        upload = source.first_upload(project)
+        if upload is None:
+            continue
+        earlier = [n for day, n in series[project].items() if day < upload and n > 0]
+        if earlier and sum(earlier) / len(earlier) < TRACE_DAILY:
+            starts[project] = upload
+    text = yaml.safe_dump({"starts": starts}, allow_unicode=True)
+    path = Path(root) / "series_start.yaml"
+    path.write_text(_STARTS_HEADER.format(trace=TRACE_DAILY) + text, encoding="utf-8")
+    return starts

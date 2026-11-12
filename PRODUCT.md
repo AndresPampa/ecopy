@@ -32,4 +32,5 @@ neutralizar la inflación por CI, no da puntajes combinados y congela los rankin
 
 ## Brand Commitments
 
-Nombre: ecopy. Subtítulo: "the Python ecosystem, year by year". No usa el logo ni la marca de la PSF.
+Nombre: ecopy; en el sitio se escribe eco-py, con una serpiente como guion. Subtítulo: "the Python
+ecosystem, year by year". No usa el logo ni la marca de la PSF: una sola serpiente, sin azul y amarillo.

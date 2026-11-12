@@ -188,7 +188,7 @@ def year_share_chart(shares: Sequence[YearShare]) -> dict:
     for share in shares:
         ytd = share.status == "ytd"
         names.append(f"{share.year}{' YTD' if ytd else ''}")
-        point = {"value": round(100 * share.share, 2)}
+        point = {"value": round(100 * share.share, 3)}
         data.append({**point, "itemStyle": {"opacity": 0.55}} if ytd else point)
     series = {
         "type": "bar",
@@ -216,10 +216,10 @@ def _year_charts(
     return {
         "shares": _horizontal_bars(
             [label(c.slug, labels, lang) for c in categories],
-            [round(100 * c.share, 2) for c in categories],
+            [round(100 * c.share, 3) for c in categories],
         ),
         "python": _horizontal_bars(
-            [v.version for v in versions], [round(100 * v.share, 2) for v in versions]
+            [v.version for v in versions], [round(100 * v.share, 3) for v in versions]
         ),
         "volume": _volume_chart(years),
     }
