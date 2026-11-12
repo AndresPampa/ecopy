@@ -17,7 +17,13 @@ from pathlib import Path
 
 import httpx
 
-from ecopy.catalog import FIRST_RANKED_YEAR, Catalog, CatalogError, refresh_top100
+from ecopy.catalog import (
+    FIRST_RANKED_YEAR,
+    Catalog,
+    CatalogError,
+    refresh_series_start,
+    refresh_top100,
+)
 from ecopy.metrics import (
     METHODOLOGY_VERSION,
     YearInputs,
@@ -34,6 +40,7 @@ from ecopy.pipeline import REOBSERVE_DAYS, ingest, ingest_stars, validate_store
 from ecopy.site import render_site
 from ecopy.sources.clickpy import ClickPy, SourceError
 from ecopy.sources.github import GitHub
+from ecopy.sources.pypi import PyPI
 from ecopy.store import ImmutabilityError, Store
 
 
@@ -235,6 +242,14 @@ def _freeze(args: argparse.Namespace) -> int:
 
 def _catalog(args: argparse.Namespace, http: httpx.Client | None, now: datetime) -> int:
     with _client(http) as client:
+        if args.action == "starts":
+            projects = Catalog.load(args.catalog).projects
+            series = Store(args.data).daily_downloads(projects)
+            starts = refresh_series_start(args.catalog, PyPI(client), series)
+            print(f"{len(starts)} series con inicio recortado")
+            for project, day in starts.items():
+                print(f"{project}\t{day}")
+            return 0
         source = ClickPy(client)
         if args.action == "refresh":
             added = refresh_top100(args.catalog, source, now=now)
@@ -337,8 +352,9 @@ def _parser() -> argparse.ArgumentParser:
     )
 
     catalog = commands.add_parser("catalog", help="mantiene el catálogo")
-    catalog.add_argument("action", choices=["refresh", "check"])
+    catalog.add_argument("action", choices=["refresh", "check", "starts"])
     catalog.add_argument("--catalog", type=Path, default=Path("catalog"))
+    catalog.add_argument("--data", type=Path, default=Path("data"), help="solo para `starts`")
 
     serve = commands.add_parser("serve", help="sirve el sitio en localhost con su CSP")
     serve.add_argument("--out", type=Path, default=Path("build/site"))

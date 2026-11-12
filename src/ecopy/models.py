@@ -333,6 +333,8 @@ class LibraryView(BaseModel):
 
     project: str
     first_date: date
+    earlier_downloads: int = 0
+    """Descargas que el nombre tuvo antes de su primera versión vigente; no entran en la serie."""
     last_closed_month: MonthPoint | None
     monthly: tuple[MonthPoint, ...]
     yearly: tuple[YearTotal, ...]

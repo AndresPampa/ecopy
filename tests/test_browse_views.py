@@ -126,7 +126,8 @@ def test_each_domain_and_category_has_its_share_per_year_and_its_libraries():
         (2023, 0.75, "closed"),
         (2024, 0.75, "ytd"),
     ]
-    web, testing = domain.categories
+    web = next(c for c in domain.categories if c.slug == "web")
+    testing = next(c for c in domain.categories if c.slug == "testing")
     assert [s.share for s in web.shares] == [0.5, 0.25]
     assert [r.project for r in web.rows] == ["fastapi", "flask"]
     assert [r.project for r in testing.rows] == ["pytest"]
@@ -173,3 +174,73 @@ def test_stars_accumulate_by_week_and_know_who_shares_the_repo():
 
 def test_without_a_daily_count_the_total_is_the_accumulated_sum():
     assert stars_view("a/b", {date(2024, 1, 7): 10}, {}, shared_with=()).total == 10
+
+
+def test_categories_go_from_the_largest_share_of_the_latest_year_to_the_smallest():
+    years = (year(2023, 0.5, 0.25), year(2024, 0.25, 0.5, status="ytd"))
+
+    domain = taxonomy_view(years, rows(), catalog())[0]
+
+    assert [c.slug for c in domain.categories] == ["testing", "web"]
+
+
+def test_categories_with_the_same_share_keep_the_taxonomy_order():
+    years = (year(2024, 0.25, 0.25),)
+
+    domain = taxonomy_view(years, rows(), catalog())[0]
+
+    assert [c.slug for c in domain.categories] == ["web", "testing"]
+
+
+def two_domains(number, first, second) -> YearView:
+    base = year(number, 0.0, 0.0)
+    shares = (
+        DomainShare(slug="development", downloads=1, share=first, categories=()),
+        DomainShare(slug="data-ai", downloads=1, share=second, categories=()),
+    )
+    return base.model_copy(update={"domains": shares})
+
+
+def test_domains_go_from_the_largest_share_of_the_latest_year_to_the_smallest():
+    tree = Catalog({}, {}, domains=(Domain("development", ()), Domain("data-ai", ())))
+
+    pages = taxonomy_view((two_domains(2023, 0.6, 0.3), two_domains(2024, 0.2, 0.7)), (), tree)
+
+    assert [d.slug for d in pages] == ["data-ai", "development"]
+
+
+def reused_name() -> Catalog:
+    libraries = {"fastapi": Library("fastapi", "web", (), None, None)}
+    return Catalog(libraries, {"web": "development"}, starts={"fastapi": date(2024, 2, 10)})
+
+
+def test_a_series_starts_at_the_first_release_still_on_pypi():
+    series = {date(2024, 1, 5): 3, date(2024, 2, 9): 4, date(2024, 2, 10): 50, date(2024, 3, 1): 60}
+
+    view = library_view("fastapi", series, as_of=AS_OF, totals=TOTALS, catalog=reused_name())
+
+    assert view.first_date == date(2024, 2, 10)
+    assert [(m.month, m.downloads) for m in view.monthly] == [
+        (date(2024, 2, 1), 50),
+        (date(2024, 3, 1), 60),
+    ]
+    assert [(y.year, y.downloads) for y in view.yearly] == [(2024, 110)]
+    assert view.earlier_downloads == 7
+
+
+def test_a_series_without_a_known_start_is_whole():
+    view = library_view("flask", months((1, 3), (2, 4)), as_of=AS_OF, catalog=catalog())
+
+    assert view.first_date == date(2024, 1, 1) and view.earlier_downloads == 0
+
+
+def test_a_start_after_the_last_data_does_not_empty_the_series():
+    late = Catalog(
+        {"fastapi": Library("fastapi", "web", (), None, None)},
+        {"web": "development"},
+        starts={"fastapi": date(2025, 1, 1)},
+    )
+
+    view = library_view("fastapi", months((1, 3)), as_of=AS_OF, catalog=late)
+
+    assert view.first_date == date(2024, 1, 1) and view.earlier_downloads == 0

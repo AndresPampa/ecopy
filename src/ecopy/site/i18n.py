@@ -8,6 +8,10 @@ TEXTS = {
     "en": {
         "switch_label": "Español",
         "first_data": "First day with data",
+        "earlier_note": (
+            "The series starts on {date}, the first release still on PyPI. Before that the name "
+            "had {n} downloads of releases that are no longer on PyPI; they are left out."
+        ),
         "last_closed": "Last closed month",
         "yearly_title": "Downloads per year",
         "monthly_title": "Downloads per month",
@@ -42,7 +46,7 @@ TEXTS = {
         "in_year": "in {year}",
         "trend_alt": "Share of PyPI over the last 36 closed months for {project}.",
         "catalog_title": "Libraries",
-        "catalog_lead": "The ecopy catalog, by downloads in the last closed month.",
+        "catalog_lead": "The eco-py catalog, by downloads in the last closed month.",
         "trend_col": "Share of PyPI, 36 months",
         "filter_label": "Filter by tag",
         "filter_count": "{shown} of {total} libraries",
@@ -150,7 +154,8 @@ TEXTS = {
         "shares_title": "Share by domain and category",
         "shares_alt": "Bar chart of the twelve largest categories. The table has all of them.",
         "catalog_share": (
-            "Shares are over the ecopy catalog, which is {share} of all PyPI downloads this period."
+            "Shares are over the eco-py catalog, which is {share} of all PyPI downloads this "
+            "period."
         ),
         "category": "Category",
         "share": "Share",
@@ -187,6 +192,10 @@ TEXTS = {
     "es": {
         "switch_label": "English",
         "first_data": "Primer día con datos",
+        "earlier_note": (
+            "La serie empieza el {date}, la primera versión que sigue en PyPI. Antes el nombre "
+            "tuvo {n} descargas de versiones que ya no están en PyPI; quedan fuera."
+        ),
         "last_closed": "Último mes cerrado",
         "yearly_title": "Descargas por año",
         "monthly_title": "Descargas por mes",
@@ -225,7 +234,7 @@ TEXTS = {
         "in_year": "en {year}",
         "trend_alt": "Cuota de PyPI de los últimos 36 meses cerrados de {project}.",
         "catalog_title": "Librerías",
-        "catalog_lead": "El catálogo de ecopy, por descargas del último mes cerrado.",
+        "catalog_lead": "El catálogo de eco-py, por descargas del último mes cerrado.",
         "trend_col": "Cuota de PyPI, 36 meses",
         "filter_label": "Filtrar por tag",
         "filter_count": "{shown} de {total} librerías",
@@ -348,7 +357,7 @@ TEXTS = {
             "Gráfico de barras de las doce categorías más grandes. La tabla las tiene todas."
         ),
         "catalog_share": (
-            "Las cuotas son sobre el catálogo de ecopy, que representa {share} de las descargas "
+            "Las cuotas son sobre el catálogo de eco-py, que representa {share} de las descargas "
             "de PyPI en este período."
         ),
         "category": "Categoría",

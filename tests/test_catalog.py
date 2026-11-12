@@ -5,7 +5,7 @@ from datetime import UTC, date, datetime
 import pytest
 import yaml
 
-from ecopy.catalog import Catalog, CatalogError, refresh_top100
+from ecopy.catalog import Catalog, CatalogError, refresh_series_start, refresh_top100
 
 TAXONOMY = {
     "domains": [
@@ -296,3 +296,62 @@ def test_repos_are_unique_and_know_the_packages_that_share_them(tmp_path):
 
     assert catalog.repos() == ("a/b",)
     assert catalog.projects_of_repo("a/b") == ("fastapi", "fastapi-cli")
+
+
+def test_series_starts_are_optional_and_read_by_project(tmp_path):
+    root = write(tmp_path / "c")
+    assert Catalog.load(root).series_start("fastapi") is None
+
+    (root / "series_start.yaml").write_text("starts:\n  fastapi: 2020-02-18\n")
+
+    catalog = Catalog.load(root)
+    assert catalog.series_start("fastapi") == date(2020, 2, 18)
+    assert catalog.series_start("pytest") is None
+
+
+def test_a_series_start_must_be_a_date_of_a_cataloged_project(tmp_path):
+    root = write(tmp_path / "c")
+    (root / "series_start.yaml").write_text("starts:\n  fastapi: soon\n  ghost: 2020-02-18\n")
+
+    found = problems(root)
+
+    assert "fastapi: inicio de serie inválido" in found
+    assert "ghost: está en series_start.yaml sin catalogar" in found
+
+
+class FakeUploads:
+    def __init__(self, uploads):
+        self.uploads = uploads
+
+    def first_upload(self, project):
+        return self.uploads.get(project)
+
+
+def days(start: date, count: int, downloads: int) -> dict[date, int]:
+    return {date.fromordinal(start.toordinal() + i): downloads for i in range(count)}
+
+
+def test_a_name_with_trace_downloads_before_its_first_upload_gets_a_series_start(tmp_path):
+    root = write(tmp_path / "c")
+    series = {
+        # Nombre reusado: antes de la primera subida vigente hubo un goteo de otra cosa.
+        "fastapi": {**days(date(2018, 2, 26), 10, 99), date(2020, 2, 18): 5000},
+        # Mismo proyecto con versiones viejas borradas: el volumen previo es historia real.
+        "pytest": {**days(date(2018, 2, 26), 10, 100), date(2020, 2, 18): 5000},
+    }
+    source = FakeUploads({"fastapi": date(2020, 2, 18), "pytest": date(2020, 2, 18)})
+
+    changed = refresh_series_start(root, source, series)
+
+    assert changed == {"fastapi": date(2020, 2, 18)}
+    assert Catalog.load(root).series_start("fastapi") == date(2020, 2, 18)
+    assert Catalog.load(root).series_start("pytest") is None
+
+
+def test_no_start_without_earlier_downloads_or_without_a_known_upload(tmp_path):
+    root = write(tmp_path / "c")
+    series = {"fastapi": {date(2020, 2, 18): 7}, "pytest": {date(2019, 1, 1): 7}}
+    source = FakeUploads({"fastapi": date(2020, 2, 18)})
+
+    assert refresh_series_start(root, source, series) == {}
+    assert "starts: {}" in (root / "series_start.yaml").read_text()

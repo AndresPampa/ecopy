@@ -1,0 +1,40 @@
+# Generado por `ecopy catalog starts`: no editar a mano; revisar por diff.
+# Primera versión que sigue en PyPI, solo para los nombres que antes de esa fecha tuvieron
+# menos de 100 descargas por día con datos: son versiones borradas o un nombre reusado.
+# Con más volumen que eso, lo anterior se toma como historia real y la serie no se recorta.
+starts:
+  absl-py: 2017-09-26
+  authlib: 2017-11-18
+  black: 2018-03-14
+  build: 2020-05-25
+  cattrs: 2017-12-11
+  cloudflare: 2016-05-13
+  cupy: 2017-02-21
+  dagster: 2018-06-12
+  docker: 2016-12-12
+  feast: 2019-04-09
+  hatchling: 2022-01-09
+  libcst: 2019-08-07
+  lightgbm: 2017-06-20
+  loguru: 2018-12-07
+  mcp: 2024-11-20
+  mdurl: 2021-07-20
+  mimesis: 2017-07-15
+  mlflow: 2018-06-04
+  modin: 2018-06-24
+  openai: 2020-02-18
+  panda3d: 2017-04-01
+  panel: 2018-08-24
+  prefect: 2019-03-24
+  prophet: 2020-06-07
+  pybullet: 2017-04-03
+  pyqt6: 2021-01-04
+  pyspark: 2017-07-12
+  quantlib: 2019-08-30
+  ray: 2017-06-03
+  reflex: 2023-06-19
+  tensorboard: 2017-02-25
+  tiktoken: 2022-12-15
+  trove-classifiers: 2020-04-03
+  uv: 2024-02-15
+  vectorbt: 2020-12-06

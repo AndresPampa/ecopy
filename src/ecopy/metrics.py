@@ -116,6 +116,12 @@ def library_view(
     observed = {day: n for day, n in series.items() if day <= as_of}
     if not observed:
         raise ValueError(f"{project}: sin datos hasta {as_of}")
+    start = catalog.series_start(project) if catalog is not None else None
+    earlier = 0
+    if start is not None and any(day >= start for day in observed):
+        # Antes de la primera versión vigente, el nombre era de otra cosa: no es su historia.
+        earlier = sum(n for day, n in observed.items() if day < start)
+        observed = {day: n for day, n in observed.items() if day >= start}
     for day, downloads in observed.items():
         by_month[day.replace(day=1)] += downloads
     first_date = min(observed)
@@ -135,6 +141,7 @@ def library_view(
     return LibraryView(
         project=project,
         first_date=first_date,
+        earlier_downloads=earlier,
         last_closed_month=closed[-1] if closed else None,
         monthly=monthly,
         yearly=_yearly(observed, first_date, as_of),
@@ -170,7 +177,10 @@ def library_rows(views: Sequence[LibraryView]) -> tuple[LibraryRow, ...]:
 def taxonomy_view(
     years: Sequence[YearView], rows: Sequence[LibraryRow], catalog: Catalog
 ) -> tuple[DomainPage, ...]:
-    """Cuota por año de cada dominio y categoría, con las librerías de cada categoría."""
+    """Cuota por año de cada dominio y categoría, con las librerías de cada categoría.
+
+    Dominios y categorías van de la mayor cuota del último año a la menor.
+    """
     domain_share: dict[str, list[YearShare]] = defaultdict(list)
     category_share: dict[str, list[YearShare]] = defaultdict(list)
     for year in years:
@@ -182,22 +192,34 @@ def taxonomy_view(
                 category_share[category.slug].append(
                     YearShare(year=year.year, status=year.status, share=category.share)
                 )
-    return tuple(
-        DomainPage(
-            slug=domain.slug,
-            shares=tuple(domain_share[domain.slug]),
-            categories=tuple(
-                CategoryPage(
-                    slug=slug,
-                    domain=domain.slug,
-                    shares=tuple(category_share[slug]),
-                    rows=tuple(r for r in rows if r.category == slug),
-                )
-                for slug in domain.categories
-            ),
+    latest = years[-1].year if years else None
+
+    def weight(shares: Sequence[YearShare]) -> float:
+        """Cuota del último año; lo que ese año no tiene dato va al final."""
+        return next((s.share for s in shares if s.year == latest), -1.0)
+
+    pages = []
+    for domain in catalog.domains():
+        categories = [
+            CategoryPage(
+                slug=slug,
+                domain=domain.slug,
+                shares=tuple(category_share[slug]),
+                rows=tuple(r for r in rows if r.category == slug),
+            )
+            for slug in domain.categories
+        ]
+        # sorted es estable: con la misma cuota queda el orden de la taxonomía.
+        categories.sort(key=lambda c: -weight(c.shares))
+        pages.append(
+            DomainPage(
+                slug=domain.slug,
+                shares=tuple(domain_share[domain.slug]),
+                categories=tuple(categories),
+            )
         )
-        for domain in catalog.domains()
-    )
+    pages.sort(key=lambda d: -weight(d.shares))
+    return tuple(pages)
 
 
 def releases_view(releases: Sequence[PythonRelease], *, as_of: date) -> ReleasesView:

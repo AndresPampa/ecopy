@@ -23,7 +23,7 @@ DISCONTINUITY_NOTES = {
 TEXTS = {
     "en": {
         "lead": (
-            "Where every figure on ecopy comes from, how it is calculated and what it cannot tell "
+            "Where every figure on eco-py comes from, how it is calculated and what it cannot tell "
             "you."
         ),
         "version": "Current methodology version: {version}.",
@@ -44,7 +44,8 @@ TEXTS = {
                     "A download is a file fetched from PyPI: continuous integration, mirrors and "
                     "bots count the same as a person. Downloads are not users, and total volume "
                     "grows for reasons unrelated to popularity.",
-                    "That is why ecopy compares shares instead of raw counts. A library's share is "
+                    "That is why eco-py compares shares instead of raw counts. A library's share "
+                    "is "
                     "its downloads in a month divided by all PyPI downloads that month. The share "
                     "of a category or domain is its downloads divided by those of the whole "
                     "catalog in the same period.",
@@ -59,6 +60,12 @@ TEXTS = {
                     "survivors.",
                     "Each library has one main category; tags are only for browsing. Renamed "
                     "packages are linked, never added together.",
+                    "A name on PyPI can carry downloads from before the library existed: releases "
+                    "deleted later, or a name another project used first. When a name had fewer "
+                    "than 100 downloads per day before its first release still on PyPI, its series "
+                    "starts at that release and the page says how many downloads were left out. "
+                    "With more than that, the earlier downloads are kept as real history. Yearly "
+                    "shares by category still count them.",
                 ),
             ),
             (
@@ -87,7 +94,7 @@ TEXTS = {
                 (
                     "Star history is net: it only counts people who still have the star, dated "
                     "when they gave it. Old repositories can show a jump in their first week. "
-                    "ecopy stores counts only, never who starred.",
+                    "eco-py stores counts only, never who starred.",
                 ),
             ),
             (
@@ -118,7 +125,7 @@ TEXTS = {
         ),
     },
     "es": {
-        "lead": ("De dónde sale cada cifra de ecopy, cómo se calcula y qué no puede decirte."),
+        "lead": ("De dónde sale cada cifra de eco-py, cómo se calcula y qué no puede decirte."),
         "version": "Versión metodológica vigente: {version}.",
         "sections": (
             (
@@ -138,7 +145,7 @@ TEXTS = {
                     "Una descarga es un archivo bajado de PyPI: la integración continua, los "
                     "espejos y los bots cuentan igual que una persona. Las descargas no son "
                     "usuarios, y el volumen total crece por razones ajenas a la popularidad.",
-                    "Por eso ecopy compara cuotas y no conteos. La cuota de una librería son sus "
+                    "Por eso eco-py compara cuotas y no conteos. La cuota de una librería son sus "
                     "descargas de un mes divididas por todas las descargas de PyPI de ese mes. La "
                     "cuota de una categoría o dominio son sus descargas divididas por las de todo "
                     "el catálogo en el mismo período.",
@@ -153,6 +160,13 @@ TEXTS = {
                     "a las sobrevivientes de hoy.",
                     "Cada librería tiene una categoría principal; los tags son solo para navegar. "
                     "Los paquetes renombrados se enlazan, nunca se suman.",
+                    "Un nombre de PyPI puede traer descargas de antes de que la librería "
+                    "existiera: versiones borradas después, o un nombre que antes usó otro "
+                    "proyecto. Cuando un nombre tuvo menos de 100 descargas por día antes de su "
+                    "primera versión que sigue en PyPI, la serie empieza en esa versión y la ficha "
+                    "dice cuántas descargas quedaron fuera. Con más que eso, lo anterior se "
+                    "conserva como historia real. Las cuotas anuales por categoría las siguen "
+                    "contando.",
                 ),
             ),
             (
@@ -181,7 +195,7 @@ TEXTS = {
                 (
                     "La historia de estrellas es neta: solo cuenta a quienes conservan la "
                     "estrella, fechada cuando la dieron. Los repositorios viejos pueden mostrar un "
-                    "salto en su primera semana. ecopy guarda solo conteos, nunca quién dio la "
+                    "salto en su primera semana. eco-py guarda solo conteos, nunca quién dio la "
                     "estrella.",
                 ),
             ),

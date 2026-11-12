@@ -25,8 +25,9 @@ from ecopy.models import (
     YearTotal,
     YearView,
 )
+from ecopy.site import i18n, render_site
+from ecopy.site import methodology as methodology_texts
 from ecopy.site import render as site_render
-from ecopy.site import render_site
 
 SNAPSHOTS = Path(__file__).parent / "snapshots"
 
@@ -373,7 +374,7 @@ def test_each_year_gets_a_page_per_language_with_localized_figures(tmp_path):
 
     assert "<h1>2024</h1>" in english
     assert "9,000" in english and "9.000" in spanish
-    assert "75.0%" in english and "75,0 %" in spanish
+    assert "75.000%" in english and "75,000 %" in spanish
     assert "Web development" in english and "Desarrollo web" in spanish
 
 
@@ -382,8 +383,8 @@ def test_a_year_page_shows_movers_newcomers_versions_and_timeline(tmp_path):
 
     english = year_page(tmp_path)
 
-    assert "fastapi" in english and "+1.25" in english and "+2" in english
-    assert "flask" in english and "-0.50" in english
+    assert "fastapi" in english and "+1.250" in english and "+2" in english
+    assert "flask" in english and "-0.500" in english
     assert "uvicorn" in english and "#42" in english
     assert "3.12" in english and "3.13" in english
     assert 'href="/en/library/fastapi/"' in english
@@ -395,7 +396,7 @@ def test_the_year_page_states_its_methodology_and_catalog_coverage(tmp_path):
     english, spanish = year_page(tmp_path), year_page(tmp_path, lang="es")
 
     assert "Methodology version 1" in english and "Versión metodológica 1" in spanish
-    assert "68.0%" in english and "68,0 %" in spanish
+    assert "68.000%" in english and "68,000 %" in spanish
 
 
 def test_volume_always_carries_its_warning(tmp_path):
@@ -408,7 +409,7 @@ def test_volume_always_carries_its_warning(tmp_path):
 def test_growth_is_shown_when_comparable(tmp_path):
     render_years(tmp_path)
 
-    assert "+50.0%" in year_page(tmp_path)
+    assert "+50.000%" in year_page(tmp_path)
 
 
 def test_a_discontinuity_replaces_the_growth_with_its_explanation(tmp_path):
@@ -422,7 +423,7 @@ def test_a_discontinuity_replaces_the_growth_with_its_explanation(tmp_path):
     render_years(tmp_path, year(2018, volume=volume))
 
     english = year_page(tmp_path, 2018)
-    assert "+50.0%" not in english
+    assert "+50.000%" not in english
     assert "2018-07-27" in english
     assert "Growth is not shown" in english
 
@@ -621,9 +622,12 @@ def test_the_home_page_states_the_domain_that_gained_the_most_share(tmp_path):
 
     english = (tmp_path / "en" / "index.html").read_text()
     spanish = (tmp_path / "es" / "index.html").read_text()
-    assert "Data &amp; AI went from 25.0% of catalog downloads in 2023 to 50.0% in 2024." in english
     assert (
-        "Datos e IA pasó de 25,0 % de las descargas del catálogo en 2023 a 50,0 % en 2024."
+        "Data &amp; AI went from 25.000% of catalog downloads in 2023 to 50.000% in 2024."
+        in english
+    )
+    assert (
+        "Datos e IA pasó de 25,000 % de las descargas del catálogo en 2023 a 50,000 % en 2024."
         in spanish
     )
 
@@ -957,3 +961,60 @@ def test_every_page_starts_with_a_link_that_skips_to_the_content(tmp_path):
         body = html[html.index("<body>") + len("<body>") :].lstrip()
         assert body.startswith(f'<a class="skip" href="#main">{text}</a>')
         assert '<main id="main"' in html
+
+
+def test_the_mark_is_the_name_with_the_snake_as_its_hyphen(tmp_path):
+    render_all(tmp_path)
+
+    html = page(tmp_path)
+    mark = re.search(r'<a class="mark" href="/en/"[^>]*>.*?</a>', html, re.S)[0]
+
+    assert 'aria-label="eco-py"' in mark
+    assert re.search(r'eco</span><svg class="snake"[^>]*aria-hidden="true"', mark)
+    assert mark.endswith("py</span></a>")
+    assert "style=" not in mark and "<style" not in mark
+    assert "<title>fastapi · eco-py</title>" in html
+
+
+def test_the_favicon_is_the_snake_and_carries_no_style_of_its_own(tmp_path):
+    render_all(tmp_path)
+
+    icon = (tmp_path / "static" / "favicon.svg").read_text()
+
+    assert "<circle" in icon and "<path" in icon
+    assert "style" not in icon and "<script" not in icon and "href" not in icon
+
+
+def test_no_page_shows_the_name_without_its_hyphen(tmp_path):
+    render_all(tmp_path)
+
+    for path in tmp_path.rglob("*.html"):
+        text = re.sub(r"<[^>]+>", " ", path.read_text())
+        assert not re.search(r"(?<![/.\w-])ecopy(?![.\w/-])", text), path
+
+
+def test_the_methodology_explains_where_a_trimmed_series_starts(tmp_path):
+    render_all(tmp_path)
+
+    english, spanish = methodology(tmp_path, "en"), methodology(tmp_path, "es")
+
+    assert "first release still on PyPI" in english and "100 downloads" in english
+    assert "primera versión que sigue en PyPI" in spanish and "100 descargas" in spanish
+
+
+def strings(value):
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for item in value.values():
+            yield from strings(item)
+    elif isinstance(value, (tuple, list)):
+        for item in value:
+            yield from strings(item)
+
+
+def test_no_text_of_the_site_says_the_name_without_its_hyphen():
+    texts = [*strings(i18n.TEXTS), *strings(methodology_texts.TEXTS)]
+
+    assert len(texts) > 100
+    assert [text for text in texts if re.search(r"(?<![/.\w-])ecopy(?![.\w/-])", text)] == []

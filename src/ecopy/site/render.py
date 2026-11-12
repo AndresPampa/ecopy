@@ -57,17 +57,17 @@ class AssetIntegrityError(Exception):
 
 
 def _percent(value: float, lang: str) -> str:
-    text = f"{100 * value:.1f}"
+    text = f"{100 * value:.3f}"
     return f"{text.replace('.', ',')} %" if lang == "es" else f"{text}%"
 
 
 def _points(value: float, lang: str) -> str:
-    text = f"{value:+.2f}"
+    text = f"{value:+.3f}"
     return text.replace(".", ",") if lang == "es" else text
 
 
 def _growth(value: float, lang: str) -> str:
-    text = f"{100 * value:+.1f}"
+    text = f"{100 * value:+.3f}"
     return f"{text.replace('.', ',')} %" if lang == "es" else f"{text}%"
 
 
@@ -151,12 +151,21 @@ def _legend(years: Sequence[YearView]) -> list[dict]:
 _HOME_MOVERS = 5
 
 
+def _by_downloads(view: LibraryView) -> tuple[int, str]:
+    last = view.last_closed_month
+    return (-((last.downloads if last else None) or 0), view.project)
+
+
 def _write_compare_data(pages: Sequence[LibraryView], out: Path) -> None:
-    """Un JSON por librería con sus meses cerrados y un índice de nombres."""
+    """Un JSON por librería con sus meses cerrados y un índice de nombres.
+
+    El índice va de la más descargada a la menos en su último mes cerrado: es el orden en que el
+    comparador ofrece los nombres.
+    """
     directory = out / "data" / "library"
     directory.mkdir(parents=True, exist_ok=True)
     index = []
-    for view in sorted(pages, key=lambda v: v.project):
+    for view in sorted(pages, key=_by_downloads):
         slug = _slug(view.project)
         closed = [m for m in view.monthly if m.status != "in_progress"]
         series = {

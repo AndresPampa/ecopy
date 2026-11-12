@@ -3,8 +3,8 @@
 (() => {
   'use strict';
   const lang = document.documentElement.lang;
-  const compact = new Intl.NumberFormat(lang, { notation: 'compact', maximumFractionDigits: 1 });
-  const percent = new Intl.NumberFormat(lang, { maximumFractionDigits: 2 });
+  const compact = new Intl.NumberFormat(lang, { notation: 'compact', maximumFractionDigits: 3 });
+  const percent = new Intl.NumberFormat(lang, { maximumFractionDigits: 3 });
   const full = new Intl.NumberFormat(lang);
   const monthName = new Intl.DateTimeFormat(lang, {
     month: 'long',

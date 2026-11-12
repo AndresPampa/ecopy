@@ -178,10 +178,35 @@ header.site nav a[aria-current] {
 }
 
 .mark {
+  display: inline-flex;
+  align-items: center;
   font-size: 1.25rem;
   font-weight: 750;
   letter-spacing: -0.02em;
   text-decoration: none;
+}
+
+/* La serpiente es el guion de eco-py: una sola, en tinta, con el ojo del color de Datos e IA. */
+.snake {
+  flex: none;
+  width: 1.5em;
+  height: 0.8em;
+  margin: 0.12em 0.04em 0;
+}
+
+.snake path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+}
+
+.snake .head {
+  fill: currentColor;
+}
+
+.snake .eye {
+  fill: var(--d-data-ai);
 }
 
 .tools {

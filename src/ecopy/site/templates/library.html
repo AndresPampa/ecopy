@@ -33,6 +33,9 @@
 <div><dt>{{ t.last_closed }} ({{ view.last_closed_month.month.strftime("%Y-%m") }})</dt><dd>{{ view.last_closed_month.downloads|number(lang) }}</dd></div>
 {%- endif %}
 </dl>
+{%- if view.earlier_downloads %}
+<p class="note">{{ t.earlier_note.format(date=view.first_date, n=view.earlier_downloads|number(lang)) }}</p>
+{%- endif %}
 <section>
 <h2>{{ t.monthly_title }}</h2>
 <div id="chart" class="chart" data-chart role="img" aria-label="{{ t.chart_alt }}"></div>
