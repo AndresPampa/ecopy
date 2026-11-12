@@ -217,7 +217,7 @@ def test_refresh_keeps_closed_years_and_rereads_the_current_one(tmp_path):
     (root / "top100.yaml").write_text(yaml.safe_dump({"years": {**closed, 2026: ["stale"]}}))
     source = FakeTop()
 
-    added = refresh_top100(root, source, now=NOW)
+    added = refresh_top100(root, source, now=NOW, frozen=range(2017, 2026))
 
     assert source.asked == [[2026]]
     saved = yaml.safe_load((root / "top100.yaml").read_text())["years"]
@@ -231,9 +231,38 @@ def test_first_refresh_reads_every_year_since_2017(tmp_path):
     root.mkdir()
     source = FakeTop()
 
-    refresh_top100(root, source, now=NOW)
+    refresh_top100(root, source, now=NOW, frozen=())
 
     assert source.asked == [list(range(2017, 2027))]
+
+
+def test_in_january_the_year_that_closed_is_read_again_until_it_is_frozen(tmp_path):
+    root = tmp_path / "c"
+    root.mkdir()
+    saved = {year: ["old"] for year in range(2017, 2027)}
+    (root / "top100.yaml").write_text(yaml.safe_dump({"years": saved}))
+    source = FakeTop()
+
+    refresh_top100(root, source, now=datetime(2027, 1, 3, tzinfo=UTC), frozen=range(2017, 2026))
+
+    assert source.asked == [[2026, 2027]]
+    years = yaml.safe_load((root / "top100.yaml").read_text())["years"]
+    assert years[2026] == ["new2026", "fastapi"] and years[2025] == ["old"]
+
+
+def test_a_year_the_source_has_no_data_for_yet_is_left_out(tmp_path):
+    root = tmp_path / "c"
+    root.mkdir()
+    (root / "top100.yaml").write_text(yaml.safe_dump({"years": {2017: ["old"]}}))
+
+    class NothingIn2027(FakeTop):
+        def top_projects(self, years, n=100):
+            return {y: names for y, names in super().top_projects(years, n).items() if y != 2027}
+
+    refresh_top100(root, NothingIn2027(), now=datetime(2027, 1, 1, tzinfo=UTC), frozen=[2017])
+
+    years = yaml.safe_load((root / "top100.yaml").read_text())["years"]
+    assert 2027 not in years and years[2026] == ["new2026", "fastapi"]
 
 
 def test_a_library_without_an_entry_in_repos_is_rejected(tmp_path):

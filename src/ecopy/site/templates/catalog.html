@@ -7,6 +7,39 @@
 {%- block content %}
 <h1>{{ t.catalog_title }}</h1>
 <p class="lead">{{ t.catalog_lead }}</p>
+{%- if ranking %}
+<section class="categories">
+<h2>{{ t.categories_title }}</h2>
+{%- if latest %}
+<p class="note">{{ (t.categories_note_ytd if latest.status == "ytd" else t.categories_note).format(year=latest.year) }}</p>
+{%- endif %}
+<div class="by-domain">
+{%- for domain in browse.domains %}
+<div class="d-{{ domain.slug }}">
+<h3><i class="sw"></i><a href="/{{ lang }}/domain/{{ domain.slug }}/">{{ domain.slug|label(lang) }}</a>{% if domain.shares %}<b>{{ (domain.shares|last).share|percent(lang) }}</b>{% endif %}</h3>
+<ul class="rows">
+{%- for category in domain.categories %}
+<li><a href="/{{ lang }}/category/{{ category.slug }}/">{{ category.slug|label(lang) }}</a><span class="note">{{ category.rows|length }}</span>{% if category.shares %}<b>{{ (category.shares|last).share|percent(lang) }}</b>{% endif %}</li>
+{%- endfor %}
+</ul>
+</div>
+{%- endfor %}
+</div>
+<details class="ranking">
+<summary>{{ t.categories_all.format(n=ranking|length) }}</summary>
+<table class="ranking">
+<thead><tr><th scope="col">{{ t.category }}</th><th scope="col">{{ t.libraries_col }}</th><td class="bar"></td><th scope="col">{{ t.share }}</th></tr></thead>
+<tbody>
+{%- for category in ranking %}
+<tr><th scope="row"><i class="sw d-{{ category.domain }}"></i> <a href="/{{ lang }}/category/{{ category.slug }}/">{{ category.slug|label(lang) }}</a></th><td>{{ category.rows|length }}</td><td class="bar">{% if category.slug in bars %}<svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true" focusable="false"><rect class="track" width="100" height="8" rx="2"/><rect class="d-{{ category.domain }}" width="{{ bars[category.slug] }}" height="8" rx="2"/></svg>{% endif %}</td><td>{% if category.shares %}{{ (category.shares|last).share|percent(lang) }}{% else %}{{ t.no_data }}{% endif %}</td></tr>
+{%- endfor %}
+</tbody>
+</table>
+</details>
+</section>
+<section>
+<h2>{{ t.all_libraries }}</h2>
+{%- endif %}
 <div id="filters" class="filters" role="group" aria-label="{{ t.filter_label }}" hidden>
 {%- for tag in browse.tags %}
 <button class="chip" type="button" data-tag="{{ tag }}" aria-pressed="false">{{ tag|label(lang) }}</button>
@@ -14,4 +47,7 @@
 </div>
 <p id="filter-count" class="note" role="status" data-template="{{ t.filter_count }}"></p>
 {{ m.library_table(browse.rows) }}
+{%- if ranking %}
+</section>
+{%- endif %}
 {%- endblock %}

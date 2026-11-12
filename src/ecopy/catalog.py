@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -289,10 +289,14 @@ class Catalog:
         return self._labels
 
 
-def refresh_top100(root: Path, source: _TopSource, *, now: datetime) -> list[str]:
+def refresh_top100(
+    root: Path, source: _TopSource, *, now: datetime, frozen: Collection[int]
+) -> list[str]:
     """Actualiza `top100.yaml` y devuelve los paquetes del top que no estaban antes.
 
-    Los años cerrados ya guardados no se vuelven a pedir: su ranking queda fijo.
+    Solo los años ya congelados quedan fijos. Un año que cerró pero no se congeló se vuelve a
+    pedir: en enero, el ranking guardado del año anterior es el de la última corrida de diciembre
+    o anterior, no el del año completo. Un año sin datos en la fuente todavía no entra.
     """
     path = Path(root) / "top100.yaml"
     years: dict[int, list[str]] = (
@@ -300,7 +304,8 @@ def refresh_top100(root: Path, source: _TopSource, *, now: datetime) -> list[str
     )
     known = {project for names in years.values() for project in names}
     current = now.astimezone(UTC).year
-    pending = [y for y in range(FIRST_RANKED_YEAR, current + 1) if y == current or y not in years]
+    fixed = set(frozen) & set(years)
+    pending = [y for y in range(FIRST_RANKED_YEAR, current + 1) if y not in fixed]
     fetched = source.top_projects(pending, 100)
     years.update({year: list(names) for year, names in fetched.items()})
     text = yaml.safe_dump({"years": dict(sorted(years.items()))}, allow_unicode=True)

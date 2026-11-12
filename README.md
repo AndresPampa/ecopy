@@ -52,7 +52,8 @@ que alcanza con un sitio pre-generado. El repositorio es también la base de dat
 
 Los datos entran por `ingest` y `stars`, se validan antes de escribirse y nunca se sobrescriben: una
 corrección de la fuente es un archivo nuevo. Las métricas se recalculan en cada build, salvo los años
-cerrados, que se leen de lo congelado.
+cerrados, que se leen de lo congelado. Un año recién cerrado que todavía no se congeló se publica como
+cierre provisional, así el deploy diario no se corta en enero.
 
 ```mermaid
 flowchart TD
@@ -68,7 +69,7 @@ flowchart TD
     raw --> metrics["Métricas<br/>DuckDB"]
     catalog[("catalog/<br/>500 paquetes y taxonomía")] --> metrics
     pypi["API JSON de PyPI<br/>primera versión vigente"] -.->|"ecopy catalog starts, a mano"| catalog
-    metrics -.->|"ecopy freeze, una vez al año"| frozen[("data/frozen/<br/>años cerrados")]
+    metrics -.->|"ecopy freeze, a mano en enero"| frozen[("data/frozen/<br/>años cerrados")]
     metrics --> build["ecopy build<br/>Jinja2, ECharts y SVG"]
     frozen --> build
     runs -->|"aviso de actualización fallida"| build
@@ -210,6 +211,11 @@ Detalle y estado en [`docs/ROADMAP.md`](docs/ROADMAP.md). Cada etapa se trabaja 
   releases y estrellas. Incluye selector de tema claro y oscuro.
 - **Etapa 5 — Publicación del MVP** ✅: EN/ES, metodología, seguridad, accesibilidad y despliegue
   (GitHub Actions + Cloudflare Pages).
+- **Etapa 6 — Logo, rankings y datos de las fichas** ✅: marca eco-py, listas de mayor a menor, series
+  desde la primera versión vigente en PyPI y porcentajes con 3 decimales.
+- **Etapa 7 — Categorías en Libraries y cierre anual** 🚧: todas las categorías a la vista en la página
+  de librerías, con enlace a sus estadísticas; cuota en "Explore by domain"; cierre provisional del año
+  que termina hasta congelarlo a mano en enero.
 - **Después del MVP:** Trending y Seguridad; cuentas y encuestas.
 
 ## Fuentes de datos
@@ -244,8 +250,19 @@ Para generar el sitio completo, con el catálogo entero y las páginas por año:
 uv run ecopy ingest   # primera vez: histórico; después: hasta ayer (UTC)
 uv run ecopy freeze   # congela los años cerrados que falten; lo ya congelado no se reescribe
 uv run ecopy stars    # historia de estrellas; pide GITHUB_TOKEN y se reanuda sola
-uv run ecopy build    # genera build/site/; falla si falta congelar algún año cerrado
+uv run ecopy build    # genera build/site/; un año cerrado sin congelar sale como cierre provisional
 uv run ecopy serve    # http://127.0.0.1:8000/en/ con la CSP real
+```
+
+**Cierre anual (a mano, desde el 8 de enero).** El 1 de enero el año que terminó pasa a cerrado; hasta
+congelarlo, `build` lo publica como cierre provisional y `update.yml` deja una anotación en cada corrida.
+Conviene esperar a que pase la ventana de 7 días de reobservación:
+
+```bash
+uv run ecopy catalog refresh   # vuelve a pedir el top 100 de los años sin congelar
+git diff catalog/top100.yaml   # revisar lo que entra; categorizar en libraries.yaml lo nuevo
+uv run ecopy catalog starts    # solo si se agregaron librerías; revisar catalog/series_start.yaml
+uv run ecopy freeze            # congela el año; lo ya congelado no se reescribe
 ```
 
 La historia completa de estrellas ya está en `data/`. Partirla desde cero lleva unas 10.000 consultas

@@ -23,6 +23,9 @@
 <nav class="years" aria-label="{{ t.nav_years }}">
 {%- for item in years|reverse %}{% if item.year == view.year %}<span aria-current="page">{{ item.year }}</span>{% else %}<a href="/{{ lang }}/year/{{ item.year }}/">{{ item.year }}</a>{% endif %}{% endfor %}</nav>
 <h1>{{ view.year }}</h1>
+{%- if view.provisional %}
+<p class="provisional" role="note">{{ t.provisional }}</p>
+{%- endif %}
 <p>{% if view.status == "ytd" %}{{ t.ytd }}: {{ view.period_start }} → {{ view.period_end }}. {{ t.compared_with.format(start=view.previous_start, end=view.previous_end) }}{% else %}{{ view.period_start }} → {{ view.period_end }}.{% endif %} <a href="/{{ lang }}/methodology/">{{ t.methodology.format(version=view.methodology_version) }}</a>.</p>
 
 <section>

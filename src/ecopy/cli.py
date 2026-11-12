@@ -124,28 +124,44 @@ def _validate(args: argparse.Namespace, now: datetime) -> int:
     return 1 if problems else 0
 
 
-class FrozenYearMissing(Exception):
-    """Un año cerrado no tiene su vista congelada."""
-
-
 def _closed_years(totals: DailySeries, as_of: date) -> list[int]:
     years = {day.year for day in totals if day.year >= FIRST_RANKED_YEAR}
     return sorted(year for year in years if date(year, 12, 31) <= as_of)
 
 
 def _year_views(store: Store, catalog: Catalog, series: dict, as_of: date) -> list[YearView]:
-    """Años cerrados desde lo congelado; el año en curso, recalculado."""
+    """Años cerrados desde lo congelado; el año en curso, recalculado.
+
+    Un año cerrado sin congelar se recalcula como provisional: así el deploy diario no se corta
+    entre el 1 de enero y el `ecopy freeze` manual, que necesita el top 100 revisado.
+    """
     totals = store.pypi_daily_totals()
+    inputs = functools.cache(
+        lambda: YearInputs(series, totals, store.python_minor_monthly(), catalog)
+    )
     views = []
     for year in _closed_years(totals, as_of):
         view = store.frozen_year(year)
         if view is None:
-            raise FrozenYearMissing(f"{year} no está congelado; correr `ecopy freeze`")
+            view = year_view(year, inputs(), as_of=as_of).model_copy(update={"provisional": True})
         views.append(view)
     if as_of.year >= FIRST_RANKED_YEAR and date(as_of.year, 12, 31) > as_of:
-        inputs = YearInputs(series, totals, store.python_minor_monthly(), catalog)
-        views.append(year_view(as_of.year, inputs, as_of=as_of))
+        views.append(year_view(as_of.year, inputs(), as_of=as_of))
     return views
+
+
+def _warn_provisional(years: Sequence[YearView]) -> None:
+    pending = [view.year for view in years if view.provisional]
+    if not pending:
+        return
+    message = (
+        f"{pending} sin congelar: se publican como cierre provisional. Correr "
+        "`ecopy catalog refresh`, revisar el diff de catalog/top100.yaml y `ecopy freeze`"
+    )
+    print(f"ecopy: {message}", file=sys.stderr)
+    # En Actions, una anotación visible en el resumen de la ejecución, sin hacerla fallar.
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        print(f"::warning title=Año sin congelar::{message}")
 
 
 def _library_stars(store: Store, catalog: Catalog) -> dict[str, StarsView]:
@@ -185,6 +201,7 @@ def _build(args: argparse.Namespace) -> int:
     # Las cuotas solo tienen sentido con todo el catálogo.
     catalog = None if args.project else Catalog.load(args.catalog)
     years = _year_views(store, catalog, series, as_of) if catalog else []
+    _warn_provisional(years)
     totals = store.pypi_daily_totals()
     stars = _library_stars(store, catalog) if catalog else {}
     pages = [
@@ -252,7 +269,10 @@ def _catalog(args: argparse.Namespace, http: httpx.Client | None, now: datetime)
             return 0
         source = ClickPy(client)
         if args.action == "refresh":
-            added = refresh_top100(args.catalog, source, now=now)
+            store = Store(args.data)
+            current = now.astimezone(UTC).year
+            frozen = [y for y in range(FIRST_RANKED_YEAR, current + 1) if store.frozen_year(y)]
+            added = refresh_top100(args.catalog, source, now=now, frozen=frozen)
             print(f"top 100 actualizado; {len(added)} paquetes nuevos")
             for project in added:
                 print(project)
@@ -354,7 +374,9 @@ def _parser() -> argparse.ArgumentParser:
     catalog = commands.add_parser("catalog", help="mantiene el catálogo")
     catalog.add_argument("action", choices=["refresh", "check", "starts"])
     catalog.add_argument("--catalog", type=Path, default=Path("catalog"))
-    catalog.add_argument("--data", type=Path, default=Path("data"), help="solo para `starts`")
+    catalog.add_argument(
+        "--data", type=Path, default=Path("data"), help="para `starts` y `refresh`"
+    )
 
     serve = commands.add_parser("serve", help="sirve el sitio en localhost con su CSP")
     serve.add_argument("--out", type=Path, default=Path("build/site"))
@@ -392,7 +414,6 @@ def main(
         SourceError,
         ImmutabilityError,
         CatalogError,
-        FrozenYearMissing,
         FileNotFoundError,
     ) as error:
         print(f"ecopy: {error}", file=sys.stderr)

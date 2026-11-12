@@ -30,6 +30,13 @@ El favicon es la misma serpiente sobre una placa oscura, con colores fijos y sin
 
 Fuentes del sistema. Monoespaciada solo para nombres de paquete, que son código.
 
+## Listados
+
+- En Libraries, arriba de la tabla: un bloque por dominio con su color, su cuota y todas sus categorías
+  (cantidad de librerías y cuota del último año). Debajo, plegado, el ranking de las 40 categorías con una
+  barra medida contra la mayor; la barra tiene un piso para que ninguna cuota desaparezca.
+- Toda lista ordenada por cuota muestra la cuota: si muestra otra cifra, el orden parece desordenado.
+
 ## Gráficos
 
 - Los porcentajes y los puntos de cuota llevan 3 decimales: con menos, las cuotas chicas salían 0,0 %.

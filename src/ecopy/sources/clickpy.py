@@ -168,10 +168,12 @@ class ClickPy:
                         GROUP BY y, project ORDER BY y, s DESC LIMIT {n} BY y""",
                 ):
                     ranking[int(year)].append(project)
-        short = {year: len(ranking[year]) for year in years if len(ranking[year]) != n}
+        # Un año sin ninguna fila todavía no empezó en la fuente (el 1 de enero); uno con menos
+        # de `n` es una respuesta cortada.
+        short = {year: len(ranking[year]) for year in years if 0 < len(ranking[year]) != n}
         if short:
             raise ChecksumMismatch(f"top {n} incompleto: {short}")
-        return {year: tuple(ranking[year]) for year in years}
+        return {year: tuple(ranking[year]) for year in years if ranking[year]}
 
     def known_projects(self, projects: Sequence[str]) -> set[str]:
         """Los paquetes de la lista que tienen algún dato en la fuente."""

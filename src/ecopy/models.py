@@ -9,7 +9,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 _SAFE_FILE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 
@@ -292,6 +292,8 @@ class YearView(BaseModel):
     python_unknown_share: float
     python_other_share: float
     timeline: tuple[TimelineEvent, ...]
+    provisional: bool = Field(default=False, exclude=True)
+    """Año cerrado que todavía no se congeló: se calcula en cada build y no se guarda."""
 
 
 class SiteStatus(BaseModel):

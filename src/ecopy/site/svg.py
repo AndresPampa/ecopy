@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
 
-from ecopy.models import ReleasesView, YearView
+from ecopy.models import CategoryPage, ReleasesView, YearView
 
 STRATA_ORDER = (
     "data-ai",
@@ -93,6 +93,18 @@ class Spark:
 _SPARK_WIDTH = 120
 _SPARK_HEIGHT = 28
 _SPARK_PAD = 3
+
+# Ancho mínimo de una barra con cuota, sobre 100: una categoría de 0,003 % no desaparece.
+_BAR_FLOOR = 0.5
+
+
+def share_bars(categories: Sequence[CategoryPage]) -> dict[str, float]:
+    """Largo de la barra de cada categoría (0 a 100) frente a la de mayor cuota del último año."""
+    latest = {c.slug: c.shares[-1].share for c in categories if c.shares}
+    top = max(latest.values(), default=0.0)
+    if top <= 0:
+        return {}
+    return {slug: round(max(_BAR_FLOOR, 100 * share / top), 2) for slug, share in latest.items()}
 
 
 def sparkline(values: Sequence[float]) -> Spark | None:

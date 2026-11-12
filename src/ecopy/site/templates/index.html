@@ -43,7 +43,7 @@
 <h2>{{ t.explore_domains }}</h2>
 <ul class="rows">
 {%- for domain in browse.domains %}
-<li><i class="sw d-{{ domain.slug }}"></i><a href="/{{ lang }}/domain/{{ domain.slug }}/">{{ domain.slug|label(lang) }}</a><span class="note">{{ t.libraries_count.format(n=domain.categories|map(attribute="rows")|map("length")|sum) }}</span></li>
+<li><i class="sw d-{{ domain.slug }}"></i><a href="/{{ lang }}/domain/{{ domain.slug }}/">{{ domain.slug|label(lang) }}</a><span class="note">{{ t.libraries_count.format(n=domain.categories|map(attribute="rows")|map("length")|sum) }}</span>{% if domain.shares %}<b>{{ (domain.shares|last).share|percent(lang) }}</b>{% endif %}</li>
 {%- endfor %}
 </ul>
 </section>
