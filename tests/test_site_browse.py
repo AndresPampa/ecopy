@@ -292,6 +292,109 @@ def test_the_home_page_adds_movers_and_the_domains(tmp_path):
     assert 'href="/en/domain/development/"' in html
 
 
+def test_the_home_page_shows_the_share_that_orders_the_domains(tmp_path):
+    build(tmp_path)
+
+    english, spanish = read(tmp_path, ""), read(tmp_path, "", "es")
+
+    assert re.search(r'href="/en/domain/development/".*?<b>75\.000%</b>', english)
+    assert re.search(r'href="/es/domain/development/".*?<b>75,000 %</b>', spanish)
+
+
+def test_a_domain_without_shares_shows_no_share_on_the_home_page(tmp_path):
+    data = browse()
+    empty = data.domains[0].model_copy(update={"shares": ()})
+
+    build(tmp_path, data=data.model_copy(update={"domains": (empty,)}))
+
+    html = read(tmp_path, "")
+    assert 'href="/en/domain/development/"' in html
+    assert "75.000%" not in html
+
+
+def shares(*values) -> tuple[YearShare, ...]:
+    years = (2025, 2026)[-len(values) :]
+    return tuple(
+        YearShare(year=y, status="ytd" if y == 2026 else "closed", share=v)
+        for y, v in zip(years, values, strict=True)
+    )
+
+
+def two_domains() -> BrowseView:
+    """Dos dominios donde el orden por dominio no es el orden por categoría."""
+    web = CategoryPage(slug="web", domain="development", shares=shares(0.30), rows=(row(),))
+    testing = CategoryPage(slug="testing", domain="development", shares=shares(0.20), rows=())
+    cloud = CategoryPage(slug="cloud", domain="infrastructure", shares=shares(0.10, 0.50), rows=())
+    development = DomainPage(slug="development", shares=shares(0.5), categories=(web, testing))
+    infra = DomainPage(slug="infrastructure", shares=shares(0.5), categories=(cloud,))
+    return browse().model_copy(update={"domains": (development, infra)})
+
+
+def categories_section(html: str) -> str:
+    return re.search(r'<section class="categories">(.*?)</section>', html, re.S)[1]
+
+
+def test_the_library_page_lists_every_category_by_domain_with_its_figures(tmp_path):
+    build(tmp_path, data=two_domains())
+
+    english = categories_section(read(tmp_path, "library"))
+    spanish = categories_section(read(tmp_path, "library", "es"))
+
+    assert re.search(r'href="/en/domain/development/">Development</a><b>50\.000%</b>', english)
+    assert re.search(
+        r'href="/en/category/web/">Web development</a><span class="note">1</span><b>30\.000%</b>',
+        english,
+    )
+    assert 'href="/en/category/testing/"' in english and 'href="/en/category/cloud/"' in english
+    assert 'href="/es/category/web/">Desarrollo web</a>' in spanish and "30,000 %" in spanish
+
+
+def test_the_library_page_puts_every_category_in_one_ranking(tmp_path):
+    build(tmp_path, data=two_domains())
+
+    html = categories_section(read(tmp_path, "library"))
+    ranking = re.search(r"<details.*?</details>", html, re.S)[0]
+
+    links = re.findall(r'href="/en/category/([a-z]+)/"', ranking)
+    assert links == ["cloud", "web", "testing"]
+    assert "<summary>All 3 categories, largest first</summary>" in ranking
+
+
+def test_ranking_bars_are_measured_against_the_largest_category(tmp_path):
+    build(tmp_path, data=two_domains())
+
+    ranking = re.search(r"<details.*?</details>", read(tmp_path, "library"), re.S)[0]
+
+    widths = re.findall(r'<rect class="d-[a-z-]+" width="([0-9.]+)"', ranking)
+    assert widths == ["100.0", "60.0", "40.0"]
+
+
+def test_a_tiny_share_still_draws_a_bar_and_a_category_without_data_draws_none(tmp_path):
+    data = two_domains()
+    tiny = data.domains[0].categories[1].model_copy(update={"shares": shares(0.00003)})
+    empty = data.domains[1].categories[0].model_copy(update={"shares": ()})
+    development = data.domains[0].model_copy(
+        update={"categories": (data.domains[0].categories[0], tiny)}
+    )
+    infra = data.domains[1].model_copy(update={"categories": (empty,)})
+
+    build(tmp_path, data=data.model_copy(update={"domains": (development, infra)}))
+
+    ranking = re.search(r"<details.*?</details>", read(tmp_path, "library"), re.S)[0]
+    assert re.findall(r'<rect class="d-[a-z-]+" width="([0-9.]+)"', ranking) == ["100.0", "0.5"]
+    assert re.findall(r'href="/en/category/([a-z]+)/"', ranking) == ["web", "testing", "cloud"]
+
+
+def test_the_category_share_states_its_year(tmp_path):
+    build(tmp_path, data=two_domains())
+
+    english = categories_section(read(tmp_path, "library"))
+    spanish = categories_section(read(tmp_path, "library", "es"))
+
+    assert "Share of catalog downloads in 2026, year to date." in english
+    assert "Cuota de las descargas del catálogo en 2026, año en curso." in spanish
+
+
 def test_the_library_page_places_itself_in_the_catalog(tmp_path):
     build(tmp_path)
 

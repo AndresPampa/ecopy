@@ -50,3 +50,6 @@ categorias.md
 
 # Salidas generadas (spikes, builds locales)
 build/
+
+#Deploy 
+.wrangler

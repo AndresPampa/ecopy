@@ -24,13 +24,21 @@
 - ✅ **Ajustes visuales de la Etapa 4:** selector de tema, créditos, alineación y comparador vacío.
 - ✅ **Etapa 5 — Publicación del MVP:** EN/ES completo, metodología, CSP/`_headers`, accesibilidad,
   GitHub Actions (cron diario) y despliegue en https://ecopy.pages.dev.
-- 🚧 **Etapa 6 — Logo, rankings y datos de las fichas:** marca eco-py con la serpiente como guion,
-  listas de mayor a menor, series desde la primera versión vigente en PyPI y porcentajes con 3 decimales.
-  En la rama `etapa-6-logo-y-rankings`, sin mergear.
+- 🚧 **Etapa 7 — Categorías en Libraries y cierre anual:** en la rama `etapa-7-categorias-y-cierre-anual`,
+  sin mergear; un solo commit.
+  - [x] Cuota al lado de cada dominio en "Explore by domain".
+  - [x] Categorías en `/library/`: bloques por dominio (opción A) y ranking plegado de las 40 con barras (B).
+  - [x] Cierre provisional: `build` no se corta con un año cerrado sin congelar; aviso en stderr y
+        anotación en Actions; nota en la página del año y en la metodología.
+  - [x] `catalog refresh` vuelve a pedir los años sin congelar y tolera un año sin datos.
+  - [ ] Usuario, desde el 2027-01-08: `catalog refresh` → revisar diff → `freeze` → commit.
 - 📋 **Después del MVP:** Trending y Seguridad (Fase 3); cuentas y encuestas (Fase 4).
 
 ## Shipped
 
+- ✅ **Etapa 6 — Logo, rankings y datos de las fichas** (PR #12, 2026-11-12): marca eco-py con la serpiente
+  como guion, listas de mayor a menor, series desde la primera versión vigente en PyPI
+  (`catalog/series_start.yaml`) y porcentajes con 3 decimales.
 - ✅ **Etapa 5 — Publicación del MVP** (PR #9, 2026-11-10): sitio en https://ecopy.pages.dev con
   actualización diaria por GitHub Actions; entrada y SEO, metodología, accesibilidad a 320/390 px,
   auditoría de seguridad y sus arreglos. `python_minor` codificado quedó para después: ClickPy no tiene

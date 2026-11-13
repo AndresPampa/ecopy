@@ -936,6 +936,13 @@ def test_the_methodology_states_the_data_calendar_the_code_uses(tmp_path):
             assert f'<time datetime="{last}">{last}</time>' in html
 
 
+def test_the_methodology_explains_the_provisional_close(tmp_path):
+    render_all(tmp_path)
+
+    assert "provisional close" in methodology(tmp_path, "en")
+    assert "cierre provisional" in methodology(tmp_path, "es")
+
+
 def test_every_page_links_the_methodology_from_its_footer(tmp_path):
     render_all(tmp_path)
 

@@ -1,19 +1,27 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-11 · branch: `etapa-6-logo-y-rankings` (desde `main` = `fbcb3b6`), **sin commit ni PR todavía**: los hace el
-> usuario con `build/etapa-6-commit.txt` y `build/etapa-6-pr.md` (PR #9, #10 y #11 mergeados; el bot suma commits
-> `data:` a diario, hacer `git pull` antes de trabajar) · sitio: https://ecopy.pages.dev · remoto `origin` =
-> https://github.com/AndresPampa/ecopy.git
+> Last updated: 2026-11-12 · branch: `etapa-7-categorias-y-cierre-anual` (desde `main` = `c649051`; el bot suma
+> commits `data:` a diario, hacer `git pull` antes de trabajar). Etapa 7 implementada y verificada, **sin commit**:
+> lo hace el usuario con `build/etapa-7-commit.txt` y `build/etapa-7-pr.md` · sitio: https://ecopy.pages.dev ·
+> remoto `origin` = https://github.com/AndresPampa/ecopy.git
 
 ## Current State
-- **Etapa 6 lista en la rama `etapa-6-logo-y-rankings`, sin commit (2026-11-11):** marca **eco-py** con la
-  serpiente como guion (inline en `_base.html`, favicon nuevo) y nombre visible cambiado en todo el sitio;
-  repo, comando, paquete y dominio siguen siendo `ecopy`. Dominios, categorías dentro de cada dominio e
-  índice del comparador van de mayor a menor; movers no cambia. Las fichas, el comparador y los listados
-  empiezan en la primera versión vigente en PyPI para 35 librerías (`catalog/series_start.yaml`).
-  Porcentajes, crecimiento y puntos de cuota con 3 decimales. 434 tests, ruff limpio, 25 mutaciones
-  detectadas (2 sobrevivían y ahora tienen test), Chrome sin violaciones de CSP en 56 combinaciones
-  (14 páginas × claro/oscuro × 1280/390 px, con control positivo). `data/frozen/` sin cambios.
+- **Etapa 7 implementada, sin commit** (2026-11-12, rama `etapa-7-categorias-y-cierre-anual`). (1) "Explore by
+  domain" muestra la cuota al lado de cada dominio. (2) `/library/` tiene, arriba de la tabla, un bloque por
+  dominio con todas sus categorías (cantidad y cuota, opción A) y, plegado, el ranking de las 40 con barras
+  (opción B); el usuario pidió la mezcla. (3) Cierre anual: un año cerrado sin congelar se publica como
+  **cierre provisional** (nota en la página del año y en la metodología, aviso en stderr y `::warning` en
+  Actions); `catalog refresh` vuelve a pedir los años sin congelar y saltea un año sin datos. 450 tests, 25 de
+  25 mutaciones detectadas, Chrome por CDP sin violaciones (52 combinaciones, con control positivo). Simulado
+  con datos reales sin el congelado de 2025: `build` sale con 0 y la vista provisional es idéntica a la
+  congelada. `update.yml` no cambió.
+- **Etapa 6 mergeada** (PR #12, `b256cc2`, 2026-11-12): marca **eco-py** con la serpiente como guion (inline en
+  `_base.html`, favicon nuevo) y nombre visible cambiado en todo el sitio; repo, comando, paquete y dominio
+  siguen siendo `ecopy`. Dominios, categorías dentro de cada dominio e índice del comparador van de mayor a
+  menor; movers no cambia. 35 librerías empiezan en su primera versión vigente en PyPI
+  (`catalog/series_start.yaml`). Porcentajes, crecimiento y puntos de cuota con 3 decimales. 434 tests.
+  **Al 2026-11-12 producción todavía no la muestra** (la portada no dice "eco-py"): sale con la próxima
+  corrida de `update.yml`.
 - **MVP publicado (Etapa 5 cerrada, 2026-11-10):** https://ecopy.pages.dev, desplegado por `update.yml`
   (PR #9). Verificado contra producción: `/` → `/en/` (302), CSP y cabeceras de `_headers`, 404 reales y
   Chrome sin violaciones de CSP (12 páginas × claro/oscuro × 1280/390 px, con control positivo). 405
@@ -50,9 +58,17 @@
   `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-**Lo siguiente es el cierre anual (antes del 2027-01-01); logo, rankings y datos de fichas ya están en la rama.**
-- [ ] **Usuario: commit, push y PR de la Etapa 6** con `build/etapa-6-commit.txt` y `build/etapa-6-pr.md`. Después del
-      deploy, mirar en producción `/en/library/openai/` (debe empezar el 2020-02-18) y la marca en los dos temas.
+- [ ] **Usuario: commit único y PR de la Etapa 7** con `build/etapa-7-commit.txt` y `build/etapa-7-pr.md`.
+      No agregar `.wrangler/`.
+- [ ] **Producción todavía sin la Etapa 6** (2026-11-12 23:04 UTC: título "· ecopy", dominios alfabéticos). El
+      merge del PR #12 fue después del commit `data:` del día; tiene que salir con la próxima corrida de
+      `update.yml`. Confirmarlo (y la Etapa 7 tras su merge): la portada dice "eco-py", dominios con cuota y de
+      mayor a menor, `/en/library/` con categorías, `/en/library/openai/` empieza el 2020-02-18. `gh` no está
+      instalado en esta máquina: mirar Actions en la web.
+- [ ] **Usuario, desde el 2027-01-08: cierre de 2026.** `uv run ecopy catalog refresh` → revisar `git diff
+      catalog/top100.yaml` (categorizar en `libraries.yaml` lo que entre; si no, `Catalog.load` falla y con él
+      `build`) → si hubo librerías nuevas, `uv run ecopy catalog starts` y revisar `series_start.yaml` →
+      `uv run ecopy freeze` → commit. Entre el 1 y el congelado el sitio muestra 2026 como cierre provisional.
 - [ ] **Revisar las 15 librerías con descargas previas que NO se recortan** (promedio ≥ 100 por día antes de la primera
       versión vigente): `atomicwrites` (285 M: mismo proyecto, versiones borradas y vueltas a subir), `opencv-python`,
       `ortools`, `torch`, `lightning`, `tensorflow`, `flet`, `arcade`, `dvc`, `snowflake-connector-python`, `locust`,
@@ -65,12 +81,6 @@
       regenerar `data/frozen/`.
 - [ ] El usuario dijo "en todas lo vi mal" sobre los rankings, pero los listados de librerías ya salían de mayor a
       menor; se ordenaron las tres listas que no lo estaban. Si se refería a otra, falta saber cuál.
-- [ ] **4. Antes del 2027-01-01: resolver el cierre anual, o el deploy diario se corta.** `update.yml` no corre
-      `ecopy freeze`, y `ecopy build` falla con `FrozenYearMissing` en cuanto 2026 queda cerrado (`as_of` =
-      2026-12-31, corrida del 1 de enero, `cli.py:_year_views`). Como `build` va antes del commit y del
-      artefacto, no se publica ni se guardan datos hasta congelar. `freeze` además exige el top 100 del año
-      (`ecopy catalog refresh`), que cambia `catalog/top100.yaml` y conviene revisar. Decidir: paso manual
-      a principios de enero (y qué hace `build` mientras tanto) o automatizarlo.
 - [ ] **Confirmar la primera corrida programada** (05:23 UTC) y la primera de estrellas
       (lunes 06:53 UTC) en Actions: revisar duración del paso `stars` contra `--max-minutes 25`.
 - [ ] Opcional (endurecimiento del informe, sección 6): `wrangler` sin lockfile en el job con secretos;
@@ -97,6 +107,14 @@
       tratando como no confiable: autoescape, sin `|safe`, sin Markdown externo.
 
 ## Key Decisions & Why
+- **Cierre anual: congelado manual en enero y cierre provisional mientras tanto (aceptado por el usuario,
+  2026-11-12).** Automatizarlo obligaría al bot a commitear `catalog/top100.yaml` sin revisión, y un paquete
+  nuevo del top sin categoría rompe `Catalog.load` y corta el deploy (entran 7 a 19 por año; 15 en 2026). Lo
+  congelado no se pisa: un error obliga a borrar `data/frozen/` y regenerar. `build` calcula en vivo el año
+  sin congelar (`YearView.provisional`, excluido del JSON); así no se corta el deploy. El `::warning` no
+  hace fallar la corrida para no mandar un mail por día.
+- **Categorías en Libraries: mezcla de A y B (decisión del usuario, 2026-11-12).** Bloques por dominio para
+  ver todas con su cantidad y cuota; el ranking cruzado de las 40 va plegado en un `<details>` (sin JS).
 - **Flujo simple, proyecto de una persona:** etapas en `docs/ROADMAP.md`; cada etapa = una rama
   `etapa-N-<tema>` + commit(s) + PR a `main`. **Sin issues ni OpenSpec** (CLI no instalado,
   `openspec/` ignorado por git, y su guía exige proposal/aprobación/verify/archive por change:
@@ -196,6 +214,10 @@
   gráficos; un test exige que los dos bloques coincidan.
 
 ## Failed Approaches
+- **`catalog refresh` tal como estaba congelaría en enero un ranking viejo:** solo volvía a pedir el año en curso,
+  así que el 2026 guardado quedaba como el de la última corrida manual (el 9/11). Medido el 12/11 sobre una copia:
+  en 3 días ya salía `psutil` y entraba `python-multipart`. Además, el 1 de enero pediría el año nuevo sin datos y
+  `top_projects` cortaba con "top 100 incompleto". Las dos cosas quedaron corregidas en la Etapa 7.
 - **"Primera subida que figura en PyPI" no es "primera versión de la librería":** PyPI no lista versiones borradas.
   De 500 paquetes, 50 tienen descargas anteriores; en unos es un nombre reusado (`uv`, `mcp`, `openai` con una `0.1`
   de 2018) y en otros el mismo proyecto con versiones viejas borradas (`atomicwrites`, 285 M de descargas previas).
@@ -476,3 +498,16 @@ Rama `etapa-6-logo-y-rankings`. Logo en dos rondas con `impeccable` (sin launche
 y el nombre eco-py. Rankings: se ordenaron dominios, categorías por dominio e índice del comparador. El "error" de
 `openai` desde 2018 eran descargas reales de una versión `0.1` borrada: adaptador de PyPI, `ecopy catalog starts` y
 corte de la serie con nota. Porcentajes con 3 decimales. TDD de corrido, mutaciones y Chrome por CDP. Sin commit.
+
+### 2026-11-12 — Etapa 6 mergeada; pedido de categorías en Libraries
+El usuario hizo el commit y el PR #12; `main` = `c649051`. Pidió ver todas las categorías en Libraries con
+enlace a sus estadísticas y marcó que "Explore by domain" no está de mayor a menor. Relevado sin cambiar
+código: el orden ya es por cuota pero la portada muestra cantidad de librerías, y producción todavía no
+tiene la Etapa 6. Decidido: ese arreglo y el cierre anual van juntos en un commit. README, ROADMAP y handoff
+actualizados sobre `main`, sin commit.
+
+### 2026-11-12 — Etapa 7: categorías en Libraries, cuota en la portada y cierre provisional
+Rama `etapa-7-categorias-y-cierre-anual`. Producción todavía sin la Etapa 6. Tres opciones de categorías con
+`impeccable` (sin launcher) y datos reales; el usuario pidió mezclar A y B. Cierre anual con evidencia: manual
+en enero + cierre provisional; aceptado. TDD de corrido, 25 mutaciones detectadas, Chrome por CDP y capturas
+con `--virtual-time-budget`. Vista previa de las opciones en `build/preview-etapa-7/` (ignorado). Sin commit.

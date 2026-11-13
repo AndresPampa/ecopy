@@ -348,17 +348,65 @@ def yearly_catalog(root, top=None):
     return write_catalog(root, "fastapi", top=top or {"years": {2023: ["fastapi"]}})
 
 
-def test_a_full_build_needs_the_closed_years_frozen(tmp_path, capsys):
+def test_a_closed_year_not_yet_frozen_is_published_as_provisional(tmp_path, capsys):
+    data, out = tmp_path / "data", tmp_path / "s"
+    seed(Store(data))
+    catalog = yearly_catalog(tmp_path / "c")
+
+    code = main(["build", "--data", str(data), "--catalog", str(catalog), "--out", str(out)])
+
+    assert code == 0
+    assert "ecopy freeze" in capsys.readouterr().err
+    english = (out / "en" / "year" / "2023" / "index.html").read_text()
+    spanish = (out / "es" / "year" / "2023" / "index.html").read_text()
+    assert "Provisional close" in english and "Cierre provisional" in spanish
+    assert not (data / "frozen").exists()
+
+
+def test_a_provisional_year_is_flagged_for_github_actions(tmp_path, capsys, monkeypatch):
+    data = tmp_path / "data"
+    seed(Store(data))
+    catalog = yearly_catalog(tmp_path / "c")
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+
+    main(["build", "--data", str(data), "--catalog", str(catalog), "--out", str(tmp_path / "s")])
+
+    assert re.search(r"^::warning title=.*::.*2023.*ecopy freeze", capsys.readouterr().out, re.M)
+
+
+def test_outside_github_actions_there_is_no_workflow_command(tmp_path, capsys, monkeypatch):
+    data = tmp_path / "data"
+    seed(Store(data))
+    catalog = yearly_catalog(tmp_path / "c")
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+
+    main(["build", "--data", str(data), "--catalog", str(catalog), "--out", str(tmp_path / "s")])
+
+    assert "::warning" not in capsys.readouterr().out
+
+
+def test_the_frozen_file_never_stores_the_provisional_mark(tmp_path):
     data = tmp_path / "data"
     seed(Store(data))
     catalog = yearly_catalog(tmp_path / "c")
 
-    code = main(
-        ["build", "--data", str(data), "--catalog", str(catalog), "--out", str(tmp_path / "s")]
-    )
+    main(["freeze", "--data", str(data), "--catalog", str(catalog)])
 
-    assert code == 1
-    assert "ecopy freeze" in capsys.readouterr().err
+    saved = json.loads((data / "frozen" / "year=2023" / "methodology=1.json").read_text())
+    assert "provisional" not in saved
+
+
+def test_a_frozen_year_is_not_marked_provisional(tmp_path):
+    data, out = tmp_path / "data", tmp_path / "s"
+    seed(Store(data))
+    catalog = yearly_catalog(tmp_path / "c")
+    options = ["--data", str(data), "--catalog", str(catalog)]
+    main(["freeze", *options])
+
+    main(["build", *options, "--out", str(out)])
+
+    assert "Provisional close" not in (out / "en" / "year" / "2023" / "index.html").read_text()
+    assert "Provisional close" not in (out / "en" / "year" / "2024" / "index.html").read_text()
 
 
 def test_freezing_lets_a_full_build_write_every_year(tmp_path):
@@ -413,6 +461,27 @@ def test_freezing_needs_the_ranking_of_the_year(tmp_path, capsys):
     assert main(["freeze", "--data", str(data), "--catalog", str(catalog)]) == 1
 
     assert "catalog refresh" in capsys.readouterr().err
+
+
+def test_catalog_refresh_reads_again_only_the_years_not_yet_frozen(tmp_path):
+    data = tmp_path / "data"
+    seed(Store(data))
+    catalog = yearly_catalog(tmp_path / "c")
+    main(["freeze", "--data", str(data), "--catalog", str(catalog)])
+    asked = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        wanted = re.search(r"IN \(([\d, ]+)\)", request.content.decode()).group(1).split(", ")
+        asked.extend(int(y) for y in wanted)
+        body = "".join(f"{y}\tp{i}\t1\n" for y in wanted for i in range(100))
+        return httpx.Response(200, headers={"X-ClickHouse-Summary": json.dumps(SUMMARY)}, text=body)
+
+    http = httpx.Client(transport=httpx.MockTransport(handler))
+    options = ["catalog", "refresh", "--catalog", str(catalog), "--data", str(data)]
+    later = datetime(2025, 1, 2, tzinfo=UTC)
+
+    assert main(options, http=http, now=lambda: later) == 0
+    assert 2023 not in asked and 2024 in asked
 
 
 def test_a_single_project_build_writes_no_year_pages(tmp_path):

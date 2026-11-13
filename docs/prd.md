@@ -135,7 +135,7 @@ append-only en Parquet → cálculo de métricas → render HTML → Cloudflare 
 - Adopción de versiones de Python (historia 5): agregado global de todo PyPI, mensual y solo de
   meses cerrados; se trae cuando falta un mes (cada pasada lee 10.644 M de filas). El desglose
   por paquete no se guarda en el MVP (2,65 MB si se pide después).
-- Año calendario en UTC. Rankings de años cerrados se congelan junto con su versión metodológica: `ecopy freeze` guarda la vista anual completa en `data/frozen/year=YYYY/methodology=N.json`. Las cuotas se calculan sobre el total del catálogo; movers y recién llegados excluyen "Infraestructura base".
+- Año calendario en UTC. Rankings de años cerrados se congelan junto con su versión metodológica: `ecopy freeze` guarda la vista anual completa en `data/frozen/year=YYYY/methodology=N.json`. Hasta que se congela (paso manual de enero, después de `ecopy catalog refresh` y de revisar el top 100), un año recién cerrado se publica como "cierre provisional", recalculado en cada build. Las cuotas se calculan sobre el total del catálogo; movers y recién llegados excluyen "Infraestructura base".
 - Cobertura (spike S1): datos diarios desde 2016-01-22. Vistas anuales desde **2017** (primer año
   completo); 2016 solo en fichas, marcado como parcial. Las métricas relativas (cuota, rankings,
   movers) son comparables a través del salto ×3 de volumen del 2018-07-27 (cuotas estables); los

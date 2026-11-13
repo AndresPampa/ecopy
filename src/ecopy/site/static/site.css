@@ -300,6 +300,15 @@ footer.site p {
   font-weight: 600;
 }
 
+.provisional {
+  max-width: 68ch;
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  border: 1px solid var(--axis);
+  border-radius: 6px;
+  color: var(--ink-2);
+}
+
 /* Texto */
 main.prose p,
 main.prose li {
@@ -642,6 +651,93 @@ table.libraries .category .sw {
 
 tr[hidden] {
   display: none;
+}
+
+/* Categorías en Libraries: un bloque por dominio y, plegado, el ranking de todas. */
+.by-domain {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 28px 40px;
+  align-items: start;
+  margin-top: 16px;
+}
+
+.by-domain h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--c);
+}
+
+.by-domain h3 a,
+.by-domain .rows a,
+table.ranking a {
+  text-decoration: none;
+}
+
+.by-domain h3 a {
+  flex: 1;
+}
+
+.by-domain a:hover,
+table.ranking a:hover {
+  text-decoration: underline;
+}
+
+.by-domain h3 b {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.by-domain .rows li {
+  padding: 6px 0;
+}
+
+details.ranking {
+  margin-top: 28px;
+}
+
+details.ranking summary {
+  padding: 6px 0;
+}
+
+table.ranking {
+  margin-top: 8px;
+}
+
+table.ranking th[scope="row"] a {
+  font-weight: 600;
+}
+
+table.ranking td:nth-child(2) {
+  color: var(--ink-2);
+}
+
+table.ranking td:last-child,
+table.ranking th:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+
+table.ranking .bar {
+  width: 34%;
+}
+
+table.ranking .bar svg {
+  width: 100%;
+  height: 8px;
+}
+
+table.ranking .track {
+  fill: var(--band);
+}
+
+@media (max-width: 600px) {
+  table.ranking .bar {
+    display: none;
+  }
 }
 
 /* Controles */

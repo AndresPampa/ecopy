@@ -15,7 +15,7 @@ from jinja2 import Environment, PackageLoader, StrictUndefined
 from markupsafe import Markup
 
 from ecopy.metrics import METHODOLOGY_VERSION
-from ecopy.models import BrowseView, LibraryView, SiteStatus, YearView
+from ecopy.models import BrowseView, CategoryPage, LibraryView, SiteStatus, YearView
 from ecopy.quality import DEGRADED_DAYS, DISCONTINUITIES, GAPS, SOURCE_START
 from ecopy.site import methodology, svg
 from ecopy.site.charts import _chart, _year_charts, share_chart, stars_chart, year_share_chart
@@ -183,8 +183,25 @@ def _write_compare_data(pages: Sequence[LibraryView], out: Path) -> None:
     )
 
 
+def _category_ranking(browse: BrowseView) -> tuple[CategoryPage, ...]:
+    """Todas las categorías juntas, de la mayor cuota del último año a la menor."""
+    categories = [c for d in browse.domains for c in d.categories]
+    return tuple(sorted(categories, key=lambda c: -c.shares[-1].share if c.shares else 1.0))
+
+
 def _write_browse(write, browse: BrowseView, common: dict) -> None:
-    write("library/", "catalog.html", "libraries", browse=browse, **common)
+    ranking = _category_ranking(browse)
+    latest = next((d.shares[-1] for d in browse.domains if d.shares), None)
+    write(
+        "library/",
+        "catalog.html",
+        "libraries",
+        browse=browse,
+        ranking=ranking,
+        latest=latest,
+        bars=svg.share_bars(ranking),
+        **common,
+    )
     write("compare/", "compare.html", "compare", **common)
     write(
         "python/",

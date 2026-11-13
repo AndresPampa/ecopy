@@ -79,6 +79,8 @@ TEXTS = {
                     "list.",
                     "Closed years are frozen together with the methodology version that produced "
                     "them. A new version recalculates them; it never edits a frozen year by hand.",
+                    "A year that has just closed is shown as a provisional close until it is "
+                    "frozen: its figures are recalculated with every update and may still change.",
                 ),
             ),
             (
@@ -180,6 +182,9 @@ TEXTS = {
                     "Los años cerrados se congelan junto con la versión metodológica que los "
                     "produjo. Una versión nueva los recalcula; nunca se edita un año congelado a "
                     "mano.",
+                    "Un año recién terminado se muestra como cierre provisional hasta que se "
+                    "congela: sus cifras se recalculan en cada actualización y todavía pueden "
+                    "cambiar.",
                 ),
             ),
             (

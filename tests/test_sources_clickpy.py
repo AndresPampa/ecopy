@@ -317,6 +317,14 @@ def test_top_projects_are_read_a_few_years_per_query():
     assert sorted(top) == list(range(2017, 2024))
 
 
+def test_a_year_without_any_downloads_yet_is_left_out_of_the_ranking():
+    body = "2026\trequests\t9\n2026\tsix\t5\n"
+
+    top = ClickPy(answering({"top": body})).top_projects([2026, 2027], n=2)
+
+    assert top == {2026: ("requests", "six")}
+
+
 def test_a_year_short_of_projects_is_rejected():
     with pytest.raises(ChecksumMismatch):
         ClickPy(answering({"top": "2017\trequests\t9\n"})).top_projects([2017], n=2)

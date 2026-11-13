@@ -59,6 +59,11 @@ TEXTS = {
         "share_year_alt": "Bars with the share per year. The table has the same data.",
         "share_year_note": "A fainter bar is a year in progress.",
         "categories_title": "Categories",
+        "categories_note_ytd": "Share of catalog downloads in {year}, year to date. Largest first.",
+        "categories_note": "Share of catalog downloads in {year}. Largest first.",
+        "categories_all": "All {n} categories, largest first",
+        "libraries_col": "Libraries",
+        "all_libraries": "All libraries",
         "top_libraries": "Most downloaded libraries",
         "in_domain": "Domain",
         "python_page_title": "Python releases",
@@ -135,6 +140,9 @@ TEXTS = {
         "years_title": "The Python ecosystem, year by year",
         "compared_with": "Compared with the same number of days from {start} to {end}.",
         "methodology": "Methodology version {version}",
+        "provisional": (
+            "Provisional close: this year is not frozen yet, so its figures may still change."
+        ),
         "methodology_title": "Methodology",
         "methodology_description": (
             "Sources, formulas, known biases and data problems behind every figure on ecopy."
@@ -247,6 +255,13 @@ TEXTS = {
         "share_year_alt": "Barras con la cuota por año. La tabla tiene los mismos datos.",
         "share_year_note": "Una barra más tenue es un año en curso.",
         "categories_title": "Categorías",
+        "categories_note_ytd": (
+            "Cuota de las descargas del catálogo en {year}, año en curso. De mayor a menor."
+        ),
+        "categories_note": "Cuota de las descargas del catálogo en {year}. De mayor a menor.",
+        "categories_all": "Las {n} categorías, de mayor a menor",
+        "libraries_col": "Librerías",
+        "all_libraries": "Todas las librerías",
         "top_libraries": "Librerías más descargadas",
         "in_domain": "Dominio",
         "python_page_title": "Versiones de Python",
@@ -329,6 +344,9 @@ TEXTS = {
         "years_title": "El ecosistema Python, año por año",
         "compared_with": "Comparado con la misma cantidad de días, del {start} al {end}.",
         "methodology": "Versión metodológica {version}",
+        "provisional": (
+            "Cierre provisional: este año todavía no está congelado y sus cifras pueden cambiar."
+        ),
         "methodology_title": "Metodología",
         "methodology_description": (
             "Fuentes, fórmulas, sesgos conocidos y problemas de los datos detrás de cada cifra de "
