@@ -57,6 +57,8 @@ def make_server(out: Path, port: int) -> ThreadingHTTPServer:
         def end_headers(self) -> None:
             for name, value in headers:
                 self.send_header(name, value)
+            # Local siempre fresco: sin esto el navegador reusa por heurística HTML o CSS viejos.
+            self.send_header("Cache-Control", "no-cache")
             super().end_headers()
 
         def send_error(self, code: int, message: str | None = None, explain: str | None = None):

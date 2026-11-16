@@ -24,18 +24,17 @@
 - ✅ **Ajustes visuales de la Etapa 4:** selector de tema, créditos, alineación y comparador vacío.
 - ✅ **Etapa 5 — Publicación del MVP:** EN/ES completo, metodología, CSP/`_headers`, accesibilidad,
   GitHub Actions (cron diario) y despliegue en https://ecopy.pages.dev.
-- 🚧 **Etapa 7 — Categorías en Libraries y cierre anual:** en la rama `etapa-7-categorias-y-cierre-anual`,
-  sin mergear; un solo commit.
-  - [x] Cuota al lado de cada dominio en "Explore by domain".
-  - [x] Categorías en `/library/`: bloques por dominio (opción A) y ranking plegado de las 40 con barras (B).
-  - [x] Cierre provisional: `build` no se corta con un año cerrado sin congelar; aviso en stderr y
-        anotación en Actions; nota en la página del año y en la metodología.
-  - [x] `catalog refresh` vuelve a pedir los años sin congelar y tolera un año sin datos.
-  - [ ] Usuario, desde el 2027-01-08: `catalog refresh` → revisar diff → `freeze` → commit.
+- 🚧 **Estáticos con versión:** en la rama `assets-con-version`, sin mergear. Cada URL de `/static/` lleva
+  `?v=` con el hash de su contenido y `ecopy serve` manda `Cache-Control: no-cache`: un CSS viejo guardado
+  ya no se cruza con un HTML nuevo (el logo deformado que se vio con `serve`).
+- [ ] **Usuario, desde el 2027-01-08:** cierre de 2026 (`catalog refresh` → revisar diff → `freeze` → commit).
 - 📋 **Después del MVP:** Trending y Seguridad (Fase 3); cuentas y encuestas (Fase 4).
 
 ## Shipped
 
+- ✅ **Etapa 7 — Categorías en Libraries y cierre anual** (PR #13, 2026-11-12): bloques por dominio con
+  todas las categorías y ranking plegado de las 40 en `/library/`, cuota en "Explore by domain", cierre
+  provisional de un año sin congelar y `catalog refresh` que vuelve a pedir los años sin congelar.
 - ✅ **Etapa 6 — Logo, rankings y datos de las fichas** (PR #12, 2026-11-12): marca eco-py con la serpiente
   como guion, listas de mayor a menor, series desde la primera versión vigente en PyPI
   (`catalog/series_start.yaml`) y porcentajes con 3 decimales.

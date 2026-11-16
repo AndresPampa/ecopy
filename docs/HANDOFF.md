@@ -1,12 +1,19 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-12 · branch: `etapa-7-categorias-y-cierre-anual` (desde `main` = `c649051`; el bot suma
-> commits `data:` a diario, hacer `git pull` antes de trabajar). Etapa 7 implementada y verificada, **sin commit**:
-> lo hace el usuario con `build/etapa-7-commit.txt` y `build/etapa-7-pr.md` · sitio: https://ecopy.pages.dev ·
+> Last updated: 2026-11-12 · branch: `assets-con-version` (desde `main` = `fe182bd`; el bot suma commits `data:`
+> a diario, hacer `git pull` antes de trabajar). Estáticos con versión implementados y verificados, **sin commit**:
+> lo hace el usuario con `build/assets-commit.txt` y `build/assets-pr.md` · sitio: https://ecopy.pages.dev ·
 > remoto `origin` = https://github.com/AndresPampa/ecopy.git
 
 ## Current State
-- **Etapa 7 implementada, sin commit** (2026-11-12, rama `etapa-7-categorias-y-cierre-anual`). (1) "Explore by
+- **Estáticos con versión, sin commit** (2026-11-12, rama `assets-con-version`). Con `ecopy serve` el usuario vio
+  el logo alternando entre el viejo y el nuevo, y el nuevo apilado (eco / serpiente / py): HTML nuevo con un
+  `site.css` viejo que el navegador reusaba por heurística (el servidor local no mandaba `Cache-Control`).
+  Arreglo: el global de Jinja `asset()` (`render.py`) arma `/static/<archivo>?v=<12 hex del SHA-256>` en todas
+  las plantillas, y `serve` manda `Cache-Control: no-cache`. Las instantáneas quitan el `?v=` para no romperse
+  con cada cambio de CSS. 453 tests, 5 de 5 mutaciones detectadas, Chrome por CDP: 52 combinaciones sin
+  violaciones, logo de 30 px en todas. Producción manda `max-age=0, must-revalidate` y no debería verlo.
+- **Etapa 7 mergeada** (PR #13, `6616751`, 2026-11-12). (1) "Explore by
   domain" muestra la cuota al lado de cada dominio. (2) `/library/` tiene, arriba de la tabla, un bloque por
   dominio con todas sus categorías (cantidad y cuota, opción A) y, plegado, el ranking de las 40 con barras
   (opción B); el usuario pidió la mezcla. (3) Cierre anual: un año cerrado sin congelar se publica como
@@ -58,13 +65,11 @@
   `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-- [ ] **Usuario: commit único y PR de la Etapa 7** con `build/etapa-7-commit.txt` y `build/etapa-7-pr.md`.
+- [ ] **Usuario: commit y PR de los estáticos con versión** con `build/assets-commit.txt` y `build/assets-pr.md`.
       No agregar `.wrangler/`.
-- [ ] **Producción todavía sin la Etapa 6** (2026-11-12 23:04 UTC: título "· ecopy", dominios alfabéticos). El
-      merge del PR #12 fue después del commit `data:` del día; tiene que salir con la próxima corrida de
-      `update.yml`. Confirmarlo (y la Etapa 7 tras su merge): la portada dice "eco-py", dominios con cuota y de
-      mayor a menor, `/en/library/` con categorías, `/en/library/openai/` empieza el 2020-02-18. `gh` no está
-      instalado en esta máquina: mirar Actions en la web.
+- [ ] **Mirar producción después de la corrida del 2026-11-13** (el cron de las 05:23 UTC viene entrando 7 a 8 h
+      tarde): logo eco-py de 30 px de alto en EN y ES. Al 2026-11-13 01:26 UTC seguía la versión anterior a la
+      Etapa 6. Para no esperar: Actions → update → Run workflow sobre `main`.
 - [ ] **Usuario, desde el 2027-01-08: cierre de 2026.** `uv run ecopy catalog refresh` → revisar `git diff
       catalog/top100.yaml` (categorizar en `libraries.yaml` lo que entre; si no, `Catalog.load` falla y con él
       `build`) → si hubo librerías nuevas, `uv run ecopy catalog starts` y revisar `series_start.yaml` →
@@ -511,3 +516,9 @@ Rama `etapa-7-categorias-y-cierre-anual`. Producción todavía sin la Etapa 6. T
 `impeccable` (sin launcher) y datos reales; el usuario pidió mezclar A y B. Cierre anual con evidencia: manual
 en enero + cierre provisional; aceptado. TDD de corrido, 25 mutaciones detectadas, Chrome por CDP y capturas
 con `--virtual-time-budget`. Vista previa de las opciones en `build/preview-etapa-7/` (ignorado). Sin commit.
+
+### 2026-11-12 — Etapa 7 mergeada; pipeline explicado; estáticos con versión
+El usuario mergeó el PR #13. Se le explicó el pipeline: `ci.yml` no publica; solo `update.yml` (cron diario,
+lunes con estrellas, o a mano) hace ingesta → build → commit de `data/` → deploy, así que un merge sale con la
+corrida siguiente. Producción seguía sin la Etapa 6. El logo raro era local (`ecopy serve`): HTML nuevo con CSS
+viejo en caché. Arreglo con `?v=<hash>` en los estáticos y `no-cache` en `serve`, con TDD. Sin commit.

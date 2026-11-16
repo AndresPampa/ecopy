@@ -2,7 +2,7 @@
 {%- import "_macros.html" as m with context %}
 {%- block title %}{{ t.catalog_title }}{% endblock %}
 {%- block scripts %}
-<script src="/static/filter.js" defer></script>
+<script src="{{ asset("filter.js") }}" defer></script>
 {%- endblock %}
 {%- block content %}
 <h1>{{ t.catalog_title }}</h1>

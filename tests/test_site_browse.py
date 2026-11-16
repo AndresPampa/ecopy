@@ -184,7 +184,7 @@ def test_rows_and_controls_are_ready_for_the_tag_filter(tmp_path):
 
     assert 'data-tags="async typed"' in html
     assert 'data-tag="async"' in html and "Async" in html
-    assert '<script src="/static/filter.js" defer>' in html
+    assert re.search(r'<script src="/static/filter\.js\?v=[0-9a-f]{12}" defer>', html)
 
 
 def test_domain_and_category_pages_show_share_per_year_and_their_libraries(tmp_path):
@@ -236,7 +236,7 @@ def test_the_compare_page_has_its_controls_and_script(tmp_path):
     html = read(tmp_path, "compare")
 
     assert 'id="compare-chart"' in html and 'id="compare-table"' in html
-    assert '<script src="/static/compare.js" defer>' in html
+    assert re.search(r'<script src="/static/compare\.js\?v=[0-9a-f]{12}" defer>', html)
     assert "<noscript>" in html
     assert "<form" not in html
 

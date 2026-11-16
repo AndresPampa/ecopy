@@ -2,8 +2,8 @@
 {%- import "_macros.html" as m with context %}
 {%- block title %}{{ domain.slug|label(lang) }}{% endblock %}
 {%- block scripts %}
-<script src="/static/vendor/{{ echarts }}" defer></script>
-<script src="/static/charts.js" defer></script>
+<script src="{{ asset("vendor/" ~ echarts) }}" defer></script>
+<script src="{{ asset("charts.js") }}" defer></script>
 {%- endblock %}
 {%- block main_attrs %} class="domain-{{ domain.slug }}"{% endblock %}
 {%- block content %}
