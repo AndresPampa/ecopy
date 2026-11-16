@@ -16,8 +16,8 @@
 {%- block title %}{{ view.year }}{% endblock %}
 {%- block description %}{{ t.year_description.format(year=view.year) }}{% endblock %}
 {%- block scripts %}
-<script src="/static/vendor/{{ echarts }}" defer></script>
-<script src="/static/charts.js" defer></script>
+<script src="{{ asset("vendor/" ~ echarts) }}" defer></script>
+<script src="{{ asset("charts.js") }}" defer></script>
 {%- endblock %}
 {%- block content %}
 <nav class="years" aria-label="{{ t.nav_years }}">

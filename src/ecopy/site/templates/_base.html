@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}{% endblock %} · eco-py</title>
-<script src="/static/theme.js"></script>
-<link rel="stylesheet" href="/static/site.css">
-<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<script src="{{ asset("theme.js") }}"></script>
+<link rel="stylesheet" href="{{ asset("site.css") }}">
+<link rel="icon" href="{{ asset("favicon.svg") }}" type="image/svg+xml">
 {%- block head_meta %}
 <meta name="description" content="{% block description %}{{ t.site_description }}{% endblock %}">
 <link rel="canonical" href="{{ site }}/{{ lang }}/{{ path }}">

@@ -213,7 +213,7 @@ Detalle y estado en [`docs/ROADMAP.md`](docs/ROADMAP.md). Cada etapa se trabaja 
   (GitHub Actions + Cloudflare Pages).
 - **Etapa 6 — Logo, rankings y datos de las fichas** ✅: marca eco-py, listas de mayor a menor, series
   desde la primera versión vigente en PyPI y porcentajes con 3 decimales.
-- **Etapa 7 — Categorías en Libraries y cierre anual** 🚧: todas las categorías a la vista en la página
+- **Etapa 7 — Categorías en Libraries y cierre anual** ✅: todas las categorías a la vista en la página
   de librerías, con enlace a sus estadísticas; cuota en "Explore by domain"; cierre provisional del año
   que termina hasta congelarlo a mano en enero.
 - **Después del MVP:** Trending y Seguridad; cuentas y encuestas.
@@ -251,7 +251,7 @@ uv run ecopy ingest   # primera vez: histórico; después: hasta ayer (UTC)
 uv run ecopy freeze   # congela los años cerrados que falten; lo ya congelado no se reescribe
 uv run ecopy stars    # historia de estrellas; pide GITHUB_TOKEN y se reanuda sola
 uv run ecopy build    # genera build/site/; un año cerrado sin congelar sale como cierre provisional
-uv run ecopy serve    # http://127.0.0.1:8000/en/ con la CSP real
+uv run ecopy serve    # http://127.0.0.1:8000/en/ con la CSP real, sin caché del navegador
 ```
 
 **Cierre anual (a mano, desde el 8 de enero).** El 1 de enero el año que terminó pasa a cerrado; hasta

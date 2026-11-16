@@ -1,5 +1,6 @@
 """CLI: la política de ingesta y el recorrido completo, de la fuente a las páginas."""
 
+import hashlib
 import json
 import re
 import subprocess
@@ -171,6 +172,42 @@ def test_serve_answers_a_missing_page_with_the_site_404_in_its_language(tmp_path
     assert response.status_code == 404
     assert text in response.text
     assert "default-src 'none'" in response.headers["Content-Security-Policy"]
+
+
+def test_every_page_asks_for_each_local_asset_by_its_content_version(tmp_path):
+    data, out = tmp_path / "data", tmp_path / "site"
+    ingest(data, recorded_clickpy())
+    build(data, out)
+
+    pages = list(out.rglob("*.html"))
+    references = {r for p in pages for r in re.findall(r'"(/static/[^"]*)"', p.read_text())}
+
+    assert len(pages) > 3
+    assert {"site.css", "theme.js", "favicon.svg"} <= {
+        r.split("?")[0].removeprefix("/static/") for r in references
+    }
+    for reference in references:
+        path, _, version = reference.partition("?v=")
+        content = (out / path.lstrip("/")).read_bytes()
+        assert version == hashlib.sha256(content).hexdigest()[:12], reference
+
+
+def test_serve_tells_the_browser_to_revalidate_every_file(tmp_path):
+    data, out = tmp_path / "data", tmp_path / "site"
+    ingest(data, recorded_clickpy())
+    build(data, out)
+
+    server = make_server(out, port=0)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        base = f"http://127.0.0.1:{server.server_address[1]}"
+        responses = [httpx.get(base + p, trust_env=False) for p in ("/en/", "/static/site.css")]
+    finally:
+        server.shutdown()
+        server.server_close()
+
+    assert [r.headers.get("Cache-Control") for r in responses] == ["no-cache", "no-cache"]
 
 
 def test_serve_requires_a_built_site(tmp_path):

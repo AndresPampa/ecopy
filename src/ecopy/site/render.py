@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import calendar
+import functools
 import hashlib
 import json
 import re
@@ -104,6 +105,13 @@ def _copy_static(out: Path) -> None:
     if hashlib.sha256(library).hexdigest() != ECHARTS_SHA256:
         raise AssetIntegrityError(f"{ECHARTS_FILE} no coincide con su SHA-256 fijado")
     shutil.copytree(STATIC, out / "static", dirs_exist_ok=True)
+
+
+def _asset(path: str) -> str:
+    """URL de un estático con la versión de su contenido: un cambio de CSS o JS nunca se cruza con
+    una copia vieja guardada por el navegador o por la CDN."""
+    version = hashlib.sha256((STATIC / path).read_bytes()).hexdigest()[:12]
+    return f"/static/{path}?v={version}"
 
 
 def _in_progress_note(view: LibraryView, texts: Mapping[str, str], lang: str) -> str | None:
@@ -271,6 +279,7 @@ def render_site(
         label=lambda slug, lang: label(slug, labels, lang),
         spark=svg.sparkline,
     )
+    env.globals["asset"] = functools.cache(_asset)
     if browse is not None:
         _write_compare_data(pages, out)
     trends = {row.project: row.trend for row in browse.rows} if browse else {}

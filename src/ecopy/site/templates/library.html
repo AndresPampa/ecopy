@@ -10,8 +10,8 @@
 {%- block title %}{{ view.project }}{% endblock %}
 {%- block description %}{{ t.library_description.format(project=view.project) }}{% endblock %}
 {%- block scripts %}
-<script src="/static/vendor/{{ echarts }}" defer></script>
-<script src="/static/charts.js" defer></script>
+<script src="{{ asset("vendor/" ~ echarts) }}" defer></script>
+<script src="{{ asset("charts.js") }}" defer></script>
 {%- endblock %}
 {%- block main_attrs %} class="library{% if view.domain %} domain-{{ view.domain }}{% endif %}"{% endblock %}
 {%- block content %}

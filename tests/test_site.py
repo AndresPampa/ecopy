@@ -32,6 +32,11 @@ from ecopy.site import render as site_render
 SNAPSHOTS = Path(__file__).parent / "snapshots"
 
 
+def unversioned(html: str) -> str:
+    """Las instantáneas no dependen del contenido de CSS y JS: su versión la prueba otro test."""
+    return re.sub(r"\?v=[0-9a-f]{12}", "", html)
+
+
 FULL = Coverage(expected=31, gap=0, degraded=0)
 
 
@@ -170,7 +175,8 @@ def test_echarts_and_its_license_are_served_from_the_site(tmp_path):
     )
     assert (vendor / "ECHARTS-LICENSE.txt").exists()
     assert (vendor / "ECHARTS-NOTICE.txt").exists()
-    assert '<script src="/static/vendor/echarts-6.1.0.common.min.js" defer>' in page(tmp_path)
+    script = r'<script src="/static/vendor/echarts-6\.1\.0\.common\.min\.js\?v=[0-9a-f]{12}" defer>'
+    assert re.search(script, page(tmp_path))
 
 
 def test_build_fails_if_the_bundled_echarts_does_not_match_its_hash(tmp_path, monkeypatch):
@@ -259,9 +265,9 @@ def test_page_matches_its_snapshot(tmp_path, lang):
     snapshot = SNAPSHOTS / f"library-{lang}.html"
 
     if os.environ.get("UPDATE_SNAPSHOTS"):
-        snapshot.write_text(page(tmp_path, lang))
+        snapshot.write_text(unversioned(page(tmp_path, lang)))
 
-    assert page(tmp_path, lang) == snapshot.read_text()
+    assert unversioned(page(tmp_path, lang)) == snapshot.read_text()
 
 
 @pytest.mark.parametrize("name", ["..", "."])
@@ -541,12 +547,20 @@ def test_the_theme_switch_stays_hidden_until_its_script_runs(tmp_path):
     assert " hidden" in button
 
 
+def test_no_template_names_a_static_file_without_its_version():
+    templates = Path(site_render.__file__).parent / "templates"
+
+    literal = [t.name for t in templates.glob("*.html") if '"/static/' in t.read_text()]
+
+    assert literal == []
+
+
 def test_the_saved_theme_is_applied_by_a_blocking_script_from_the_site(tmp_path):
     render_site([view()], tmp_path)
 
     head = page(tmp_path)[: page(tmp_path).index("</head>")]
 
-    assert '<script src="/static/theme.js"></script>' in head
+    assert re.search(r'<script src="/static/theme\.js\?v=[0-9a-f]{12}"></script>', head)
     assert (tmp_path / "static" / "theme.js").exists()
 
 
@@ -781,9 +795,9 @@ def test_year_page_matches_its_snapshot(tmp_path, lang):
     snapshot = SNAPSHOTS / f"year-{lang}.html"
 
     if os.environ.get("UPDATE_SNAPSHOTS"):
-        snapshot.write_text(year_page(tmp_path, lang=lang))
+        snapshot.write_text(unversioned(year_page(tmp_path, lang=lang)))
 
-    assert year_page(tmp_path, lang=lang) == snapshot.read_text()
+    assert unversioned(year_page(tmp_path, lang=lang)) == snapshot.read_text()
 
 
 # Publicación: entrada, 404 y SEO
@@ -866,7 +880,8 @@ def test_the_description_escapes_external_project_names(tmp_path):
 def test_every_page_links_the_favicon_served_by_the_site(tmp_path):
     render_all(tmp_path)
 
-    assert '<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">' in page(tmp_path)
+    icon = r'<link rel="icon" href="/static/favicon\.svg\?v=[0-9a-f]{12}" type="image/svg\+xml">'
+    assert re.search(icon, page(tmp_path))
     assert (tmp_path / "static" / "favicon.svg").read_text().startswith("<svg")
 
 

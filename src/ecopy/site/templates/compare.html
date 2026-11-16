@@ -1,8 +1,8 @@
 {% extends "_base.html" %}
 {%- block title %}{{ t.compare_title }}{% endblock %}
 {%- block scripts %}
-<script src="/static/vendor/{{ echarts }}" defer></script>
-<script src="/static/compare.js" defer></script>
+<script src="{{ asset("vendor/" ~ echarts) }}" defer></script>
+<script src="{{ asset("compare.js") }}" defer></script>
 {%- endblock %}
 {%- block content %}
 <h1>{{ t.compare_title }}</h1>
