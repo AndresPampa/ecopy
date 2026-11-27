@@ -34,7 +34,7 @@ from ecopy.models import (
     YearTotal,
     YearView,
 )
-from ecopy.quality import DISCONTINUITIES, SOURCE_START, period_coverage
+from ecopy.quality import DISCONTINUITIES, SHARE_BREAKS, SOURCE_START, period_coverage
 
 
 def _next_month(month: date) -> date:
@@ -424,12 +424,17 @@ def _timeline(period: _Period, catalog: Catalog) -> tuple[TimelineEvent, ...]:
     return tuple(sorted(events, key=lambda e: (e.date, e.version)))
 
 
+def _crossed(breaks: Sequence[date], period: _Period, previous: _Period | None) -> tuple[date, ...]:
+    """Los cortes que separan el período anterior del actual (o caen dentro de alguno)."""
+    if previous is None:
+        return ()
+    return tuple(d for d in breaks if previous.start < d <= period.end)
+
+
 def _volume(totals: DailySeries, period: _Period, previous: _Period | None) -> VolumeView:
     total = sum(value for day, value in totals.items() if day in period)
     before = sum(value for day, value in totals.items() if day in previous) if previous else None
-    crosses = previous is not None and any(
-        previous.start < d <= period.end for d in DISCONTINUITIES
-    )
+    crosses = bool(_crossed(DISCONTINUITIES, period, previous))
     growth = None if crosses or not before else (total - before) / before
     return VolumeView(
         total=total,
@@ -470,4 +475,6 @@ def year_view(year: int, inputs: YearInputs, *, as_of: date) -> YearView:
         python_unknown_share=unknown,
         python_other_share=other,
         timeline=_timeline(period, inputs.catalog),
+        share_breaks=tuple(d for d in SHARE_BREAKS if d in period),
+        mover_breaks=_crossed(SHARE_BREAKS, period, previous),
     )

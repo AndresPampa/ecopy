@@ -74,7 +74,8 @@ def strata(
         columns.append(
             Column(
                 year=view.year,
-                label=f"'{str(view.year)[2:]}" if short else str(view.year),
+                label=(f"'{str(view.year)[2:]}" if short else str(view.year))
+                + ("†" if view.share_breaks else ""),
                 x=round(index * (column + gap), 1),
                 partial=view.status == "ytd",
                 segments=tuple(segments),

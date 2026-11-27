@@ -356,4 +356,48 @@ def test_the_2026_drop_blocks_growth_like_the_2018_jump():
     view = year_view(2026, inputs(series), as_of=date(2026, 11, 8))
 
     assert view.volume.growth is None
-    assert view.volume.discontinuities == (date(2026, 8, 25),)
+    assert view.volume.discontinuities == (date(2026, 8, 24),)
+
+
+def test_a_period_ending_on_the_day_pypi_changed_its_count_already_crosses_it():
+    # El 2026-08-24 ya mezcla las dos formas de contar (blog de PyPI, 2026-08-31).
+    series = {"django": {date(2025, 8, 1): 10, date(2026, 8, 1): 30}}
+
+    view = year_view(2026, inputs(series), as_of=date(2026, 8, 24))
+
+    assert view.volume.growth is None
+
+
+def test_the_year_of_pypis_counting_change_mixes_shares_and_movers():
+    series = {"django": yearly({2025: 10, 2026: 30})}
+
+    view = year_view(2026, inputs(series), as_of=date(2026, 11, 8))
+
+    assert view.share_breaks == (date(2026, 8, 24),)
+    assert view.mover_breaks == (date(2026, 8, 24),)
+
+
+def test_the_next_year_compares_movers_across_the_change_but_its_shares_are_clean():
+    series = {"django": yearly({2025: 10, 2026: 30, 2027: 40})}
+
+    view = year_view(2027, inputs(series), as_of=date(2027, 12, 31))
+
+    assert view.share_breaks == ()
+    assert view.mover_breaks == (date(2026, 8, 24),)
+
+
+def test_years_away_from_the_change_have_no_share_breaks():
+    series = {"django": yearly({2024: 10, 2025: 20, 2026: 30, 2027: 40, 2028: 50})}
+
+    for year in (2025, 2028):
+        view = year_view(year, inputs(series), as_of=date(2028, 12, 31))
+        assert (view.share_breaks, view.mover_breaks) == ((), ())
+
+
+def test_the_2018_jump_does_not_flag_shares():
+    # Triplicó el volumen de todos por igual (S1); solo bloquea el crecimiento absoluto.
+    series = {"django": yearly({2017: 5, 2018: 10})}
+
+    view = year_view(2018, inputs(series), as_of=date(2018, 12, 31))
+
+    assert (view.share_breaks, view.mover_breaks) == ((), ())

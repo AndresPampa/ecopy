@@ -1,12 +1,32 @@
 # HANDOFF — ecopy (métricas históricas del ecosistema Python)
 > Leer esto primero antes de tocar nada.
-> Last updated: 2026-11-12 · branch: `assets-con-version` (desde `main` = `fe182bd`; el bot suma commits `data:`
-> a diario, hacer `git pull` antes de trabajar). Estáticos con versión implementados y verificados, **sin commit**:
-> lo hace el usuario con `build/assets-commit.txt` y `build/assets-pr.md` · sitio: https://ecopy.pages.dev ·
+> Last updated: 2026-11-26 · branch: `investigar-caida-2026-08-25` (desde `main` = `0031bc6`; el bot suma commits
+> `data:` a diario, hacer `git pull` antes de trabajar). Causa de la caída del 2026-08-25 y aviso en cuotas, **sin
+> commit**: lo hace el usuario con `build/caida-commit.txt` y `build/caida-pr.md` · sitio: https://ecopy.pages.dev ·
 > remoto `origin` = https://github.com/AndresPampa/ecopy.git
 
 ## Current State
-- **Estáticos con versión, sin commit** (2026-11-12, rama `assets-con-version`). Con `ecopy serve` el usuario vio
+- **Caída del 2026-08-25 explicada, sin commit** (2026-11-26, rama `investigar-caida-2026-08-25`). Desde el
+  2026-08-24 PyPI deja de contar los `.metadata` (PEP 658) y otros archivos que no son distribuciones
+  ([blog de PyPI](https://blog.pypi.org/posts/2026-08-31-download-counts/)); no es retroactivo y el 24 ya mezcla
+  las dos cuentas. La baja no es pareja entre paquetes, así que además del volumen afecta las cuotas.
+  (1) `quality.py`: la discontinuidad pasa al 24 (`PYPI_COUNTS_ONLY_DISTRIBUTIONS`) y se suma `SHARE_BREAKS`
+  (solo ese cambio; el salto de 2018 fue parejo). (2) `YearView.share_breaks` (cortes dentro del año) y
+  `mover_breaks` (cortes entre el año anterior y este). (3) Metodología EN/ES con la causa y el enlace al blog.
+  (4) Aviso "variante C", elegida por el usuario entre tres vistas previas: nota con † bajo "Share by domain and
+  category" y † en las columnas "Share" y "Change (share points)"; en 2027 solo movers lleva † y su nota dice que se
+  compara con 2026; en la portada, la columna "2026†" y la misma nota bajo el gráfico. 465 tests, 11 de 11
+  mutaciones detectadas, build real revisado en claro y oscuro. Sin estilos ni scripts nuevos (la CSP no cambia).
+- **Producción verificada** (2026-11-26): `site.css?v=7d59dbae1420` igual al de `main`, `max-age=0,
+  must-revalidate`, datos al 2026-11-25. Las corridas diarias entran entre las 13:27 y las 16:00 UTC. Las dos
+  corridas de estrellas (lunes 16 y 23) terminaron bien: paso `stars` de 18,4 min contra `--max-minutes 25`, con
+  `star_weeks/*-observed.parquet` en `main`.
+- **PR #14 publicado** (2026-11-15). Producción (https://ecopy.pages.dev) ya muestra las Etapas 6 y 7: título
+  "· eco-py", serpiente en la cabecera, categorías en `/en/library/`. El PR #14 sale con la próxima corrida de
+  `update.yml`. Las corridas programadas funcionan: commits `data:` del 13, 14 y 15 de noviembre, entre las
+  12:19 y las 13:15 UTC (el cron de las 05:23 UTC entra unas 7 horas tarde). Un merge sale recién con esa
+  corrida; para adelantarlo, Actions → update → Run workflow sobre `main`.
+- **Estáticos con versión mergeados** (PR #14, `b87891a`, 2026-11-15). Con `ecopy serve` el usuario vio
   el logo alternando entre el viejo y el nuevo, y el nuevo apilado (eco / serpiente / py): HTML nuevo con un
   `site.css` viejo que el navegador reusaba por heurística (el servidor local no mandaba `Cache-Control`).
   Arreglo: el global de Jinja `asset()` (`render.py`) arma `/static/<archivo>?v=<12 hex del SHA-256>` en todas
@@ -27,13 +47,12 @@
   siguen siendo `ecopy`. Dominios, categorías dentro de cada dominio e índice del comparador van de mayor a
   menor; movers no cambia. 35 librerías empiezan en su primera versión vigente en PyPI
   (`catalog/series_start.yaml`). Porcentajes, crecimiento y puntos de cuota con 3 decimales. 434 tests.
-  **Al 2026-11-12 producción todavía no la muestra** (la portada no dice "eco-py"): sale con la próxima
-  corrida de `update.yml`.
+  En producción desde la corrida del 2026-11-13.
 - **MVP publicado (Etapa 5 cerrada, 2026-11-10):** https://ecopy.pages.dev, desplegado por `update.yml`
   (PR #9). Verificado contra producción: `/` → `/en/` (302), CSP y cabeceras de `_headers`, 404 reales y
   Chrome sin violaciones de CSP (12 páginas × claro/oscuro × 1280/390 px, con control positivo). 405
-  tests. Auditoría: `~/security-audit-skill/ecopy/run-1/REPORT.md`. Todavía no corrió ningún cron
-  programado ni el paso `stars` en Actions: la primera ejecución fue manual y sin estrellas.
+  tests. Auditoría: `~/security-audit-skill/ecopy/run-1/REPORT.md`. El cron diario ya corre
+  (confirmado del 13 al 15 de noviembre); el paso `stars` todavía no corrió en Actions.
 - **Ajustes visuales de la Etapa 4 mergeados** (PR #8): selector de tema (Pythonista =
   oscuro, Pythoneer = claro), créditos en el pie, cabecera alineada con el contenido y comparador
   vacío sin eje suelto. 345 tests, 5 mutaciones detectadas, Chrome sin violaciones de CSP (con control
@@ -65,15 +84,13 @@
   `brainstorming.md`, `categorias.md`, `build/`).
 
 ## Next Steps
-- [ ] **Usuario: commit y PR de los estáticos con versión** con `build/assets-commit.txt` y `build/assets-pr.md`.
-      No agregar `.wrangler/`.
-- [ ] **Mirar producción después de la corrida del 2026-11-13** (el cron de las 05:23 UTC viene entrando 7 a 8 h
-      tarde): logo eco-py de 30 px de alto en EN y ES. Al 2026-11-13 01:26 UTC seguía la versión anterior a la
-      Etapa 6. Para no esperar: Actions → update → Run workflow sobre `main`.
+- [ ] **Usuario: commit y PR de la caída del 2026-08-25** con `build/caida-commit.txt` y `build/caida-pr.md`.
+      Antes, `git merge origin/main` (solo commits `data:`). Sale a producción con la corrida siguiente al merge.
 - [ ] **Usuario, desde el 2027-01-08: cierre de 2026.** `uv run ecopy catalog refresh` → revisar `git diff
       catalog/top100.yaml` (categorizar en `libraries.yaml` lo que entre; si no, `Catalog.load` falla y con él
       `build`) → si hubo librerías nuevas, `uv run ecopy catalog starts` y revisar `series_start.yaml` →
       `uv run ecopy freeze` → commit. Entre el 1 y el congelado el sitio muestra 2026 como cierre provisional.
+      2026 se congela con `share_breaks`/`mover_breaks` (van en el JSON): revisar que la página congelada mantenga †.
 - [ ] **Revisar las 15 librerías con descargas previas que NO se recortan** (promedio ≥ 100 por día antes de la primera
       versión vigente): `atomicwrites` (285 M: mismo proyecto, versiones borradas y vueltas a subir), `opencv-python`,
       `ortools`, `torch`, `lightning`, `tensorflow`, `flet`, `arcade`, `dvc`, `snowflake-connector-python`, `locust`,
@@ -86,8 +103,7 @@
       regenerar `data/frozen/`.
 - [ ] El usuario dijo "en todas lo vi mal" sobre los rankings, pero los listados de librerías ya salían de mayor a
       menor; se ordenaron las tres listas que no lo estaban. Si se refería a otra, falta saber cuál.
-- [ ] **Confirmar la primera corrida programada** (05:23 UTC) y la primera de estrellas
-      (lunes 06:53 UTC) en Actions: revisar duración del paso `stars` contra `--max-minutes 25`.
+- [ ] Vigilar el paso `stars` (18,4 min de 25): si crece el catálogo de repos, subir `--max-minutes` o el presupuesto.
 - [ ] Opcional (endurecimiento del informe, sección 6): `wrangler` sin lockfile en el job con secretos;
       verificar que el artefacto no tenga `_worker.js`/`_routes.json`/`functions/`; `ValueError` y JSON
       inválido como `SourceError` en `github.py`; `validate._volume` con mediana 0; `.gitignore` para
@@ -95,12 +111,10 @@
 - [ ] Más adelante: `python_minor` codificado (hex) solo si ClickPy empieza a traer 0x1e/0x1f. Al hacerlo,
       reproducir el escape TSV de ClickHouse (`'` → `\'`, `\\`) o migrar claves: hoy hay 2 valores
       guardados con `\'` que cambiarían de clave y duplicarían la fracción "otros" en `metrics`.
-- [ ] **Usuario:** borrar la rama ya mergeada: `git branch -d docs-readme-arquitectura` y
-      `git push origin --delete docs-readme-arquitectura`. No agregar `.wrangler/` (caché local) a ningún commit.
 - [ ] Si cambia una categoría de `catalog/libraries.yaml`: borrar `data/frozen/` y volver a correr
       `uv run ecopy freeze`. `repo` y tags no lo invalidan.
-- [ ] **Investigar la caída desde 2026-08-25** (−36 % de un día para el otro, recuperación lenta,
-      algunos paquetes ×0,12). Ya está marcada como discontinuidad: si se explica, revisar esa marca.
+- [ ] La portada lista "Mayores subas de 2027" sin † aunque crucen el cambio de PyPI (la nota de la columna 2026†
+      sigue visible). Decidir en enero si hace falta marcarla.
 - [ ] Opcional: activar hooks de Claude Code copiando `.claude/settings.template.json` →
       `.claude/settings.json` (hoy los guards solo corren en Codex).
 
@@ -112,6 +126,10 @@
       tratando como no confiable: autoescape, sin `|safe`, sin Markdown externo.
 
 ## Key Decisions & Why
+- **Cambio de conteo de PyPI (2026-08-24) como corte de cuotas, aviso variante C (usuario, 2026-11-26).** Los datos
+  anteriores no se corrigen: ClickPy cuenta los `.metadata` como wheels y no hay forma de separarlos. Se avisa
+  donde pega (cuotas y puntos de cuota) con †, sin otro recuadro: el de cierre provisional ya ocupa ese lugar en
+  enero. En las cuatro semanas siguientes, neto de 2025, Datos e IA perdió 1,2 puntos de cuota.
 - **Cierre anual: congelado manual en enero y cierre provisional mientras tanto (aceptado por el usuario,
   2026-11-12).** Automatizarlo obligaría al bot a commitear `catalog/top100.yaml` sin revisión, y un paquete
   nuevo del top sin categoría rompe `Catalog.load` y corta el deploy (entran 7 a 19 por año; 15 en 2026). Lo
@@ -522,3 +540,16 @@ El usuario mergeó el PR #13. Se le explicó el pipeline: `ci.yml` no publica; s
 lunes con estrellas, o a mano) hace ingesta → build → commit de `data/` → deploy, así que un merge sale con la
 corrida siguiente. Producción seguía sin la Etapa 6. El logo raro era local (`ecopy serve`): HTML nuevo con CSS
 viejo en caché. Arreglo con `?v=<hash>` en los estáticos y `no-cache` en `serve`, con TDD. Sin commit.
+
+### 2026-11-15 — Estáticos con versión mergeados; cierre de sesión
+El usuario mergeó el PR #14 (`8ca1525`). Producción ya tiene las Etapas 6 y 7; las corridas diarias del 13 al 15
+funcionaron, unas 7 horas después de las 05:23 UTC. `.wrangler/` no aparecía en `git status` porque el usuario
+lo agregó al `.gitignore` en el commit de la Etapa 7. Token fine-grained renovado por el usuario: solo sirve
+para su push local por HTTPS. Los workflows usan `github.token` y los secretos de Cloudflare, así que no hubo
+que cambiar nada en el repo ni en Secrets. README, ROADMAP y handoff actualizados sobre `main`, sin commit.
+
+### 2026-11-26 — Caída del 2026-08-25 explicada; aviso en cuotas (variante C)
+La sesión del 16/11 había encontrado la causa (blog de PyPI), corregido la discontinuidad y la metodología, y
+armado tres vistas previas en `build/preview-aviso/`, sin pasar al handoff. Hoy el usuario eligió la C: nota con †
+y marca en columnas, en la vista anual y en la portada, con TDD (5 tests de sitio). Producción verificada: CSS con
+versión, corridas diarias y dos de estrellas (18,4 min). Sin commit: lo hace el usuario.

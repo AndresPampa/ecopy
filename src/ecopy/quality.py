@@ -30,11 +30,20 @@ DEGRADED_DAYS = (
 )
 
 
+PYPI_COUNTS_ONLY_DISTRIBUTIONS = date(2026, 8, 24)
+"""PyPI deja de contar como descarga los `.metadata` (PEP 658) y otros archivos que no son
+distribuciones (https://blog.pypi.org/posts/2026-08-31-download-counts/). No es retroactivo y el 24
+ya mezcla las dos cuentas; el total cae ~33 % y cada paquete pierde distinto."""
+
 DISCONTINUITIES = (
     date(2018, 7, 27),  # el volumen se triplica y no vuelve (S1)
-    date(2026, 8, 25),  # cae 36 % de un día para el otro, causa desconocida (S7)
+    PYPI_COUNTS_ONLY_DISTRIBUTIONS,
 )
 """Saltos de nivel del volumen total: el crecimiento absoluto no se calcula a través de ellos."""
+
+SHARE_BREAKS = (PYPI_COUNTS_ONLY_DISTRIBUTIONS,)
+"""Cambios de la fuente que no pegan parejo en todos los paquetes: las cuotas de antes y de
+después no son del todo comparables. El salto de 2018 no entra: fue parejo (S1)."""
 
 
 class DayQuality(StrEnum):

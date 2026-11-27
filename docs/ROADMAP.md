@@ -24,14 +24,15 @@
 - ✅ **Ajustes visuales de la Etapa 4:** selector de tema, créditos, alineación y comparador vacío.
 - ✅ **Etapa 5 — Publicación del MVP:** EN/ES completo, metodología, CSP/`_headers`, accesibilidad,
   GitHub Actions (cron diario) y despliegue en https://ecopy.pages.dev.
-- 🚧 **Estáticos con versión:** en la rama `assets-con-version`, sin mergear. Cada URL de `/static/` lleva
-  `?v=` con el hash de su contenido y `ecopy serve` manda `Cache-Control: no-cache`: un CSS viejo guardado
-  ya no se cruza con un HTML nuevo (el logo deformado que se vio con `serve`).
+- 🚧 **Caída del 2026-08-25:** en la rama `investigar-caida-2026-08-25`, sin mergear. Era PyPI, que dejó de
+  contar los `.metadata`; la metodología lo explica y las cuotas de 2026 (y los movers de 2027) llevan †.
 - [ ] **Usuario, desde el 2027-01-08:** cierre de 2026 (`catalog refresh` → revisar diff → `freeze` → commit).
 - 📋 **Después del MVP:** Trending y Seguridad (Fase 3); cuentas y encuestas (Fase 4).
 
 ## Shipped
 
+- ✅ **Estáticos con versión** (PR #14, 2026-11-15): cada URL de `/static/` lleva `?v=` con el hash de su
+  contenido y `ecopy serve` manda `Cache-Control: no-cache` (el logo deformado que se vio con `serve`).
 - ✅ **Etapa 7 — Categorías en Libraries y cierre anual** (PR #13, 2026-11-12): bloques por dominio con
   todas las categorías y ranking plegado de las 40 en `/library/`, cuota en "Explore by domain", cierre
   provisional de un año sin congelar y `catalog refresh` que vuelve a pedir los años sin congelar.

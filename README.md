@@ -216,6 +216,10 @@ Detalle y estado en [`docs/ROADMAP.md`](docs/ROADMAP.md). Cada etapa se trabaja 
 - **Etapa 7 — Categorías en Libraries y cierre anual** ✅: todas las categorías a la vista en la página
   de librerías, con enlace a sus estadísticas; cuota en "Explore by domain"; cierre provisional del año
   que termina hasta congelarlo a mano en enero.
+- **Estáticos con versión** ✅: cada CSS y JS se pide con `?v=` y el hash de su contenido, así una copia
+  vieja en caché nunca se cruza con una página nueva.
+- **Caída del 2026-08-25 explicada** 🚧: PyPI dejó de contar los archivos de metadatos; la metodología lo
+  explica y las cuotas que mezclan las dos formas de contar llevan †.
 - **Después del MVP:** Trending y Seguridad; cuentas y encuestas.
 
 ## Fuentes de datos

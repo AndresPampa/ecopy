@@ -30,3 +30,6 @@
 </tbody>
 </table>
 {%- endmacro -%}
+{%- macro break_note(lead, days, cause) %}
+<p class="note">† {{ lead }} {% for day in days %}<time datetime="{{ day }}">{{ day }}</time>{% if not loop.last %}, {% endif %}{% endfor %} {{ cause }} <a href="/{{ lang }}/methodology/">{{ t.break_link }}</a>.</p>
+{%- endmacro -%}

@@ -292,6 +292,10 @@ class YearView(BaseModel):
     python_unknown_share: float
     python_other_share: float
     timeline: tuple[TimelineEvent, ...]
+    share_breaks: tuple[date, ...] = ()
+    """Cambios de conteo dentro del período: sus cuotas mezclan dos formas de contar."""
+    mover_breaks: tuple[date, ...] = ()
+    """Cambios de conteo entre el período anterior y este: los puntos de cuota los cruzan."""
     provisional: bool = Field(default=False, exclude=True)
     """Año cerrado que todavía no se congeló: se calcula en cada build y no se guarda."""
 

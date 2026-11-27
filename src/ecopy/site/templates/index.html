@@ -28,6 +28,9 @@
 </ul>
 </figure>
 <p class="note">{{ t.strata_caption }}</p>
+{%- for item in years if item.share_breaks %}
+{{ m.break_note(t.share_break.format(year=item.year), item.share_breaks, t.share_break_cause) }}
+{%- endfor %}
 {%- if browse %}
 <div class="columns">
 <section>

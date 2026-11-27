@@ -140,7 +140,7 @@ append-only en Parquet → cálculo de métricas → render HTML → Cloudflare 
   completo); 2016 solo en fichas, marcado como parcial. Las métricas relativas (cuota, rankings,
   movers) son comparables a través del salto ×3 de volumen del 2018-07-27 (cuotas estables); los
   crecimientos de volumen absoluto que lo crucen no se calculan.
-- Discontinuidades de volumen (2018-07-27 y 2026-08-25): se marcan y no se calcula crecimiento absoluto que las cruce.
+- Discontinuidades de volumen (2018-07-27 y 2026-08-24): se marcan y no se calcula crecimiento absoluto que las cruce. La de 2026 es el cambio de conteo de PyPI (deja de contar `.metadata`): no pega parejo, así que las cuotas que la cruzan llevan †.
 - Calidad del dato: huecos (2016-03-06→05-21, 2019-04-26/27) y días degradados (2018-07-11→26, más 2016-12-08, 2017-05-11, 2018-04-17, 2019-04-13, 2019-04-25 y 2019-04-28) se marcan en el calendario de `quality`, no se borran ni se interpolan. Un día sin filas de un paquete son cero descargas, no un hueco de la fuente.
 - La ingesta diaria toma hasta ayer (UTC) y reobserva los últimos 7 días guardados; el store solo
   escribe filas nuevas o que cambiaron (medido: 0 de 1,66 M de filas cambiaron en ~40 h).

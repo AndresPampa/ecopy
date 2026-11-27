@@ -159,6 +159,19 @@ TEXTS = {
         "against_previous": "against the previous period.",
         "growth_hidden": "Growth is not shown: the comparison crosses a change in data collection.",
         "discontinuity": "The volume has a discontinuity on",
+        "share_break": "{year} mixes two ways of counting: since",
+        "mover_break": (
+            "Share points are compared with {year}, which mixes two ways of counting: since"
+        ),
+        "share_break_cause": (
+            "PyPI no longer counts metadata files, and that hits libraries unevenly. Its shares "
+            "are not fully comparable with earlier years."
+        ),
+        "mover_break_cause": (
+            "PyPI no longer counts metadata files, and that hits libraries unevenly. These changes "
+            "are not fully comparable with those of other years."
+        ),
+        "break_link": "Methodology",
         "shares_title": "Share by domain and category",
         "shares_alt": "Bar chart of the twelve largest categories. The table has all of them.",
         "catalog_share": (
@@ -370,6 +383,19 @@ TEXTS = {
             "datos."
         ),
         "discontinuity": "El volumen tiene una discontinuidad el",
+        "share_break": "{year} mezcla dos formas de contar: desde el",
+        "mover_break": (
+            "Los puntos de cuota se comparan con {year}, que mezcla dos formas de contar: desde el"
+        ),
+        "share_break_cause": (
+            "PyPI ya no cuenta los archivos de metadatos y eso no pega parejo en todas las "
+            "librerías. Sus cuotas no son del todo comparables con años anteriores."
+        ),
+        "mover_break_cause": (
+            "PyPI ya no cuenta los archivos de metadatos y eso no pega parejo en todas las "
+            "librerías. Estos cambios no son del todo comparables con los de otros años."
+        ),
+        "break_link": "Metodología",
         "shares_title": "Cuota por dominio y categoría",
         "shares_alt": (
             "Gráfico de barras de las doce categorías más grandes. La tabla las tiene todas."
