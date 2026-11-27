@@ -418,6 +418,69 @@ def test_growth_is_shown_when_comparable(tmp_path):
     assert "+50.000%" in year_page(tmp_path)
 
 
+COUNT_CHANGE = date(2026, 8, 24)
+
+
+def test_a_year_that_mixes_two_counts_flags_its_shares_and_movers(tmp_path):
+    marked = year(2026, share_breaks=(COUNT_CHANGE,), mover_breaks=(COUNT_CHANGE,))
+    render_years(tmp_path, marked)
+
+    english, spanish = year_page(tmp_path, 2026), year_page(tmp_path, 2026, "es")
+
+    assert '<th scope="col">Share †</th>' in english
+    assert '<th scope="col">Cuota †</th>' in spanish
+    assert english.count("Change (share points) †</th>") == 2
+    assert spanish.count("Cambio (puntos de cuota) †</th>") == 2
+    note = re.search(r'<p class="note">† 2026 mixes two ways of counting: [^\n]*</p>', english)
+    assert note and '<time datetime="2026-08-24">2026-08-24</time>' in note.group()
+    assert 'href="/en/methodology/"' in note.group()
+    assert english.count('<p class="note">†') == 1
+    assert '<p class="note">† 2026 mezcla dos formas de contar: ' in spanish
+    assert "Its shares are not fully comparable" in note.group()
+    assert "Sus cuotas no son del todo comparables" in spanish
+
+
+def test_the_year_after_flags_only_its_movers(tmp_path):
+    render_years(tmp_path, year(2027, mover_breaks=(COUNT_CHANGE,)))
+
+    english, spanish = year_page(tmp_path, 2027), year_page(tmp_path, 2027, "es")
+
+    assert '<th scope="col">Share</th>' in english
+    assert english.count("Change (share points) †</th>") == 2
+    note = re.search(r'<p class="note">† [^\n]*</p>', english)
+    assert note and "compared with 2026" in note.group()
+    assert '<time datetime="2026-08-24">2026-08-24</time>' in note.group()
+    assert "These changes are not fully comparable" in note.group()
+    assert "comparan con 2026" in spanish
+
+
+def test_a_year_with_comparable_counts_has_no_mark(tmp_path):
+    render_years(tmp_path)
+
+    for lang in ("en", "es"):
+        assert "†" not in year_page(tmp_path, lang=lang)
+
+
+def test_the_home_marks_the_column_of_a_year_that_mixes_two_counts(tmp_path):
+    marked = year(2026, status="ytd", share_breaks=(COUNT_CHANGE,), mover_breaks=(COUNT_CHANGE,))
+    render_years(tmp_path, year(2025), marked)
+
+    english = (tmp_path / "en" / "index.html").read_text()
+    spanish = (tmp_path / "es" / "index.html").read_text()
+
+    assert re.search(r'<text class="yr"[^>]*>2026†</text>', english)
+    assert re.search(r'<text class="yr"[^>]*>&#39;26†</text>', english)
+    assert re.search(r'<text class="yr"[^>]*>2025</text>', english)
+    assert '<p class="note">† 2026 mixes two ways of counting: ' in english
+    assert '<p class="note">† 2026 mezcla dos formas de contar: ' in spanish
+
+
+def test_the_home_has_no_mark_without_a_mixed_year(tmp_path):
+    render_years(tmp_path, year(2024), year(2025))
+
+    assert "†" not in (tmp_path / "en" / "index.html").read_text()
+
+
 def test_a_discontinuity_replaces_the_growth_with_its_explanation(tmp_path):
     volume = VolumeView(
         total=9_000,
@@ -949,6 +1012,29 @@ def test_the_methodology_states_the_data_calendar_the_code_uses(tmp_path):
         assert f'<time datetime="{first}">{first}</time>' in html
         if last != first:
             assert f'<time datetime="{last}">{last}</time>' in html
+
+
+def test_every_discontinuity_is_explained_in_both_languages(tmp_path):
+    from ecopy.quality import DISCONTINUITIES
+
+    render_all(tmp_path)
+
+    for lang in ("en", "es"):
+        html = methodology(tmp_path, lang)
+        for day in DISCONTINUITIES:
+            assert re.search(rf'<li><time datetime="{day}">{day}</time>: \S', html), (lang, day)
+
+
+def test_the_methodology_explains_pypis_2026_counting_change_with_its_source(tmp_path):
+    render_all(tmp_path)
+
+    english, spanish = methodology(tmp_path, "en"), methodology(tmp_path, "es")
+    source = '<a href="https://blog.pypi.org/posts/2026-08-31-download-counts/">'
+
+    assert source in english and source in spanish
+    assert ".metadata" in english and ".metadata" in spanish
+    assert "Cause unknown" not in english and "Causa desconocida" not in spanish
+    assert "not fully comparable" in english and "no son del todo comparables" in spanish
 
 
 def test_the_methodology_explains_the_provisional_close(tmp_path):

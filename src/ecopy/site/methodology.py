@@ -7,17 +7,35 @@ from datetime import date
 DISCONTINUITY_NOTES = {
     "en": {
         date(2018, 7, 27): "Total volume triples and never returns to its previous level.",
-        date(2026, 8, 25): (
-            "Total volume falls 36 % from one day to the next and recovers slowly. Cause unknown."
+        date(2026, 8, 24): (
+            "PyPI stops counting the .metadata files (PEP 658) and other files that are not "
+            "distributions, which installers fetch while resolving; only .whl, .tar.gz and .zip "
+            "files count from now on. The change is not retroactive and this day already mixes "
+            "both counts. Total volume falls by about a third, but not evenly: packages that "
+            "release often lose the most and packages that only publish source archives lose "
+            "nothing. Shares before and after this date are therefore not fully comparable: in "
+            "the four weeks after it, net of the same weeks of 2025, Data & AI lost 1.2 share "
+            "points. ClickPy counts those files as wheels, so earlier data cannot be corrected."
         ),
     },
     "es": {
         date(2018, 7, 27): "El volumen total se triplica y no vuelve a su nivel anterior.",
-        date(2026, 8, 25): (
-            "El volumen total cae 36 % de un día para el otro y se recupera despacio. Causa "
-            "desconocida."
+        date(2026, 8, 24): (
+            "PyPI deja de contar los archivos .metadata (PEP 658) y otros que no son "
+            "distribuciones, que los instaladores piden al resolver dependencias; desde entonces "
+            "solo cuentan los .whl, .tar.gz y .zip. El cambio no es retroactivo y este día ya "
+            "mezcla las dos cuentas. El volumen total cae cerca de un tercio, pero no parejo: los "
+            "paquetes que publican versiones seguido pierden más y los que solo publican código "
+            "fuente no pierden nada. Por eso las cuotas de antes y de después de esta fecha no son "
+            "del todo comparables: en las cuatro semanas siguientes, descontado lo que pasó en las "
+            "mismas semanas de 2025, Datos e IA perdió 1,2 puntos de cuota. ClickPy cuenta esos "
+            "archivos como wheels, así que los datos anteriores no se pueden corregir."
         ),
     },
+}
+
+DISCONTINUITY_SOURCES = {
+    date(2026, 8, 24): "https://blog.pypi.org/posts/2026-08-31-download-counts/",
 }
 
 TEXTS = {
@@ -121,6 +139,7 @@ TEXTS = {
             "Degraded days: below half of the median of the same weekday in the four previous weeks"
         ),
         "discontinuities": "Discontinuities",
+        "source": "source: PyPI blog",
         "discontinuities_text": (
             "Changes in the level of total volume. Growth is not calculated across them, and no "
             "cause is attributed without evidence."
@@ -227,6 +246,7 @@ TEXTS = {
             "las cuatro semanas anteriores"
         ),
         "discontinuities": "Discontinuidades",
+        "source": "fuente: blog de PyPI",
         "discontinuities_text": (
             "Cambios de nivel del volumen total. El crecimiento no se calcula a través de ellos y "
             "no se atribuye causa sin evidencia."

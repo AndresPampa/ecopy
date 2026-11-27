@@ -32,7 +32,7 @@
 <p>{{ m.discontinuities_text }}</p>
 <ul>
 {%- for value in discontinuities %}
-<li>{{ day(value) }}{% if value in notes %}: {{ notes[value] }}{% endif %}</li>
+<li>{{ day(value) }}{% if value in notes %}: {{ notes[value] }}{% endif %}{% if value in sources %} (<a href="{{ sources[value] }}">{{ m.source }}</a>){% endif %}</li>
 {%- endfor %}
 </ul>
 {%- endblock %}

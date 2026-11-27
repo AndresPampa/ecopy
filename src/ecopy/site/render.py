@@ -360,6 +360,7 @@ def render_site(
             "",
             m=methodology.TEXTS[lang],
             notes=methodology.DISCONTINUITY_NOTES[lang],
+            sources=methodology.DISCONTINUITY_SOURCES,
             version=METHODOLOGY_VERSION,
             start=SOURCE_START,
             gaps=GAPS,

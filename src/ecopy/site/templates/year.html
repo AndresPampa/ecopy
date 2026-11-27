@@ -1,11 +1,12 @@
 {% extends "_base.html" %}
+{%- import "_macros.html" as m with context %}
 {%- macro chart_box(name, alt, payload) %}
 <div id="chart-{{ name }}" class="chart" data-chart role="img" aria-label="{{ alt }}"></div>
 <script id="chart-{{ name }}-data" type="application/json">{{ payload|tojson }}</script>
 {%- endmacro %}
 {%- macro mover_rows(movers) %}
 <table>
-<thead><tr><th scope="col">{{ t.package }}</th><th scope="col" class="category">{{ t.category }}</th><th scope="col">{{ t.share_points }}</th><th scope="col">{{ t.position }}</th></tr></thead>
+<thead><tr><th scope="col">{{ t.package }}</th><th scope="col" class="category">{{ t.category }}</th><th scope="col">{{ t.share_points }}{% if view.mover_breaks %} †{% endif %}</th><th scope="col">{{ t.position }}</th></tr></thead>
 <tbody>
 {%- for mover in movers %}
 <tr><th scope="row"><a href="/{{ lang }}/library/{{ mover.project|slug }}/">{{ mover.project }}</a></th><td class="category">{{ mover.category|label(lang) }}</td><td>{{ mover.share_change|points(lang) }}</td><td>{% if mover.rank %}#{{ mover.rank }}{% else %}—{% endif %}{% if mover.rank_change %} ({{ "%+d"|format(mover.rank_change) }}){% endif %}</td></tr>
@@ -55,9 +56,12 @@
 <section>
 <h2>{{ t.shares_title }}</h2>
 <p class="note">{{ t.catalog_share.format(share=view.catalog_share|percent(lang)) }}</p>
+{%- if view.share_breaks %}
+{{ m.break_note(t.share_break.format(year=view.year), view.share_breaks, t.share_break_cause) }}
+{%- endif %}
 {{ chart_box("shares", t.shares_alt, charts.shares) }}
 <table>
-<thead><tr><th scope="col">{{ t.category }}</th><th scope="col">{{ t.share }}</th></tr></thead>
+<thead><tr><th scope="col">{{ t.category }}</th><th scope="col">{{ t.share }}{% if view.share_breaks %} †{% endif %}</th></tr></thead>
 <tbody>
 {%- for domain in view.domains %}
 <tr><th scope="row"><strong>{{ domain.slug|label(lang) }}</strong></th><td><strong>{{ domain.share|percent(lang) }}</strong></td></tr>
@@ -75,6 +79,9 @@
 <p>{{ t.no_previous }}</p>
 {%- else %}
 <p class="note">{{ t.movers_note }}</p>
+{%- if view.mover_breaks and not view.share_breaks %}
+{{ m.break_note(t.mover_break.format(year=view.previous_start.year), view.mover_breaks, t.mover_break_cause) }}
+{%- endif %}
 <h3>{{ t.movers_up }}</h3>
 {{ mover_rows(view.movers_up) }}
 <h3>{{ t.movers_down }}</h3>
